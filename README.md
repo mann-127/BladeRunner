@@ -269,7 +269,7 @@ BladeRunner uses GitHub Actions for continuous integration:
 
 ### System Architecture
 
-![BladeRunner Architecture](/architecture.png)
+![BladeRunner Architecture](/ARCHITECTURE.png)
 
 **Architecture Overview:**
 The diagram above represents the logical execution pipeline of `bladerunner/agent.py`. The broad, gray background lines represent the macro-stages of the request, while the thin colored lines represent the granular data hand-offs between the components.
