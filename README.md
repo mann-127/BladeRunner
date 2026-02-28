@@ -272,11 +272,16 @@ BladeRunner uses GitHub Actions for continuous integration:
 ![BladeRunner Architecture](/ARCHITECTURE.png)
 
 **Architecture Overview:**
-- **Tier 1 Features** (green): Strategic thinking and resilience—Planning, Reflection, Retry, Streaming
-- **Tier 2 Features** (orange): Safety and learning—Safety Detection, Approvals, Tool Tracking, Memory, Agent Selection
-- **Tool Registry**: Extensible architecture supporting Bash, Read/Write, WebSearch, Image analysis, and custom tools
-- **Storage Layer**: Persistent sessions, tool statistics, semantic memory, and configuration
-- **API Clients**: Integration with OpenRouter, Groq, Brave Search, and external services
+The diagram above represents the logical execution pipeline of `bladerunner/agent.py`. The broad, gray background lines represent the macro-stages of the request, while the thin colored lines represent the granular data hand-offs between the components.
+
+**The Execution Lifecycle (`execute()`):**
+1. **Ingestion:** User prompts enter through `cli.py` or `interactive.py`.
+2. **Context Compilation:** Before contacting the LLM, the `agent_orchestrator.py` selects an identity, `semantic_memory.py` injects similar successful past code, and `sessions.py` loads the ongoing conversation history.
+3. **Core Generation:** The strategic planner inside `agent.py` formats the compiled context and streams the LLM completion.
+4. **Parsing & Guardrails:** The response is routed to the `parse_tool_calls` function. If a system tool is requested, the command is intercepted by `safety.py` to check for destructive operations, followed by `permissions.py` for user authorization.
+5. **Execution:** The validated command is dispatched to the physical tool registry (`tools/bash.py`, `tools/filesystem.py`, etc.).
+6. **Analytics & Recovery:** - **Success:** The `tool_tracker.py` logs a successful execution, updating system reliability metrics and committing the context to memory.
+   - **Failure:** The output drops into the error handler, triggering an automated reflection loop that injects the error traceback back into the LLM Provider API to dynamically self-correct the code.
 
 **Additional Documentation:**
 - **[AGENTIC-AI.md](AGENTIC-AI.md)** - Complete agentic AI feature reference (Tier 1 + Tier 2)

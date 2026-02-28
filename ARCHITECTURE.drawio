@@ -1,181 +1,211 @@
-<mxfile host="app.diagrams.net">
-    <diagram id="bladerunner_logical" name="BladeRunner Logical Architecture">
-        <mxGraphModel dx="1200" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1400" background="#F8FAFC" math="0" shadow="0">
+<mxfile host="65bd71144e">
+    <diagram id="bladerunner_granular" name="BladeRunner Architecture">
+        <mxGraphModel dx="1048" dy="651" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1400" background="#F8FAFC" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                
-                <mxCell id="title" value="BladeRunner System Architecture" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=32;fontStyle=1;fillColor=none;fontColor=#0F172A;fontFamily=Inter, sans-serif;" vertex="1" parent="1">
+                <mxCell id="title" value="BladeRunner v2.0.49 Architecture" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=32;fontStyle=1;fillColor=none;fontColor=#0F172A;fontFamily=Inter, sans-serif;" parent="1" vertex="1">
                     <mxGeometry x="200" y="40" width="800" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="subtitle" value="Logical Component Execution Pipeline" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fillColor=none;fontColor=#64748B;fontFamily=Inter, sans-serif;letterSpacing=1;" vertex="1" parent="1">
+                <mxCell id="subtitle" value="Granular Component Execution Flow" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fillColor=none;fontColor=#64748B;fontFamily=Inter, sans-serif;letterSpacing=1;" parent="1" vertex="1">
                     <mxGeometry x="200" y="80" width="800" height="30" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="user_prompt" value="👤 User Intent / Prompt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=none;fontSize=15;fontStyle=1;fontColor=#F8FAFC;fontFamily=Inter, sans-serif;shadow=1;arcSize=50;" vertex="1" parent="1">
+                <mxCell id="user_prompt" value="👤 User Intent / Prompt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=none;fontSize=15;fontStyle=1;fontColor=#F8FAFC;fontFamily=Inter, sans-serif;shadow=1;arcSize=50;" parent="1" vertex="1">
                     <mxGeometry x="500" y="140" width="200" height="50" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="bg_stage1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E2E8F0;strokeWidth=1;shadow=1;arcSize=4;" vertex="1" parent="1">
+                <mxCell id="bg_stage1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E2E8F0;strokeWidth=1;shadow=1;arcSize=4;" parent="1" vertex="1">
                     <mxGeometry x="200" y="240" width="800" height="110" as="geometry"/>
                 </mxCell>
-                <mxCell id="lbl_stage1" value="INTERFACE &amp; INGESTION LAYER" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#94A3B8;fontFamily=Inter, sans-serif;letterSpacing=1;" vertex="1" parent="1">
+                <mxCell id="lbl_stage1" value="INTERFACE &amp; INGESTION LAYER" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#94A3B8;fontFamily=Inter, sans-serif;letterSpacing=1;" parent="1" vertex="1">
                     <mxGeometry x="200" y="245" width="800" height="20" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="box_cli" value="&lt;b style='font-size:14px'&gt;CLI Gateway&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#64748B'&gt;Command execution &amp; arguments&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;strokeWidth=1;fontColor=#334155;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_cli" value="&lt;b style=&#39;font-size:14px&#39;&gt;CLI Gateway&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#64748B&#39;&gt;Command execution &amp; arguments&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;strokeWidth=1;fontColor=#334155;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="220" y="275" width="240" height="55" as="geometry"/>
                 </mxCell>
-                <mxCell id="box_repl" value="&lt;b style='font-size:14px'&gt;REPL Interface&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#64748B'&gt;Interactive streaming session&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;strokeWidth=1;fontColor=#334155;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_repl" value="&lt;b style=&#39;font-size:14px&#39;&gt;REPL Interface&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#64748B&#39;&gt;Interactive streaming session&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;strokeWidth=1;fontColor=#334155;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="480" y="275" width="240" height="55" as="geometry"/>
                 </mxCell>
-                <mxCell id="box_skills" value="&lt;b style='font-size:14px'&gt;Skill Configuration&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#64748B'&gt;Domain-specific prompt profiles&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;strokeWidth=1;fontColor=#334155;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_skills" value="&lt;b style=&#39;font-size:14px&#39;&gt;Skill Configuration&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#64748B&#39;&gt;Domain-specific profiles&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;strokeWidth=1;fontColor=#334155;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="740" y="275" width="240" height="55" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="bg_stage2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#FDE68A;strokeWidth=1;shadow=1;arcSize=4;" vertex="1" parent="1">
+                <mxCell id="bg_stage2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#FDE68A;strokeWidth=1;shadow=1;arcSize=4;" parent="1" vertex="1">
                     <mxGeometry x="200" y="400" width="800" height="110" as="geometry"/>
                 </mxCell>
-                <mxCell id="lbl_stage2" value="CONTEXT &amp; ORCHESTRATION LAYER" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#D97706;fontFamily=Inter, sans-serif;letterSpacing=1;" vertex="1" parent="1">
+                <mxCell id="lbl_stage2" value="CONTEXT &amp; ORCHESTRATION LAYER" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#D97706;fontFamily=Inter, sans-serif;letterSpacing=1;" parent="1" vertex="1">
                     <mxGeometry x="200" y="405" width="800" height="20" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="box_orch" value="&lt;b style='font-size:14px'&gt;Task Router&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#92400E'&gt;Multi-agent workload distribution&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#FCD34D;strokeWidth=1;fontColor=#92400E;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_orch" value="&lt;b style=&#39;font-size:14px&#39;&gt;Task Router&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#92400E&#39;&gt;Multi-agent workload sync&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#FCD34D;strokeWidth=1;fontColor=#92400E;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="220" y="435" width="240" height="55" as="geometry"/>
                 </mxCell>
-                <mxCell id="box_mem" value="&lt;b style='font-size:14px'&gt;Semantic Memory Engine&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#92400E'&gt;Jaccard similarity context injection&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#FCD34D;strokeWidth=1;fontColor=#92400E;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_mem" value="&lt;b style=&#39;font-size:14px&#39;&gt;Semantic Memory&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#92400E&#39;&gt;Past solution context injection&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#FCD34D;strokeWidth=1;fontColor=#92400E;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="480" y="435" width="240" height="55" as="geometry"/>
                 </mxCell>
-                <mxCell id="box_sess" value="&lt;b style='font-size:14px'&gt;Session State Manager&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#92400E'&gt;Continuous conversation history&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#FCD34D;strokeWidth=1;fontColor=#92400E;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_sess" value="&lt;b style=&#39;font-size:14px&#39;&gt;Session State Manager&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#92400E&#39;&gt;Continuous conversation history&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#FCD34D;strokeWidth=1;fontColor=#92400E;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="740" y="435" width="240" height="55" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="bg_stage3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#BFDBFE;strokeWidth=1;shadow=1;arcSize=4;" vertex="1" parent="1">
+                <mxCell id="bg_stage3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#BFDBFE;strokeWidth=1;shadow=1;arcSize=4;" parent="1" vertex="1">
                     <mxGeometry x="200" y="560" width="800" height="110" as="geometry"/>
                 </mxCell>
-                <mxCell id="lbl_stage3" value="COGNITIVE CORE (AGENT LOOP)" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#2563EB;fontFamily=Inter, sans-serif;letterSpacing=1;" vertex="1" parent="1">
+                <mxCell id="lbl_stage3" value="COGNITIVE CORE (AGENT LOOP)" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#2563EB;fontFamily=Inter, sans-serif;letterSpacing=1;" parent="1" vertex="1">
                     <mxGeometry x="200" y="565" width="800" height="20" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="box_plan" value="&lt;b style='font-size:14px'&gt;Strategic Planner&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#1E40AF'&gt;Goal decomposition &amp; steps&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#93C5FD;strokeWidth=1;fontColor=#1E40AF;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_plan" value="&lt;b style=&#39;font-size:14px&#39;&gt;Strategic Planner&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#1E40AF&#39;&gt;Goal decomposition &amp; steps&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#93C5FD;strokeWidth=1;fontColor=#1E40AF;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="220" y="595" width="240" height="55" as="geometry"/>
                 </mxCell>
-                <mxCell id="box_llm" value="&lt;b style='font-size:14px'&gt;LLM Provider Gateway&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#1E40AF'&gt;OpenRouter / Groq integration&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#93C5FD;strokeWidth=1;fontColor=#1E40AF;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_llm" value="&lt;b style=&#39;font-size:14px&#39;&gt;LLM Provider API&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#1E40AF&#39;&gt;OpenRouter / Groq execution&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#93C5FD;strokeWidth=1;fontColor=#1E40AF;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="480" y="595" width="240" height="55" as="geometry"/>
                 </mxCell>
-                <mxCell id="box_parse" value="&lt;b style='font-size:14px'&gt;Tool Request Parser&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#1E40AF'&gt;Extraction of system commands&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#93C5FD;strokeWidth=1;fontColor=#1E40AF;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_parse" value="&lt;b style=&#39;font-size:14px&#39;&gt;Tool Request Parser&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#1E40AF&#39;&gt;Extraction of system commands&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#93C5FD;strokeWidth=1;fontColor=#1E40AF;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="740" y="595" width="240" height="55" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="bg_stage4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#FECACA;strokeWidth=1;shadow=1;arcSize=4;" vertex="1" parent="1">
+                <mxCell id="bg_stage4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#FECACA;strokeWidth=1;shadow=1;arcSize=4;" parent="1" vertex="1">
                     <mxGeometry x="200" y="720" width="800" height="110" as="geometry"/>
                 </mxCell>
-                <mxCell id="lbl_stage4" value="SAFETY &amp; GUARDRAIL LAYER" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#DC2626;fontFamily=Inter, sans-serif;letterSpacing=1;" vertex="1" parent="1">
+                <mxCell id="lbl_stage4" value="SAFETY &amp; GUARDRAIL LAYER" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#DC2626;fontFamily=Inter, sans-serif;letterSpacing=1;" parent="1" vertex="1">
                     <mxGeometry x="200" y="725" width="800" height="20" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="box_safety" value="&lt;b style='font-size:14px'&gt;Operation Filter&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#991B1B'&gt;Heuristic critical action detection&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#FCA5A5;strokeWidth=1;fontColor=#991B1B;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_safety" value="&lt;b style=&#39;font-size:14px&#39;&gt;Operation Filter&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#991B1B&#39;&gt;Heuristic critical action check&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#FCA5A5;strokeWidth=1;fontColor=#991B1B;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="340" y="755" width="240" height="55" as="geometry"/>
                 </mxCell>
-                <mxCell id="box_perms" value="&lt;b style='font-size:14px'&gt;Permission Enforcer&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#991B1B'&gt;Human-in-the-loop approvals&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#FCA5A5;strokeWidth=1;fontColor=#991B1B;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_perms" value="&lt;b style=&#39;font-size:14px&#39;&gt;Permission Enforcer&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#991B1B&#39;&gt;Human-in-the-loop approvals&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#FCA5A5;strokeWidth=1;fontColor=#991B1B;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="620" y="755" width="240" height="55" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="bg_stage5" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F3FF;strokeColor=#E9D5FF;strokeWidth=1;shadow=1;arcSize=4;" vertex="1" parent="1">
+                <mxCell id="bg_stage5" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F3FF;strokeColor=#E9D5FF;strokeWidth=1;shadow=1;arcSize=4;" parent="1" vertex="1">
                     <mxGeometry x="200" y="880" width="800" height="110" as="geometry"/>
                 </mxCell>
-                <mxCell id="lbl_stage5" value="TOOL EXECUTION REGISTRY" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#7C3AED;fontFamily=Inter, sans-serif;letterSpacing=1;" vertex="1" parent="1">
+                <mxCell id="lbl_stage5" value="TOOL EXECUTION REGISTRY" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#7C3AED;fontFamily=Inter, sans-serif;letterSpacing=1;" parent="1" vertex="1">
                     <mxGeometry x="200" y="885" width="800" height="20" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="box_tfs" value="&lt;b style='font-size:14px'&gt;File System Engine&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#5B21B6'&gt;Local Read/Write ops&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#D8B4FE;strokeWidth=1;fontColor=#5B21B6;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_tfs" value="&lt;b style=&#39;font-size:14px&#39;&gt;File System&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#5B21B6&#39;&gt;Local I/O&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#D8B4FE;strokeWidth=1;fontColor=#5B21B6;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="224" y="915" width="170" height="55" as="geometry"/>
                 </mxCell>
-                <mxCell id="box_tbash" value="&lt;b style='font-size:14px'&gt;Sandboxed Shell&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#5B21B6'&gt;Monitored Bash execution&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#D8B4FE;strokeWidth=1;fontColor=#5B21B6;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_tbash" value="&lt;b style=&#39;font-size:14px&#39;&gt;Sandboxed Shell&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#5B21B6&#39;&gt;Bash execution&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#D8B4FE;strokeWidth=1;fontColor=#5B21B6;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="418" y="915" width="170" height="55" as="geometry"/>
                 </mxCell>
-                <mxCell id="box_tweb" value="&lt;b style='font-size:14px'&gt;Retrieval Service&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#5B21B6'&gt;Live web search parsing&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#D8B4FE;strokeWidth=1;fontColor=#5B21B6;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_tweb" value="&lt;b style=&#39;font-size:14px&#39;&gt;Retrieval Service&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#5B21B6&#39;&gt;Live web search&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#D8B4FE;strokeWidth=1;fontColor=#5B21B6;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="612" y="915" width="170" height="55" as="geometry"/>
                 </mxCell>
-                <mxCell id="box_timg" value="&lt;b style='font-size:14px'&gt;Vision Processor&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#5B21B6'&gt;Multi-modal analysis&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#D8B4FE;strokeWidth=1;fontColor=#5B21B6;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_timg" value="&lt;b style=&#39;font-size:14px&#39;&gt;Vision Processor&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#5B21B6&#39;&gt;Multi-modal logic&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#D8B4FE;strokeWidth=1;fontColor=#5B21B6;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="806" y="915" width="170" height="55" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="bg_stage6" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#BBF7D0;strokeWidth=1;shadow=1;arcSize=4;" vertex="1" parent="1">
+                <mxCell id="bg_stage6" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#BBF7D0;strokeWidth=1;shadow=1;arcSize=4;" parent="1" vertex="1">
                     <mxGeometry x="200" y="1040" width="800" height="110" as="geometry"/>
                 </mxCell>
-                <mxCell id="lbl_stage6" value="FEEDBACK, RECOVERY &amp; PERSISTENCE" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#16A34A;fontFamily=Inter, sans-serif;letterSpacing=1;" vertex="1" parent="1">
+                <mxCell id="lbl_stage6" value="FEEDBACK, RECOVERY &amp; PERSISTENCE" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#16A34A;fontFamily=Inter, sans-serif;letterSpacing=1;" parent="1" vertex="1">
                     <mxGeometry x="200" y="1045" width="800" height="20" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="box_reflect" value="&lt;b style='font-size:14px'&gt;Recovery Controller&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#166534'&gt;Error reflection &amp; Backoff logic&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#86EFAC;strokeWidth=1;fontColor=#166534;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_reflect" value="&lt;b style=&#39;font-size:14px&#39;&gt;Recovery Controller&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#166534&#39;&gt;Error reflection logic&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#86EFAC;strokeWidth=1;fontColor=#166534;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="220" y="1075" width="240" height="55" as="geometry"/>
                 </mxCell>
-                <mxCell id="box_tracker" value="&lt;b style='font-size:14px'&gt;Execution Analytics&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#166534'&gt;Tool reliability tracking&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#86EFAC;strokeWidth=1;fontColor=#166534;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_tracker" value="&lt;b style=&#39;font-size:14px&#39;&gt;Execution Analytics&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#166534&#39;&gt;Tool reliability tracking&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#86EFAC;strokeWidth=1;fontColor=#166534;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="480" y="1075" width="240" height="55" as="geometry"/>
                 </mxCell>
-                <mxCell id="box_save" value="&lt;b style='font-size:14px'&gt;Persistence Layer&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#166534'&gt;Local DB &amp; JSON store updates&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#86EFAC;strokeWidth=1;fontColor=#166534;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                <mxCell id="box_save" value="&lt;b style=&#39;font-size:14px&#39;&gt;Persistence Layer&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#166534&#39;&gt;Local DB &amp; State updates&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#86EFAC;strokeWidth=1;fontColor=#166534;fontFamily=Inter, sans-serif;arcSize=8;align=center;" parent="1" vertex="1">
                     <mxGeometry x="740" y="1075" width="240" height="55" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="final_output" value="✅ Output Stream to User" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=none;fontSize=15;fontStyle=1;fontColor=#F8FAFC;fontFamily=Inter, sans-serif;shadow=1;arcSize=50;" vertex="1" parent="1">
+                <mxCell id="final_output" value="Output Stream to User" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=none;fontSize=15;fontStyle=1;fontColor=#F8FAFC;fontFamily=Inter, sans-serif;shadow=1;arcSize=50;" parent="1" vertex="1">
                     <mxGeometry x="450" y="1200" width="300" height="50" as="geometry"/>
                 </mxCell>
-
-                <mxCell id="arr_1" value="" style="endArrow=classic;html=1;strokeColor=#94A3B8;strokeWidth=3;" edge="1" parent="1">
+                <mxCell id="arr_1" value="" style="endArrow=none;html=1;strokeColor=#E2E8F0;strokeWidth=15;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="600" y="190" as="sourcePoint"/>
                         <mxPoint x="600" y="240" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="arr_2" value="" style="endArrow=classic;html=1;strokeColor=#94A3B8;strokeWidth=3;" edge="1" parent="1">
+                <mxCell id="arr_2" value="" style="endArrow=none;html=1;strokeColor=#E2E8F0;strokeWidth=15;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="600" y="350" as="sourcePoint"/>
                         <mxPoint x="600" y="400" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="arr_3" value="" style="endArrow=classic;html=1;strokeColor=#94A3B8;strokeWidth=3;" edge="1" parent="1">
+                <mxCell id="arr_3" value="" style="endArrow=none;html=1;strokeColor=#E2E8F0;strokeWidth=15;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="600" y="510" as="sourcePoint"/>
                         <mxPoint x="600" y="560" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="arr_4" value="" style="endArrow=classic;html=1;strokeColor=#94A3B8;strokeWidth=3;" edge="1" parent="1">
+                <mxCell id="arr_4" value="" style="endArrow=none;html=1;strokeColor=#E2E8F0;strokeWidth=15;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="600" y="670" as="sourcePoint"/>
                         <mxPoint x="600" y="720" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="arr_5" value="" style="endArrow=classic;html=1;strokeColor=#94A3B8;strokeWidth=3;" edge="1" parent="1">
+                <mxCell id="arr_5" value="" style="endArrow=none;html=1;strokeColor=#E2E8F0;strokeWidth=15;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="600" y="830" as="sourcePoint"/>
                         <mxPoint x="600" y="880" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="arr_6" value="" style="endArrow=classic;html=1;strokeColor=#94A3B8;strokeWidth=3;" edge="1" parent="1">
+                <mxCell id="arr_6" value="" style="endArrow=none;html=1;strokeColor=#E2E8F0;strokeWidth=15;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="600" y="990" as="sourcePoint"/>
                         <mxPoint x="600" y="1040" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="arr_7" value="" style="endArrow=classic;html=1;strokeColor=#94A3B8;strokeWidth=3;" edge="1" parent="1">
+                <mxCell id="arr_7" value="" style="endArrow=classic;html=1;strokeColor=#E2E8F0;strokeWidth=15;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="600" y="1150" as="sourcePoint"/>
                         <mxPoint x="600" y="1200" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-
-                <mxCell id="arr_loop" value="Recovery &amp; Retry Loop" style="endArrow=classic;html=1;strokeColor=#3B82F6;strokeWidth=2;dashed=1;edgeStyle=orthogonalEdgeStyle;rounded=1;fontFamily=Inter, sans-serif;fontSize=12;fontColor=#3B82F6;labelBackgroundColor=#F8FAFC;" edge="1" parent="1">
+                <mxCell id="micro_plan_llm" value="Prompt" style="endArrow=classic;html=1;strokeColor=#2563EB;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;curved=1;fontFamily=Inter, sans-serif;fontSize=11;fontColor=#1E40AF;labelBackgroundColor=#F8FAFC;" parent="1" source="box_plan" target="box_llm" edge="1">
+                    <mxGeometry y="-17" relative="1" as="geometry">
+                        <mxPoint y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="micro_llm_parse" value="Stream Text" style="endArrow=classic;html=1;strokeColor=#2563EB;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;curved=1;fontFamily=Inter, sans-serif;fontSize=11;fontColor=#1E40AF;labelBackgroundColor=#F8FAFC;" parent="1" source="box_llm" target="box_parse" edge="1">
+                    <mxGeometry y="-17" relative="1" as="geometry">
+                        <mxPoint y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="micro_parse_safety" value="Extract Command" style="endArrow=classic;html=1;strokeColor=#DC2626;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;curved=1;fontFamily=Inter, sans-serif;fontSize=11;fontColor=#991B1B;labelBackgroundColor=#F8FAFC;" parent="1" source="box_parse" target="box_safety" edge="1">
                     <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="200" y="1095" as="sourcePoint"/>
-                        <mxPoint x="200" y="615" as="targetPoint"/>
                         <Array as="points">
-                            <mxPoint x="140" y="1095"/>
-                            <mxPoint x="140" y="615"/>
+                            <mxPoint x="860" y="690"/>
+                            <mxPoint x="460" y="690"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-
+                <mxCell id="micro_safe_perms" value="Safe?" style="endArrow=classic;html=1;strokeColor=#DC2626;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;curved=1;fontFamily=Inter, sans-serif;fontSize=11;fontColor=#991B1B;labelBackgroundColor=#F8FAFC;" parent="1" source="box_safety" target="box_perms" edge="1">
+                    <mxGeometry y="-17" relative="1" as="geometry">
+                        <mxPoint y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="micro_perms_tools" value="Approved Execution" style="endArrow=classic;html=1;strokeColor=#7C3AED;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;curved=1;fontFamily=Inter, sans-serif;fontSize=11;fontColor=#5B21B6;labelBackgroundColor=#F8FAFC;" parent="1" source="box_perms" target="bg_stage5" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="740" y="850"/>
+                            <mxPoint x="600" y="850"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="micro_tools_tracker" value="Success" style="endArrow=classic;html=1;strokeColor=#16A34A;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;curved=1;fontFamily=Inter, sans-serif;fontSize=11;fontColor=#166534;labelBackgroundColor=#F8FAFC;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="bg_stage5" target="bg_stage6" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="micro_track_save" value="Log Stats" style="endArrow=classic;html=1;strokeColor=#16A34A;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;curved=1;fontFamily=Inter, sans-serif;fontSize=11;fontColor=#166534;labelBackgroundColor=#F8FAFC;" parent="1" source="box_tracker" target="box_save" edge="1">
+                    <mxGeometry y="-17" relative="1" as="geometry">
+                        <mxPoint y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="micro_tools_reflect" value="Tool Error" style="endArrow=classic;html=1;strokeColor=#D97706;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;curved=1;fontFamily=Inter, sans-serif;fontSize=11;fontColor=#D97706;labelBackgroundColor=#F8FAFC;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="bg_stage5" target="box_reflect" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="600" y="1010"/>
+                            <mxPoint x="340" y="1010"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arr_loop" value="Reflection Retry Loop (Back to LLM)" style="endArrow=classic;html=1;strokeColor=#3B82F6;strokeWidth=2;dashed=1;edgeStyle=orthogonalEdgeStyle;rounded=1;fontFamily=Inter, sans-serif;fontSize=11;fontColor=#1E40AF;labelBackgroundColor=#F8FAFC;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="box_reflect" target="box_llm" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="140" y="1103"/>
+                            <mxPoint x="140" y="690"/>
+                            <mxPoint x="600" y="690"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
             </root>
         </mxGraphModel>
     </diagram>
