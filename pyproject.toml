@@ -1,0 +1,65 @@
+[project]
+name = "BladeRunner"
+description = "Execute orders like a Replicant. Retire the manual. Autonomous AI agent framework."
+version = "2.0.49"
+readme = "README.md"
+requires-python = ">=3.13"
+keywords = ["ai", "agent", "coding-assistant", "llm", "automation", "claude", "agentic-ai"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "openai>=2.15.0",
+    "pyyaml>=6.0",
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+    "python-dotenv>=1.0.0",
+    "pillow>=10.0.0",
+    "prompt-toolkit>=3.0.0",
+    "rich>=13.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/mann-127/BladeRunner"
+Documentation = "https://github.com/mann-127/BladeRunner/blob/main/README.md"
+Repository = "https://github.com/mann-127/BladeRunner"
+
+[project.scripts]
+bladerunner = "bladerunner.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+]
+
+lsp = [
+    "pygls>=1.0.0",
+]
+
+mcp = [
+    "mcp>=0.1.0",
+    "httpx>=0.24.0",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py313']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra --strict-config --strict-markers"
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

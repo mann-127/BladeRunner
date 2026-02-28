@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Check code style with black
+        run: uv run black --check bladerunner tests
+        continue-on-error: true
+
+      - name: Lint with flake8
+        run: uv run flake8 bladerunner tests
+        continue-on-error: true
+
+      - name: Type check with mypy
+        run: uv run mypy bladerunner
+        continue-on-error: true
+
+      - name: Run tests with coverage
+        run: uv run pytest -q --cov=bladerunner --cov-report=xml --cov-report=term
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false

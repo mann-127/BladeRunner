@@ -1,0 +1,156 @@
+# BladeRunner Configuration File
+# Requires OPENROUTER_API_KEY or GROQ_API_KEY environment variable
+
+# Backend selection (openrouter or groq)
+# backend: openrouter  # Default: OpenRouter (all models, vision support)
+# backend: groq        # Alternative: Groq (free tier, fastest, no vision)
+
+# Default model (use alias or full name)
+# OpenRouter: haiku, sonnet, opus (paid) | llama, gemini, mistral (free)
+# Groq: groq-llama, groq-mixtral (free, fastest)
+model: haiku
+
+# Optional: override API base URL (auto-selected by backend)
+base_url: https://openrouter.ai/api/v1
+
+# Debug mode
+debug: false
+
+# === Agentic AI Features ===
+agent:
+  # Tier 1: Strategic thinking and error recovery
+  enable_planning: true
+  enable_reflection: true
+  enable_retry: true
+  enable_streaming: false
+  
+  # Tier 2: Safety and learning
+  require_approval: true      # Approve critical operations (rm, dd, etc.)
+  enable_tool_tracking: true  # Track tool success rates over time
+  enable_memory: true         # Store solutions for future similar tasks
+  enable_agent_selection: true # Route tasks to specialized agents
+
+# Model configurations
+models:
+  # === OpenRouter Models (default backend) ===
+  
+  # Paid models (Claude - best for agents)
+  haiku:
+    full_name: anthropic/claude-haiku-4.5
+    temperature: 0.7
+    max_tokens: 4096
+  
+  sonnet:
+    full_name: anthropic/claude-sonnet-4
+    temperature: 0.7
+    max_tokens: 4096
+  
+  opus:
+    full_name: anthropic/claude-opus-4
+    temperature: 0.8
+    max_tokens: 4096
+  
+  # Free alternatives (good for testing)
+  llama:
+    full_name: meta-llama/llama-3.1-8b-instruct:free
+    temperature: 0.7
+    max_tokens: 4096
+  
+  gemini:
+    full_name: google/gemini-flash-1.5:free
+    temperature: 0.7
+    max_tokens: 4096
+  
+  mistral:
+    full_name: mistralai/mistral-7b-instruct:free
+    temperature: 0.7
+    max_tokens: 4096
+  
+  # === Groq Models (backend: groq) ===
+  # Free tier: 14,400 requests/day, blazing fast
+  
+  groq-llama:
+    full_name: llama-3.1-70b-versatile
+    temperature: 0.7
+    max_tokens: 4096
+  
+  groq-mixtral:
+    full_name: mixtral-8x7b-32768
+    temperature: 0.7
+    max_tokens: 4096
+
+# Backend configurations (auto-managed)
+backends:
+  openrouter:
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+  
+  groq:
+    base_url: https://api.groq.com/openai/v1
+    api_key_env: GROQ_API_KEY
+
+# Permission settings
+permissions:
+  enabled: true
+  profile: standard  # strict, standard, or permissive
+
+# Session management
+sessions:
+  enabled: true
+  directory: ~/.bladerunner/sessions
+
+# Web search settings
+web_search:
+  enabled: true
+  provider: brave
+  max_results: 5
+  timeout: 10
+
+# Skills system
+skills:
+  enabled: true
+  directory: ~/.bladerunner/skills
+  auto_match: false
+
+# === Optional Dependencies ===
+# Install these only if you need specific features:
+#
+# For LSP Integration:
+#   pip install pygls
+#
+# For MCP Servers:
+#   pip install mcp httpx
+#
+# For ACP Support (editor integration):
+#   Uses stdlib JSON-RPC + streaming I/O (no extra package needed)
+#
+# References:
+# - LSP: https://microsoft.github.io/language-server-protocol/
+# - MCP: https://modelcontextprotocol.io/
+# - ACP: https://docs.zed.dev/features/acp
+
+# === Preset Profiles (Easter Eggs) ===
+# Named after Officer K's designations in Blade Runner 2049
+# Use with: bladerunner --profile officer-k -p "Your task"
+
+profiles:
+  officer-k:        # Cautious, by-the-book (maximum safety)
+    permissions: strict
+    agent:
+      require_approval: true
+      enable_planning: true
+      enable_reflection: true
+      
+  constant-k:       # Balanced, adaptive (default settings)
+    permissions: standard
+    agent:
+      require_approval: true
+      enable_planning: true
+      
+  agent-k:          # Autonomous, decisive (minimal oversight)
+    permissions: permissive
+    agent:
+      require_approval: false
+      enable_retry: true
+      enable_agent_selection: true
+
