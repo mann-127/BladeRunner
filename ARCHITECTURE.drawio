@@ -1,296 +1,181 @@
 <mxfile host="app.diagrams.net">
-    <diagram id="bladerunner_arch" name="BladeRunner v2.0.49">
-        <mxGraphModel dx="1600" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1400" background="#F8F9FA" math="0" shadow="0">
+    <diagram id="bladerunner_logical" name="BladeRunner Logical Architecture">
+        <mxGraphModel dx="1200" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1400" background="#F8FAFC" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
                 
-                <mxCell id="title" value="BladeRunner v2.0.49 - Autonomous AI Agent Architecture" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=26;fontStyle=1;fillColor=#1A237E;fontColor=#ffffff;fontFamily=Montserrat, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="500" y="30" width="800" height="60" as="geometry"/>
+                <mxCell id="title" value="BladeRunner System Architecture" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=32;fontStyle=1;fillColor=none;fontColor=#0F172A;fontFamily=Inter, sans-serif;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="40" width="800" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="subtitle" value="Logical Component Execution Pipeline" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fillColor=none;fontColor=#64748B;fontFamily=Inter, sans-serif;letterSpacing=1;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="80" width="800" height="30" as="geometry"/>
                 </mxCell>
 
-                <mxCell id="interfaces_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#5C6BC0;strokeWidth=2;dashed=1;" vertex="1" parent="1">
-                    <mxGeometry x="140" y="130" width="1520" height="110" as="geometry"/>
-                </mxCell>
-                
-                <mxCell id="interfaces_label" value="INTERFACE LAYER" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;fillColor=none;fontColor=#3949AB;fontFamily=Montserrat, sans-serif;" vertex="1" parent="1">
-                    <mxGeometry x="150" y="130" width="200" height="30" as="geometry"/>
+                <mxCell id="user_prompt" value="👤 User Intent / Prompt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=none;fontSize=15;fontStyle=1;fontColor=#F8FAFC;fontFamily=Inter, sans-serif;shadow=1;arcSize=50;" vertex="1" parent="1">
+                    <mxGeometry x="500" y="140" width="200" height="50" as="geometry"/>
                 </mxCell>
 
-                <mxCell id="user_input" value="👤 User Input / Prompts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontSize=14;fontStyle=1;shadow=1;fontFamily=Montserrat, sans-serif;" vertex="1" parent="1">
-                    <mxGeometry x="380" y="160" width="220" height="50" as="geometry"/>
+                <mxCell id="bg_stage1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E2E8F0;strokeWidth=1;shadow=1;arcSize=4;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="240" width="800" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="lbl_stage1" value="INTERFACE &amp; INGESTION LAYER" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#94A3B8;fontFamily=Inter, sans-serif;letterSpacing=1;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="245" width="800" height="20" as="geometry"/>
                 </mxCell>
 
-                <mxCell id="cli_interface" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;🖥️ CLI&lt;/b&gt;&lt;br&gt;cli.py" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C5CAE9;strokeColor=#3F51B5;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="720" y="160" width="170" height="50" as="geometry"/>
+                <mxCell id="box_cli" value="&lt;b style='font-size:14px'&gt;CLI Gateway&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#64748B'&gt;Command execution &amp; arguments&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;strokeWidth=1;fontColor=#334155;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="220" y="275" width="240" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="box_repl" value="&lt;b style='font-size:14px'&gt;REPL Interface&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#64748B'&gt;Interactive streaming session&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;strokeWidth=1;fontColor=#334155;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="480" y="275" width="240" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="box_skills" value="&lt;b style='font-size:14px'&gt;Skill Configuration&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#64748B'&gt;Domain-specific prompt profiles&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;strokeWidth=1;fontColor=#334155;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="740" y="275" width="240" height="55" as="geometry"/>
                 </mxCell>
 
-                <mxCell id="repl_interface" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;💬 Interactive REPL&lt;/b&gt;&lt;br&gt;interactive.py" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C5CAE9;strokeColor=#3F51B5;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="930" y="160" width="170" height="50" as="geometry"/>
+                <mxCell id="bg_stage2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#FDE68A;strokeWidth=1;shadow=1;arcSize=4;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="400" width="800" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="lbl_stage2" value="CONTEXT &amp; ORCHESTRATION LAYER" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#D97706;fontFamily=Inter, sans-serif;letterSpacing=1;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="405" width="800" height="20" as="geometry"/>
                 </mxCell>
 
-                <mxCell id="skills_interface" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;🎨 Skills Framework&lt;/b&gt;&lt;br&gt;skills.py (Custom Prompts)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C5CAE9;strokeColor=#3F51B5;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="1140" y="160" width="170" height="50" as="geometry"/>
+                <mxCell id="box_orch" value="&lt;b style='font-size:14px'&gt;Task Router&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#92400E'&gt;Multi-agent workload distribution&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#FCD34D;strokeWidth=1;fontColor=#92400E;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="220" y="435" width="240" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="box_mem" value="&lt;b style='font-size:14px'&gt;Semantic Memory Engine&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#92400E'&gt;Jaccard similarity context injection&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#FCD34D;strokeWidth=1;fontColor=#92400E;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="480" y="435" width="240" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="box_sess" value="&lt;b style='font-size:14px'&gt;Session State Manager&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#92400E'&gt;Continuous conversation history&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#FCD34D;strokeWidth=1;fontColor=#92400E;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="740" y="435" width="240" height="55" as="geometry"/>
                 </mxCell>
 
-                <mxCell id="arrow_input_cli" value="" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1" source="user_input" target="cli_interface">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="bg_stage3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#BFDBFE;strokeWidth=1;shadow=1;arcSize=4;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="560" width="800" height="110" as="geometry"/>
                 </mxCell>
-                <mxCell id="arrow_input_repl" value="" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="user_input" target="repl_interface">
+                <mxCell id="lbl_stage3" value="COGNITIVE CORE (AGENT LOOP)" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#2563EB;fontFamily=Inter, sans-serif;letterSpacing=1;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="565" width="800" height="20" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="box_plan" value="&lt;b style='font-size:14px'&gt;Strategic Planner&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#1E40AF'&gt;Goal decomposition &amp; steps&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#93C5FD;strokeWidth=1;fontColor=#1E40AF;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="220" y="595" width="240" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="box_llm" value="&lt;b style='font-size:14px'&gt;LLM Provider Gateway&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#1E40AF'&gt;OpenRouter / Groq integration&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#93C5FD;strokeWidth=1;fontColor=#1E40AF;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="480" y="595" width="240" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="box_parse" value="&lt;b style='font-size:14px'&gt;Tool Request Parser&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#1E40AF'&gt;Extraction of system commands&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#93C5FD;strokeWidth=1;fontColor=#1E40AF;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="740" y="595" width="240" height="55" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="bg_stage4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#FECACA;strokeWidth=1;shadow=1;arcSize=4;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="720" width="800" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="lbl_stage4" value="SAFETY &amp; GUARDRAIL LAYER" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#DC2626;fontFamily=Inter, sans-serif;letterSpacing=1;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="725" width="800" height="20" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="box_safety" value="&lt;b style='font-size:14px'&gt;Operation Filter&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#991B1B'&gt;Heuristic critical action detection&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#FCA5A5;strokeWidth=1;fontColor=#991B1B;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="340" y="755" width="240" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="box_perms" value="&lt;b style='font-size:14px'&gt;Permission Enforcer&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#991B1B'&gt;Human-in-the-loop approvals&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#FCA5A5;strokeWidth=1;fontColor=#991B1B;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="620" y="755" width="240" height="55" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="bg_stage5" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F3FF;strokeColor=#E9D5FF;strokeWidth=1;shadow=1;arcSize=4;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="880" width="800" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="lbl_stage5" value="TOOL EXECUTION REGISTRY" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#7C3AED;fontFamily=Inter, sans-serif;letterSpacing=1;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="885" width="800" height="20" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="box_tfs" value="&lt;b style='font-size:14px'&gt;File System Engine&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#5B21B6'&gt;Local Read/Write ops&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#D8B4FE;strokeWidth=1;fontColor=#5B21B6;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="224" y="915" width="170" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="box_tbash" value="&lt;b style='font-size:14px'&gt;Sandboxed Shell&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#5B21B6'&gt;Monitored Bash execution&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#D8B4FE;strokeWidth=1;fontColor=#5B21B6;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="418" y="915" width="170" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="box_tweb" value="&lt;b style='font-size:14px'&gt;Retrieval Service&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#5B21B6'&gt;Live web search parsing&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#D8B4FE;strokeWidth=1;fontColor=#5B21B6;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="612" y="915" width="170" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="box_timg" value="&lt;b style='font-size:14px'&gt;Vision Processor&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#5B21B6'&gt;Multi-modal analysis&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#D8B4FE;strokeWidth=1;fontColor=#5B21B6;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="806" y="915" width="170" height="55" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="bg_stage6" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#BBF7D0;strokeWidth=1;shadow=1;arcSize=4;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="1040" width="800" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="lbl_stage6" value="FEEDBACK, RECOVERY &amp; PERSISTENCE" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#16A34A;fontFamily=Inter, sans-serif;letterSpacing=1;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="1045" width="800" height="20" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="box_reflect" value="&lt;b style='font-size:14px'&gt;Recovery Controller&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#166534'&gt;Error reflection &amp; Backoff logic&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#86EFAC;strokeWidth=1;fontColor=#166534;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="220" y="1075" width="240" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="box_tracker" value="&lt;b style='font-size:14px'&gt;Execution Analytics&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#166534'&gt;Tool reliability tracking&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#86EFAC;strokeWidth=1;fontColor=#166534;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="480" y="1075" width="240" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="box_save" value="&lt;b style='font-size:14px'&gt;Persistence Layer&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px;color:#166534'&gt;Local DB &amp; JSON store updates&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#86EFAC;strokeWidth=1;fontColor=#166534;fontFamily=Inter, sans-serif;arcSize=8;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="740" y="1075" width="240" height="55" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="final_output" value="✅ Output Stream to User" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=none;fontSize=15;fontStyle=1;fontColor=#F8FAFC;fontFamily=Inter, sans-serif;shadow=1;arcSize=50;" vertex="1" parent="1">
+                    <mxGeometry x="450" y="1200" width="300" height="50" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="arr_1" value="" style="endArrow=classic;html=1;strokeColor=#94A3B8;strokeWidth=3;" edge="1" parent="1">
                     <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="600" y="190" as="sourcePoint"/>
+                        <mxPoint x="600" y="240" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arr_2" value="" style="endArrow=classic;html=1;strokeColor=#94A3B8;strokeWidth=3;" edge="1" parent="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="600" y="350" as="sourcePoint"/>
+                        <mxPoint x="600" y="400" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arr_3" value="" style="endArrow=classic;html=1;strokeColor=#94A3B8;strokeWidth=3;" edge="1" parent="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="600" y="510" as="sourcePoint"/>
+                        <mxPoint x="600" y="560" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arr_4" value="" style="endArrow=classic;html=1;strokeColor=#94A3B8;strokeWidth=3;" edge="1" parent="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="600" y="670" as="sourcePoint"/>
+                        <mxPoint x="600" y="720" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arr_5" value="" style="endArrow=classic;html=1;strokeColor=#94A3B8;strokeWidth=3;" edge="1" parent="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="600" y="830" as="sourcePoint"/>
+                        <mxPoint x="600" y="880" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arr_6" value="" style="endArrow=classic;html=1;strokeColor=#94A3B8;strokeWidth=3;" edge="1" parent="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="600" y="990" as="sourcePoint"/>
+                        <mxPoint x="600" y="1040" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arr_7" value="" style="endArrow=classic;html=1;strokeColor=#94A3B8;strokeWidth=3;" edge="1" parent="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="600" y="1150" as="sourcePoint"/>
+                        <mxPoint x="600" y="1200" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+
+                <mxCell id="arr_loop" value="Recovery &amp; Retry Loop" style="endArrow=classic;html=1;strokeColor=#3B82F6;strokeWidth=2;dashed=1;edgeStyle=orthogonalEdgeStyle;rounded=1;fontFamily=Inter, sans-serif;fontSize=12;fontColor=#3B82F6;labelBackgroundColor=#F8FAFC;" edge="1" parent="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="200" y="1095" as="sourcePoint"/>
+                        <mxPoint x="200" y="615" as="targetPoint"/>
                         <Array as="points">
-                            <mxPoint x="650" y="185"/>
-                            <mxPoint x="650" y="120"/>
-                            <mxPoint x="1015" y="120"/>
+                            <mxPoint x="140" y="1095"/>
+                            <mxPoint x="140" y="615"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
 
-                <mxCell id="tier2_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;strokeWidth=2;" vertex="1" parent="1">
-                    <mxGeometry x="140" y="270" width="1520" height="230" as="geometry"/>
-                </mxCell>
-                
-                <mxCell id="tier2_label" value="TIER 2: 🛡️ Safety, Learning &amp; Orchestration (Agent Metadata Layer)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;fillColor=none;fontColor=#E65100;fontFamily=Montserrat, sans-serif;" vertex="1" parent="1">
-                    <mxGeometry x="150" y="270" width="550" height="30" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="orchestrator" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 14px;&quot;&gt;🤖 Multi-Agent Orchestrator&lt;/b&gt;&lt;br&gt;&lt;i&gt;agent_orchestrator.py&lt;/i&gt;&lt;br&gt;Routes to: Code, Test, Docs, Architect" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="720" y="300" width="380" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="memory" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;🧠 Semantic Memory&lt;/b&gt;&lt;br&gt;&lt;i&gt;semantic_memory.py&lt;/i&gt;&lt;br&gt;Jaccard Similarity Matching" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCC80;strokeColor=#E65100;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="160" y="410" width="260" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="safety" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;🚨 Safety &amp; Approvals&lt;/b&gt;&lt;br&gt;&lt;i&gt;safety.py / permissions.py&lt;/i&gt;&lt;br&gt;Human-in-the-Loop &amp; Filters" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCC80;strokeColor=#E65100;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="460" y="410" width="260" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="tool_tracker" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;📈 Tool Effectiveness Tracker&lt;/b&gt;&lt;br&gt;&lt;i&gt;tool_tracker.py&lt;/i&gt;&lt;br&gt;Success rates &amp; Reliability ranking" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCC80;strokeColor=#E65100;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="1060" y="410" width="260" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="arrow_cli_orch" value="Task Assignment" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=2;fontSize=11;fontFamily=Inter, sans-serif;fontStyle=1;" edge="1" parent="1" source="cli_interface" target="orchestrator">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="arrow_repl_orch" value="" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=2;fontSize=11;fontFamily=Inter, sans-serif;fontStyle=1;" edge="1" parent="1" source="repl_interface" target="orchestrator">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="tier1_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=2;" vertex="1" parent="1">
-                    <mxGeometry x="140" y="530" width="1520" height="150" as="geometry"/>
-                </mxCell>
-                
-                <mxCell id="tier1_label" value="TIER 1: 🧠 Strategic Thinking &amp; Resilience (agent.py Execution Loop)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;fillColor=none;fontColor=#2E7D32;fontFamily=Montserrat, sans-serif;" vertex="1" parent="1">
-                    <mxGeometry x="150" y="530" width="550" height="30" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="planning" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;📊 Planning &amp; Decomp&lt;/b&gt;&lt;br&gt;Multi-step strategy creation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="250" y="580" width="220" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="streaming" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;📡 Streaming&lt;/b&gt;&lt;br&gt;Real-time token generation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="540" y="580" width="220" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="reflection" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;🔍 Reflection&lt;/b&gt;&lt;br&gt;Self-correction on tool failure" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="1060" y="580" width="220" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="retry" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;🔁 Error Recovery&lt;/b&gt;&lt;br&gt;Exponential Backoff retries" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="1350" y="580" width="220" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="arrow_orch_agent" value="Context + Specialization" style="endArrow=classic;html=1;strokeColor=#2E7D32;strokeWidth=2;fontSize=12;fontFamily=Inter, sans-serif;fontStyle=1;edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="orchestrator" target="planning">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="910" y="380"/>
-                            <mxPoint x="360" y="380"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-
-                <mxCell id="arrow_memory_plan" value="Injects past solutions" style="endArrow=classic;html=1;strokeColor=#E65100;strokeWidth=2;dashed=1;fontSize=11;fontFamily=Inter, sans-serif;" edge="1" parent="1" source="memory" target="planning">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="arrow_retry_reflect" value="triggers" style="endArrow=classic;html=1;strokeColor=#2E7D32;strokeWidth=2;fontSize=11;fontFamily=Inter, sans-serif;dashed=1;" edge="1" parent="1" source="reflection" target="retry">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="tier3_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#6A1B9A;strokeWidth=2;" vertex="1" parent="1">
-                    <mxGeometry x="140" y="710" width="1520" height="150" as="geometry"/>
-                </mxCell>
-                
-                <mxCell id="tier3_label" value="TIER 3: 🔧 Tool Architecture &amp; Execution Layer (tools/)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;fillColor=none;fontColor=#6A1B9A;fontFamily=Montserrat, sans-serif;" vertex="1" parent="1">
-                    <mxGeometry x="150" y="710" width="450" height="30" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="tool_base" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;⚙️ base.py&lt;/b&gt;&lt;br&gt;Tool Registry &amp; Base Class" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1BEE7;strokeColor=#6A1B9A;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="160" y="760" width="200" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="tool_fs" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;📁 filesystem.py&lt;/b&gt;&lt;br&gt;Read/Write ops" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CE93D8;strokeColor=#6A1B9A;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="400" y="760" width="180" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="tool_bash" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;💻 bash.py&lt;/b&gt;&lt;br&gt;Safe execution w/ timeouts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CE93D8;strokeColor=#6A1B9A;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="620" y="760" width="180" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="tool_web" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;🌐 web.py&lt;/b&gt;&lt;br&gt;WebSearch &amp; FetchWebpage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CE93D8;strokeColor=#6A1B9A;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="840" y="760" width="180" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="tool_image" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;👁️ image.py&lt;/b&gt;&lt;br&gt;ReadImage &amp; Vision Analysis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CE93D8;strokeColor=#6A1B9A;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="1060" y="760" width="180" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="tool_custom" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;🔌 Extensible Tools&lt;/b&gt;&lt;br&gt;Custom tool loading" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CE93D8;strokeColor=#6A1B9A;fontSize=12;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="1280" y="760" width="180" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="arrow_plan_safety" value="Execution Request" style="endArrow=classic;html=1;strokeColor=#333333;strokeWidth=2;fontSize=11;fontFamily=Inter, sans-serif;fontStyle=1;" edge="1" parent="1" source="planning" target="safety">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="arrow_safety_tool" value="Approved Operations" style="endArrow=classic;html=1;strokeColor=#6A1B9A;strokeWidth=3;fontSize=12;fontFamily=Inter, sans-serif;fontStyle=1;edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="safety" target="tool_base">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="590" y="500"/>
-                            <mxPoint x="260" y="500"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-
-                <mxCell id="arrow_tool_tracking" value="Log success/fail metrics" style="endArrow=classic;html=1;strokeColor=#E65100;strokeWidth=2;dashed=1;fontSize=11;fontFamily=Inter, sans-serif;" edge="1" parent="1" source="tool_base" target="tool_tracker">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="1190" y="790"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-
-                <mxCell id="arrow_tool_reflection" value="Return Error" style="endArrow=classic;html=1;strokeColor=#C62828;strokeWidth=2;fontSize=11;fontFamily=Inter, sans-serif;fontStyle=1;edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="tool_base" target="reflection">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="1170" y="810"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-
-                <mxCell id="tier5_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F7FA;strokeColor=#006064;strokeWidth=2;" vertex="1" parent="1">
-                    <mxGeometry x="140" y="890" width="1100" height="130" as="geometry"/>
-                </mxCell>
-                
-                <mxCell id="tier5_label" value="TIER 5: 🌐 External API Integrations" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;fillColor=none;fontColor=#006064;fontFamily=Montserrat, sans-serif;" vertex="1" parent="1">
-                    <mxGeometry x="150" y="890" width="350" height="30" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="api_openrouter" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;🤖 OpenRouter (Default)&lt;/b&gt;&lt;br&gt;Claude (Vision), GPT, Llama" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#80DEEA;strokeColor=#006064;fontSize=12;fontColor=#004D40;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="160" y="930" width="260" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="api_groq" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;⚡ Groq (Fast &amp; Free)&lt;/b&gt;&lt;br&gt;Llama 70B, Mixtral" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#80DEEA;strokeColor=#006064;fontSize=12;fontColor=#004D40;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="460" y="930" width="260" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="api_brave" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;🔍 Web Search Providers&lt;/b&gt;&lt;br&gt;Brave API (Default) / Tavily / Serper" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#80DEEA;strokeColor=#006064;fontSize=12;fontColor=#004D40;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="760" y="930" width="260" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="tier4_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECEFF1;strokeColor=#455A64;strokeWidth=2;" vertex="1" parent="1">
-                    <mxGeometry x="1270" y="890" width="390" height="310" as="geometry"/>
-                </mxCell>
-                
-                <mxCell id="tier4_label" value="TIER 4: 💾 Local Storage (.bladerunner/)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;fillColor=none;fontColor=#455A64;fontFamily=Montserrat, sans-serif;" vertex="1" parent="1">
-                    <mxGeometry x="1280" y="890" width="350" height="30" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="store_config" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;⚙️ config.yml&lt;/b&gt;&lt;br&gt;Feature flags &amp; defaults" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B0BEC5;strokeColor=#455A64;fontSize=12;fontColor=#263238;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="1290" y="930" width="350" height="40" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="store_sessions" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;📊 sessions/&lt;/b&gt;&lt;br&gt;Persistent JSONL history" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B0BEC5;strokeColor=#455A64;fontSize=12;fontColor=#263238;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="1290" y="980" width="350" height="40" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="store_memory" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;🗄️ memory/solutions.jsonl&lt;/b&gt;&lt;br&gt;Semantic solution storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B0BEC5;strokeColor=#455A64;fontSize=12;fontColor=#263238;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="1290" y="1030" width="350" height="40" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="store_metrics" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;📈 metrics/tool_stats.json&lt;/b&gt;&lt;br&gt;Tool execution analytics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B0BEC5;strokeColor=#455A64;fontSize=12;fontColor=#263238;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="1290" y="1080" width="350" height="40" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="store_skills" value="&lt;b style=&quot;font-family: Montserrat, sans-serif; font-size: 13px;&quot;&gt;🎨 skills/&lt;/b&gt;&lt;br&gt;YAML Frontmatter specialized prompts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B0BEC5;strokeColor=#455A64;fontSize=12;fontColor=#263238;fontFamily=Inter, sans-serif;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="1290" y="1130" width="350" height="40" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="output" value="✅ Output stream to user" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontSize=14;fontStyle=1;shadow=1;fontFamily=Montserrat, sans-serif;" vertex="1" parent="1">
-                    <mxGeometry x="540" y="1050" width="220" height="60" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="arrow_stream_output" value="" style="endArrow=classic;html=1;strokeColor=#3F51B5;strokeWidth=3;fontSize=13;fontFamily=Inter, sans-serif;fontStyle=1;" edge="1" parent="1" source="streaming" target="output">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="arrow_web_brave" value="API Calls" style="endArrow=classic;html=1;strokeColor=#006064;strokeWidth=2;dashed=1;" edge="1" parent="1" source="tool_web" target="api_brave">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                
-                <mxCell id="arrow_memory_store" value="Persist" style="endArrow=classic;html=1;strokeColor=#455A64;strokeWidth=2;dashed=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="memory" target="store_memory">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="290" y="490"/>
-                            <mxPoint x="1240" y="490"/>
-                            <mxPoint x="1240" y="1050"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-
-                <mxCell id="arrow_tracker_store" value="Persist" style="endArrow=classic;html=1;strokeColor=#455A64;strokeWidth=2;dashed=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="tool_tracker" target="store_metrics">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="1190" y="490"/>
-                            <mxPoint x="1240" y="490"/>
-                            <mxPoint x="1240" y="1100"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-
-                <mxCell id="legend_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B0BEC5;strokeWidth=2;shadow=1;" vertex="1" parent="1">
-                    <mxGeometry x="140" y="1230" width="1090" height="120" as="geometry"/>
-                </mxCell>
-                
-                <mxCell id="legend_title" value="📋 ARCHITECTURE LEGEND &amp; FILE MAP" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;fontFamily=Montserrat, sans-serif;fontColor=#37474F;" vertex="1" parent="1">
-                    <mxGeometry x="160" y="1240" width="300" height="30" as="geometry"/>
-                </mxCell>
-                
-                <mxCell id="leg_tier1" value="■ Tier 1: Agent Core (agent.py)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=12;fillColor=#A5D6A7;strokeColor=#2E7D32;fontFamily=Inter, sans-serif;" vertex="1" parent="1">
-                    <mxGeometry x="160" y="1275" width="220" height="25" as="geometry"/>
-                </mxCell>
-                
-                <mxCell id="leg_tier2" value="■ Tier 2: Guardrails &amp; DB (*.py)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=12;fillColor=#FFCC80;strokeColor=#E65100;fontFamily=Inter, sans-serif;" vertex="1" parent="1">
-                    <mxGeometry x="160" y="1310" width="220" height="25" as="geometry"/>
-                </mxCell>
-                
-                <mxCell id="leg_tier3" value="■ Tier 3: Tools (tools/)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=12;fillColor=#CE93D8;strokeColor=#6A1B9A;fontFamily=Inter, sans-serif;" vertex="1" parent="1">
-                    <mxGeometry x="400" y="1275" width="220" height="25" as="geometry"/>
-                </mxCell>
-                
-                <mxCell id="leg_tier4" value="■ Tier 4: Storage (.bladerunner/)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=12;fillColor=#B0BEC5;strokeColor=#455A64;fontFamily=Inter, sans-serif;" vertex="1" parent="1">
-                    <mxGeometry x="400" y="1310" width="220" height="25" as="geometry"/>
-                </mxCell>
-                
-                <mxCell id="leg_tier5" value="■ Tier 5: APIs &amp; Providers" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=12;fillColor=#80DEEA;strokeColor=#006064;fontFamily=Inter, sans-serif;" vertex="1" parent="1">
-                    <mxGeometry x="640" y="1275" width="220" height="25" as="geometry"/>
-                </mxCell>
-
-                <mxCell id="key_features" value="&lt;b style=&quot;font-family: Montserrat, sans-serif;&quot;&gt;🎯 BLADERUNNER DESIGN PRINCIPLES:&lt;/b&gt;&lt;br&gt;• Modular agentic loops with pre/post execution hooks&lt;br&gt;• Fallbacks &amp; Self-reflection driven execution (Tier 1)&lt;br&gt;• High Security strict mode with command parsers (Tier 2)" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=12;fillColor=none;strokeColor=none;fontFamily=Inter, sans-serif;spacing=5;" vertex="1" parent="1">
-                    <mxGeometry x="880" y="1270" width="340" height="65" as="geometry"/>
-                </mxCell>
-                
             </root>
         </mxGraphModel>
     </diagram>
