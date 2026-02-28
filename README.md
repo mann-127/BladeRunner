@@ -269,7 +269,7 @@ BladeRunner uses GitHub Actions for continuous integration:
 
 ### System Architecture
 
-![BladeRunner Architecture](/ARCHITECTURE.drawio)
+![BladeRunner Architecture](/ARCHITECTURE.png)
 
 **Architecture Overview:**
 - **Tier 1 Features** (green): Strategic thinking and resilience—Planning, Reflection, Retry, Streaming
