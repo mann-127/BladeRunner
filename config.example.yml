@@ -29,6 +29,7 @@ agent:
   enable_tool_tracking: true  # Track tool success rates over time
   enable_memory: true         # Store solutions for future similar tasks
   enable_agent_selection: true # Route tasks to specialized agents
+  enable_evaluation: true     # Track performance metrics (success rate, token usage)
 
 # Model configurations
 models:
@@ -106,6 +107,14 @@ web_search:
   max_results: 5
   timeout: 10
 
+# RAG (Retrieval-Augmented Generation) settings
+# Requires: uv sync --extra rag
+rag:
+  enabled: false  # Enable RAG tools (rag_ingest, rag_search)
+  persist_directory: ~/.bladerunner/rag_store
+  embedding_model: all-MiniLM-L6-v2  # Lightweight embedding model
+  default_collection: knowledge_base
+
 # Skills system
 skills:
   enabled: true
@@ -115,11 +124,14 @@ skills:
 # === Optional Dependencies ===
 # Install these only if you need specific features:
 #
+# For RAG (Vector Storage & Semantic Search):
+#   uv sync --extra rag
+#
 # For LSP Integration:
-#   pip install pygls
+#   uv sync --extra lsp
 #
 # For MCP Servers:
-#   pip install mcp httpx
+#   uv sync --extra mcp
 #
 # For ACP Support (editor integration):
 #   Uses stdlib JSON-RPC + streaming I/O (no extra package needed)
@@ -153,4 +165,3 @@ profiles:
       require_approval: false
       enable_retry: true
       enable_agent_selection: true
-

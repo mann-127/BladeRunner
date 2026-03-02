@@ -12,6 +12,7 @@ from .safety import CriticalOperation
 from .tool_tracker import ToolTracker
 from .semantic_memory import SemanticMemory
 from .agent_orchestrator import AgentOrchestrator, AgentRole
+from .evaluation import AgentEvaluator
 from .tools.base import ToolRegistry
 from .tools.filesystem import ReadTool, WriteTool
 from .tools.bash import BashTool
@@ -32,6 +33,13 @@ try:
     IMAGE_AVAILABLE = True
 except ImportError:
     IMAGE_AVAILABLE = False
+
+try:
+    from .tools.rag import RAGIngestTool, RAGSearchTool, RAGStore
+
+    RAG_AVAILABLE = True
+except ImportError:
+    RAG_AVAILABLE = False
 
 
 MAX_ITERATIONS = 50
@@ -87,6 +95,9 @@ class Agent:
         if IMAGE_AVAILABLE:
             self._register_image_tools()
 
+        if RAG_AVAILABLE and config.get("rag.enabled", False):
+            self._register_rag_tools()
+
         # Permissions
         self.use_permissions = use_permissions and config.get(
             "permissions.enabled", True
@@ -138,6 +149,11 @@ class Agent:
         # Track execution path for memory storage
         self.current_execution_path: List[str] = []
 
+        # Tier 2: Evaluation and metrics tracking
+        self.evaluator = AgentEvaluator()
+        self.enable_evaluation = config.get("agent.enable_evaluation", True)
+        self.current_task_id: Optional[str] = None
+
     def _get_base_url(self) -> str:
         """Get base URL for the selected backend."""
         backends = self.config.get("backends", {})
@@ -171,6 +187,12 @@ class Agent:
     def _register_image_tools(self):
         """Register image-related tools."""
         self.registry.register(ReadImageTool())
+
+    def _register_rag_tools(self):
+        """Register RAG tools for vector storage and retrieval."""
+        rag_store = RAGStore()
+        self.registry.register(RAGIngestTool(rag_store))
+        self.registry.register(RAGSearchTool(rag_store))
 
     def load_session(self, session_id: str):
         """Load messages from a session."""
@@ -339,6 +361,10 @@ Be concise and actionable."""
 
     def execute(self, prompt: str, use_streaming: bool = False) -> str:
         """Execute agent with a prompt."""
+        # Tier 2: Start evaluation tracking
+        if self.enable_evaluation:
+            self.current_task_id = self.evaluator.start_task(prompt, self.model)
+
         # Tier 2: Agent role selection
         if self.enable_agent_selection:
             route = self.orchestrator.route_task(prompt)
@@ -383,6 +409,10 @@ Be concise and actionable."""
         # Agent loop
         for iteration in range(MAX_ITERATIONS):
             try:
+                # Record iteration for evaluation
+                if self.enable_evaluation:
+                    self.evaluator.record_iteration()
+
                 # Get model response
                 stream = use_streaming or self.enable_streaming
                 response = self.client.chat.completions.create(
@@ -439,13 +469,24 @@ Be concise and actionable."""
                             success=True,
                         )
 
+                    # Tier 2: End evaluation tracking (success)
+                    if self.enable_evaluation:
+                        self.evaluator.end_task(success=True)
+
                     return final_response
 
             except KeyboardInterrupt:
+                if self.enable_evaluation:
+                    self.evaluator.end_task(success=False, error_message="Interrupted by user")
                 return "\nInterrupted by user"
             except Exception as e:
+                if self.enable_evaluation:
+                    self.evaluator.end_task(success=False, error_message=str(e))
                 return f"Error: {str(e)}"
 
+        # Max iterations reached
+        if self.enable_evaluation:
+            self.evaluator.end_task(success=False, error_message="Max iterations reached")
         return f"Warning: Reached max iterations ({MAX_ITERATIONS})"
 
     def _handle_streaming_response(self, stream) -> Any:
@@ -576,6 +617,10 @@ Be concise and actionable."""
                     function_name, success, result if not success else None
                 )
 
+            # Tier 2: Track tool usage in evaluator
+            if self.enable_evaluation:
+                self.evaluator.record_tool_use(function_name)
+
             # Store execution step for memory
             step = f"tool:{function_name}({', '.join(arguments.keys())})"
             self.current_execution_path.append(step)
@@ -604,6 +649,10 @@ Be concise and actionable."""
         print("\n" + "=" * 60)
         print("EXECUTION SUMMARY")
         print("=" * 60)
+
+        # Tier 2: Evaluation metrics
+        if self.enable_evaluation:
+            self.evaluator.print_summary()
 
         # Tier 2: Tool tracking stats
         if self.enable_tool_tracking:

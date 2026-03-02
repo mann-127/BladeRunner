@@ -96,7 +96,7 @@ uv run bladerunner --permissions none -p "Do whatever"
 
 ## Agentic AI Features
 
-See [AGENTIC-AI.md](docs/AGENTIC-AI.md) for comprehensive feature documentation and detailed examples.
+See [FEATURES.md](docs/FEATURES.md) for comprehensive feature documentation and detailed examples.
 
 ### Quick Examples
 
@@ -223,5 +223,5 @@ uv run bladerunner --model llama -p "Your task"
 ## See Also
 
 - [README.md](/README.md) - Quick start and feature overview
-- [AGENTIC-AI.md](docs/AGENTIC-AI.md) - Detailed agentic AI feature documentation
+- [FEATURES.md](docs/FEATURES.md) - Detailed agentic AI feature documentation
 - [config.example.yml](/config.example.yml) - Configuration reference

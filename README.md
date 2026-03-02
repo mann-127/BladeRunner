@@ -70,7 +70,7 @@ bladerunner/
 
 ## 🧠 Agentic AI Features
 
-BladeRunner implements **8 production-grade agentic AI features** for intelligent task execution across two tiers:
+BladeRunner implements **9 production-grade agentic AI features** for intelligent task execution across two tiers:
 
 **Tier 1: Strategic Thinking & Resilience**
 - Planning & Decomposition
@@ -83,8 +83,9 @@ BladeRunner implements **8 production-grade agentic AI features** for intelligen
 - Tool Effectiveness Tracking
 - Semantic Memory
 - Multi-Agent Orchestration
+- Performance Evaluation & Metrics
 
-All features are configurable and optional. **For complete details, configuration, CLI usage, and examples:** See [AGENTIC-AI.md](docs/AGENTIC-AI.md)
+All features are configurable and optional. **For complete details, configuration, CLI usage, and examples:** See [FEATURES.md](docs/FEATURES.md)
 
 ---
 
@@ -96,6 +97,7 @@ All features are configurable and optional. **For complete details, configuratio
 - **WebSearch**: Real-time information via Brave Search API
 - **FetchWebpage**: Extract and parse web content
 - **ReadImage**: Vision-based image analysis
+- **RAG Tools**: Document ingestion (`rag_ingest`) and semantic search (`rag_search`)
 
 ### 🔐 Security & Permissions
 - **Three-tier system**: Strict, Standard, Permissive profiles
@@ -126,6 +128,20 @@ All features are configurable and optional. **For complete details, configuratio
 - **Multi-image**: Analyze multiple images simultaneously
 - **Screenshot debugging**: Visual error analysis
 
+### 🔍 RAG (Retrieval-Augmented Generation)
+- **Vector storage**: Persistent semantic search with ChromaDB
+- **Document ingestion**: Store and embed text for later retrieval
+- **Semantic search**: Find relevant context using similarity matching
+- **Knowledge base**: Build and query custom document collections
+- **Optional dependency**: Install with `uv sync --extra rag`
+
+### 📊 Evaluation & Metrics
+- **Performance tracking**: Monitor success rates and task completion
+- **Token analytics**: Track usage patterns across models
+- **Tool effectiveness**: Measure which tools work best for which tasks
+- **Execution metrics**: Duration, iterations, and throughput analysis
+- **Export capabilities**: JSON export for external analysis
+
 ### 🎭 Interactive Mode
 - **Rich REPL**: Beautiful terminal interface
 - **Streaming**: See responses as they arrive
@@ -145,7 +161,15 @@ cd BladeRunner
 
 # Install dependencies
 uv sync
+
+# Optional: Install RAG support
+uv sync --extra rag
 ```
+
+**Optional Dependencies:**
+- **RAG (Retrieval-Augmented Generation)**: `uv sync --extra rag`
+  - Enables vector storage and semantic document search
+  - Required for `rag_ingest` and `rag_search` tools
 
 ### API Keys
 
@@ -338,6 +362,19 @@ uv run bladerunner --continue -p "Write comprehensive tests"
 ### Visual Debugging
 ```bash
 uv run bladerunner --image error.png -p "Explain this error and suggest fixes"
+```
+
+### RAG-Enhanced Context
+```bash
+# First, enable RAG in config.yml:
+# rag:
+#   enabled: true
+
+# Ingest documentation into knowledge base
+uv run bladerunner -p "Read all markdown files in docs/ and use rag_ingest to store them"
+
+# Query with context from knowledge base
+uv run bladerunner -p "Use rag_search to find information about deployment, then create a deployment script"
 ```
 
 ---

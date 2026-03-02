@@ -6,7 +6,7 @@ Complete reference for all agentic AI capabilities in BladeRunner.
 
 ## Overview
 
-BladeRunner implements 8 production-grade agentic AI features across two tiers:
+BladeRunner implements 9 production-grade agentic AI features across two tiers:
 
 **Tier 1: Strategic Thinking & Resilience**
 - Planning & Decomposition
@@ -19,6 +19,7 @@ BladeRunner implements 8 production-grade agentic AI features across two tiers:
 - Tool Effectiveness Tracking
 - Semantic Memory
 - Multi-Agent Orchestration
+- Performance Evaluation & Metrics
 
 All features are optional and configurable.
 
@@ -359,6 +360,85 @@ $ uv run bladerunner -p "Write unit tests for login"
 3. Select best matching agent
 4. Enhance system prompt with specialization
 5. Execute with agent's preferred tools
+
+---
+
+### 9. Performance Evaluation & Metrics
+
+**What it does:** Tracks and analyzes agent performance across tasks.
+
+**Metrics Tracked:**
+- Task success/failure rates
+- Iterations per task (efficiency)
+- Token usage (total, prompt, completion)
+- Tool usage patterns
+- Execution duration
+- Model performance comparison
+
+**Configuration:**
+```yaml
+agent:
+  enable_evaluation: true
+```
+
+**CLI:**
+```bash
+# Evaluation runs automatically in background
+uv run bladerunner -p "Your task"
+
+# View metrics summary
+uv run python -c "from bladerunner.evaluation import AgentEvaluator; AgentEvaluator().print_summary()"
+```
+
+**Example Output:**
+```
+============================================================
+AGENT PERFORMANCE EVALUATION SUMMARY
+============================================================
+
+Last Updated: 2026-03-02T15:30:00
+
+Total Tasks: 42
+  ✓ Successful: 38
+  ✗ Failed: 4
+  Success Rate: 90.5%
+
+Average Iterations per Task: 3.2
+Average Duration: 12.5s
+
+Total Tokens Used: 156,420
+Average Tokens per Task: 3,724
+
+Most Used Tools:
+  - Bash: 89 times
+  - Read: 67 times
+  - Write: 45 times
+  - WebSearch: 23 times
+
+Model Performance:
+  - haiku: 32 tasks (93.8% success)
+  - sonnet: 10 tasks (80.0% success)
+============================================================
+```
+
+**Why this matters:**
+- **Identify bottlenecks**: Which tasks take longest?
+- **Optimize costs**: Track token usage per model
+- **Improve success rates**: Learn from failures
+- **Compare models**: Which performs best for your workload?
+- **Production readiness**: Essential for deployed agents
+
+**Data Location:**
+- Executions log: `~/.bladerunner/metrics/executions.jsonl`
+- Summary: `~/.bladerunner/metrics/evaluation_summary.json`
+
+**Export for Analysis:**
+```python
+from bladerunner.evaluation import AgentEvaluator
+
+evaluator = AgentEvaluator()
+print(evaluator.export_metrics())  # Exports to timestamped JSON
+```
 
 ---
 
