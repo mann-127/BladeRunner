@@ -47,23 +47,25 @@ The diagram above represents the logical execution pipeline of `bladerunner/agen
 
 ```
 bladerunner/
-├── cli.py              # Command-line interface
-├── agent.py            # Core agent orchestration
-├── config.py           # Configuration management
-├── interactive.py      # REPL interface
-├── permissions.py      # Security & access control
-├── sessions.py         # Session persistence
-├── skills.py           # Specialized capabilities
-├── safety.py           # Critical operation detection
-├── tool_tracker.py     # Tool effectiveness tracking
-├── semantic_memory.py  # Solution memory and retrieval
+├── cli.py                # Command-line interface
+├── agent.py              # Core agent orchestration
+├── config.py             # Configuration management
+├── interactive.py        # REPL interface
+├── permissions.py        # Security & access control
+├── sessions.py           # Session persistence
+├── skills.py             # Specialized capabilities
+├── safety.py             # Critical operation detection
+├── tool_tracker.py       # Tool effectiveness tracking
+├── semantic_memory.py    # Solution memory and retrieval
 ├── agent_orchestrator.py # Multi-agent task routing
-├── tools/              # Tool implementations
-│   ├── base.py         # Tool base class & registry
-│   ├── filesystem.py   # Read/Write operations
-│   ├── bash.py         # Shell command execution
-│   ├── web.py          # Web search & fetching
-│   └── image.py        # Image analysis
+├── evaluation.py         # Performance metrics and analytics
+├── tools/                # Tool implementations
+│   ├── base.py           # Tool base class & registry
+│   ├── filesystem.py     # Read/Write operations
+│   ├── bash.py           # Shell command execution
+│   ├── web.py            # Web search & fetching
+│   ├── image.py          # Image analysis
+│   └── rag.py            # RAG (vector search & retrieval)
 ```
 
 ---

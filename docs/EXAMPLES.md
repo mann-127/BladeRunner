@@ -191,6 +191,58 @@ uv run bladerunner --image img1.png --image img2.png -p "Compare these diagrams"
 
 ---
 
+## RAG (Retrieval-Augmented Generation)
+
+Build and query knowledge bases with semantic search:
+
+### Setup
+
+```bash
+# Install RAG dependencies
+uv sync --extra rag
+
+# Enable in config.yml
+# rag:
+#   enabled: true
+```
+
+### Basic Usage
+
+```bash
+# Ingest documents into knowledge base
+uv run bladerunner -p "Read all markdown files in docs/ and use rag_ingest to store them"
+
+# Search knowledge base
+uv run bladerunner -p "Use rag_search to find information about deployment"
+
+# Combine search with action
+uv run bladerunner -p "Search the knowledge base for authentication patterns, then implement them"
+```
+
+### Advanced Examples
+
+```bash
+# Build documentation knowledge base
+uv run bladerunner -p "Find all .md files, read them, and ingest into RAG with metadata"
+
+# Query with context
+uv run bladerunner -p "Search RAG for 'error handling', then write a guide based on the results"
+
+# Multi-step RAG workflow
+uv run bladerunner --session kb-build -p "Ingest all Python files from src/ into the knowledge base"
+uv run bladerunner --continue -p "Search for 'database connection' patterns"
+uv run bladerunner --continue -p "Generate best practices document based on the search results"
+```
+
+### Use Cases
+
+- **Documentation search**: Query internal docs and wikis
+- **Code pattern discovery**: Find similar code across large codebases
+- **Onboarding**: Build knowledge bases for new team members
+- **Compliance**: Store and search regulatory documents
+
+---
+
 ## Skills
 
 Use specialized capabilities:

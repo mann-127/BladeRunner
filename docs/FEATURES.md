@@ -442,6 +442,86 @@ print(evaluator.export_metrics())  # Exports to timestamped JSON
 
 ---
 
+## RAG (Retrieval-Augmented Generation)
+
+BladeRunner includes optional RAG capabilities for building and querying vector-based knowledge bases.
+
+### Installation
+
+```bash
+uv sync --extra rag
+```
+
+**Dependencies:**
+- ChromaDB: Persistent vector storage
+- sentence-transformers: Embedding model (all-MiniLM-L6-v2)
+
+### Configuration
+
+```yaml
+rag:
+  enabled: true
+  persist_directory: ~/.bladerunner/rag_store
+  embedding_model: all-MiniLM-L6-v2
+  default_collection: knowledge_base
+```
+
+### Available Tools
+
+#### `rag_ingest`
+Store documents in the vector database for later retrieval.
+
+**Parameters:**
+- `documents` (required): List of text strings to ingest
+- `metadatas` (optional): List of metadata dicts for each document
+
+**Example:**
+```python
+# Agent will use this tool when prompted
+"Read docs/api.md and ingest it into the RAG knowledge base with metadata"
+```
+
+#### `rag_search`
+Search the knowledge base using semantic similarity.
+
+**Parameters:**
+- `query` (required): Search query text
+- `n_results` (optional): Number of results to return (default: 5)
+
+**Example:**
+```python
+# Agent will use this tool when prompted
+"Search the knowledge base for 'authentication patterns' and summarize the findings"
+```
+
+### How It Works
+
+1. **Document ingestion**: Text is embedded using sentence-transformers
+2. **Vector storage**: ChromaDB persists embeddings to disk
+3. **Semantic search**: Query embeddings are compared to stored documents
+4. **Relevance scoring**: Results ranked by cosine similarity
+
+### Use Cases
+
+- **Documentation retrieval**: Store and query internal wikis/docs
+- **Code pattern discovery**: Find similar implementations
+- **Customer support**: Knowledge base for FAQ responses
+- **Compliance**: Search regulatory documents
+- **Onboarding**: Contextual information for new developers
+
+### Data Location
+
+- Vector store: `~/.bladerunner/rag_store/`
+- Collections: Managed via ChromaDB
+
+### Limitations
+
+- Embedding model is lightweight (384 dimensions) for performance
+- No built-in document chunking (implement in prompts)
+- Single collection support (can be extended)
+
+---
+
 ## Configuration Reference
 
 **For complete configuration options with all comments and settings**, see [config.example.yml](/config.example.yml).
