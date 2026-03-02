@@ -728,4 +728,4 @@ This implementation demonstrates:
 
 ## See Also
 
-- [README.md](../README.md) - Quick start guide and roadmap
+- [README.md](../README.md)

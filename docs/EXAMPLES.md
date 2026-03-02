@@ -94,10 +94,6 @@ uv run bladerunner --permissions none -p "Do whatever"
 
 ---
 
-## Agentic AI Features
-
-See [FEATURES.md](docs/FEATURES.md) for comprehensive feature documentation and detailed examples.
-
 ### Quick Examples
 
 ```bash
@@ -274,6 +270,5 @@ uv run bladerunner --model llama -p "Your task"
 
 ## See Also
 
-- [README.md](../README.md) - Quick start and feature overview
-- [FEATURES.md](../docs/FEATURES.md) - Detailed agentic AI feature documentation
+- [README.md](../README.md)
 - [config.example.yml](../config.example.yml) - Configuration reference
