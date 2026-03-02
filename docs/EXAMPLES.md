@@ -222,6 +222,6 @@ uv run bladerunner --model llama -p "Your task"
 
 ## See Also
 
-- [README.md](README.md) - Quick start and feature overview
+- [README.md](/README.md) - Quick start and feature overview
 - [AGENTIC-AI.md](docs/AGENTIC-AI.md) - Detailed agentic AI feature documentation
-- [config.example.yml](config.example.yml) - Configuration reference
+- [config.example.yml](/config.example.yml) - Configuration reference
