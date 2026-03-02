@@ -41,10 +41,6 @@ The diagram above represents the logical execution pipeline of `bladerunner/agen
 6. **Analytics & Recovery:** - **Success:** The `tool_tracker.py` logs a successful execution, updating system reliability metrics and committing the context to memory.
    - **Failure:** The output drops into the error handler, triggering an automated reflection loop that injects the error traceback back into the LLM Provider API to dynamically self-correct the code.
 
-**Additional Documentation:**
-- **[AGENTIC-AI.md](docs/AGENTIC-AI.md)** - Complete agentic AI feature reference (Tier 1 + Tier 2)
-- **[EXAMPLES.md](docs/EXAMPLES.md)** - Copy-paste ready examples for all capabilities
-
 ---
 
 **Project Structure:**
