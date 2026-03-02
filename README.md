@@ -27,7 +27,7 @@ BladeRunner transforms natural language prompts into executed code and system op
 
 ## 🏗️ System Architecture
 
-![BladeRunner Architecture](/ARCHITECTURE.png)
+![BladeRunner Architecture](docs/architecture.png)
 
 **Architecture Overview:**
 The diagram above represents the logical execution pipeline of `bladerunner/agent.py`. The broad, gray background lines represent the macro-stages of the request, while the thin colored lines represent the granular data hand-offs between the components.
@@ -42,8 +42,8 @@ The diagram above represents the logical execution pipeline of `bladerunner/agen
    - **Failure:** The output drops into the error handler, triggering an automated reflection loop that injects the error traceback back into the LLM Provider API to dynamically self-correct the code.
 
 **Additional Documentation:**
-- **[AGENTIC-AI.md](AGENTIC-AI.md)** - Complete agentic AI feature reference (Tier 1 + Tier 2)
-- **[EXAMPLES.md](EXAMPLES.md)** - Copy-paste ready examples for all capabilities
+- **[AGENTIC-AI.md](docs/AGENTIC-AI.md)** - Complete agentic AI feature reference (Tier 1 + Tier 2)
+- **[EXAMPLES.md](docs/EXAMPLES.md)** - Copy-paste ready examples for all capabilities
 
 ---
 
@@ -88,7 +88,7 @@ BladeRunner implements **8 production-grade agentic AI features** for intelligen
 - Semantic Memory
 - Multi-Agent Orchestration
 
-All features are configurable and optional. **For complete details, configuration, CLI usage, and examples:** See [AGENTIC-AI.md](AGENTIC-AI.md)
+All features are configurable and optional. **For complete details, configuration, CLI usage, and examples:** See [AGENTIC-AI.md](docs/AGENTIC-AI.md)
 
 ---
 
@@ -248,7 +248,7 @@ pip install .
 bladerunner -p "Your prompt here"
 ```
 
-**For comprehensive CLI examples and common workflows:** See [EXAMPLES.md](EXAMPLES.md)
+**For comprehensive CLI examples and common workflows:** See [EXAMPLES.md](docs/EXAMPLES.md)
 
 ## 🧪 Development & Testing
 
@@ -295,7 +295,7 @@ make type       # Type-check code (mypy)
 
 ### Examples
 
-See [EXAMPLES.md](EXAMPLES.md) for copy-paste prompt examples covering:
+See [EXAMPLES.md](docs/EXAMPLES.md) for copy-paste prompt examples covering:
 - Quick prompts (API workflows, refactoring)
 - Multi-turn sessions
 - Web search integration

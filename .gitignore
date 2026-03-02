@@ -1,3 +1,8 @@
+.gitignore
+.gitattributes
+.flake8
+.python-version
+
 # Bytecode
 __pycache__/
 *.py[cod]
@@ -50,5 +55,5 @@ Thumbs.db
 *.jsonl
 config.yml
 
-# UV lock file (optional - some prefer to commit it)
-# uv.lock
+# UV lock file (optional)
+uv.lock
