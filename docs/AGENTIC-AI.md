@@ -53,8 +53,6 @@ agent:
   enable_planning: true
 ```
 
-See [config.example.yml](config.example.yml) for full configuration options.
-
 **CLI:**
 ```bash
 # Enable planning (default)
@@ -366,7 +364,7 @@ $ uv run bladerunner -p "Write unit tests for login"
 
 ## Configuration Reference
 
-**For complete configuration options with all comments and settings**, see [config.example.yml](config.example.yml).
+**For complete configuration options with all comments and settings**, see [config.example.yml](/config.example.yml).
 
 ### Quick Presets
 
@@ -570,5 +568,4 @@ This implementation demonstrates:
 
 ## See Also
 
-- [README.md](README.md) - Quick start guide and roadmap
-- [config.example.yml](config.example.yml) - Configuration reference
+- [README.md](/README.md) - Quick start guide and roadmap
