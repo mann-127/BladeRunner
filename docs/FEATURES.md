@@ -524,7 +524,7 @@ Search the knowledge base using semantic similarity.
 
 ## Configuration Reference
 
-**For complete configuration options with all comments and settings**, see [config.example.yml](/config.example.yml).
+**For complete configuration options with all comments and settings**, see [config.example.yml](../config.example.yml).
 
 ### Quick Presets
 
@@ -728,4 +728,4 @@ This implementation demonstrates:
 
 ## See Also
 
-- [README.md](/README.md) - Quick start guide and roadmap
+- [README.md](../README.md) - Quick start guide and roadmap
