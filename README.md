@@ -27,7 +27,7 @@ BladeRunner transforms natural language prompts into executed code and system op
 
 ## 🏗️ System Architecture
 
-![BladeRunner Architecture](docs/architecture (dark).png)
+![BladeRunner Architecture](../docs/architecture (dark).png)
 
 **Architecture Overview:**
 The diagram above represents the logical execution pipeline of `bladerunner/agent.py`. The broad, gray background lines represent the macro-stages of the request, while the thin colored lines represent the granular data hand-offs between the components.
