@@ -54,10 +54,10 @@ bladerunner/
 ├── permissions.py      # Security & access control
 ├── sessions.py         # Session persistence
 ├── skills.py           # Specialized capabilities
-├── safety.py           # Critical operation detection (Tier 2)
-├── tool_tracker.py     # Tool effectiveness tracking (Tier 2)
-├── semantic_memory.py  # Solution memory and retrieval (Tier 2)
-├── agent_orchestrator.py # Multi-agent task routing (Tier 2)
+├── safety.py           # Critical operation detection
+├── tool_tracker.py     # Tool effectiveness tracking
+├── semantic_memory.py  # Solution memory and retrieval
+├── agent_orchestrator.py # Multi-agent task routing
 ├── tools/              # Tool implementations
 │   ├── base.py         # Tool base class & registry
 │   ├── filesystem.py   # Read/Write operations
