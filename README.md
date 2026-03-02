@@ -25,6 +25,53 @@ BladeRunner transforms natural language prompts into executed code and system op
 
 ---
 
+## 🏗️ System Architecture
+
+![BladeRunner Architecture](/ARCHITECTURE.png)
+
+**Architecture Overview:**
+The diagram above represents the logical execution pipeline of `bladerunner/agent.py`. The broad, gray background lines represent the macro-stages of the request, while the thin colored lines represent the granular data hand-offs between the components.
+
+**The Execution Lifecycle (`execute()`):**
+1. **Ingestion:** User prompts enter through `cli.py` or `interactive.py`.
+2. **Context Compilation:** Before contacting the LLM, the `agent_orchestrator.py` selects an identity, `semantic_memory.py` injects similar successful past code, and `sessions.py` loads the ongoing conversation history.
+3. **Core Generation:** The strategic planner inside `agent.py` formats the compiled context and streams the LLM completion.
+4. **Parsing & Guardrails:** The response is routed to the `parse_tool_calls` function. If a system tool is requested, the command is intercepted by `safety.py` to check for destructive operations, followed by `permissions.py` for user authorization.
+5. **Execution:** The validated command is dispatched to the physical tool registry (`tools/bash.py`, `tools/filesystem.py`, etc.).
+6. **Analytics & Recovery:** - **Success:** The `tool_tracker.py` logs a successful execution, updating system reliability metrics and committing the context to memory.
+   - **Failure:** The output drops into the error handler, triggering an automated reflection loop that injects the error traceback back into the LLM Provider API to dynamically self-correct the code.
+
+**Additional Documentation:**
+- **[AGENTIC-AI.md](AGENTIC-AI.md)** - Complete agentic AI feature reference (Tier 1 + Tier 2)
+- **[EXAMPLES.md](EXAMPLES.md)** - Copy-paste ready examples for all capabilities
+
+---
+
+**Project Structure:**
+
+```
+bladerunner/
+├── cli.py              # Command-line interface
+├── agent.py            # Core agent orchestration
+├── config.py           # Configuration management
+├── interactive.py      # REPL interface
+├── permissions.py      # Security & access control
+├── sessions.py         # Session persistence
+├── skills.py           # Specialized capabilities
+├── safety.py           # Critical operation detection (Tier 2)
+├── tool_tracker.py     # Tool effectiveness tracking (Tier 2)
+├── semantic_memory.py  # Solution memory and retrieval (Tier 2)
+├── agent_orchestrator.py # Multi-agent task routing (Tier 2)
+├── tools/              # Tool implementations
+│   ├── base.py         # Tool base class & registry
+│   ├── filesystem.py   # Read/Write operations
+│   ├── bash.py         # Shell command execution
+│   ├── web.py          # Web search & fetching
+│   └── image.py        # Image analysis
+```
+
+---
+
 ## 🧠 Agentic AI Features
 
 BladeRunner implements **8 production-grade agentic AI features** for intelligent task execution across two tiers:
@@ -42,6 +89,52 @@ BladeRunner implements **8 production-grade agentic AI features** for intelligen
 - Multi-Agent Orchestration
 
 All features are configurable and optional. **For complete details, configuration, CLI usage, and examples:** See [AGENTIC-AI.md](AGENTIC-AI.md)
+
+---
+
+## ✨ Key Features
+
+### 🛠️ Core Tools
+- **Read/Write**: Intelligent file operations with encoding support
+- **Bash**: Safe command execution with timeouts
+- **WebSearch**: Real-time information via Brave Search API
+- **FetchWebpage**: Extract and parse web content
+- **ReadImage**: Vision-based image analysis
+
+### 🔐 Security & Permissions
+- **Three-tier system**: Strict, Standard, Permissive profiles
+- **Command filtering**: Block dangerous operations (`rm -rf`, `sudo`, etc.)
+- **User confirmation**: Interactive prompts for sensitive actions
+- **Glob patterns**: Fine-grained file access control
+
+### 💾 Session Management
+- **Persistent conversations**: JSONL-based storage
+- **Resume anytime**: Continue from where you left off
+- **Session history**: List and manage multiple sessions
+- **Context preservation**: Full conversation state maintained
+
+### 🎨 Skills System
+- **Specialized agents**: Load domain-specific capabilities
+- **Tool restriction**: Limit available tools per skill
+- **Custom prompts**: Define behavior via Markdown files
+- **Easy creation**: YAML frontmatter + instructions
+
+### 🌐 Web Integration
+- **Live search**: Access current information
+- **Content extraction**: Parse and summarize web pages
+- **Modular**: Ready for additional sources
+
+### 👁️ Vision Capabilities
+- **Multi-format**: JPEG, PNG, GIF, WebP support
+- **Auto-optimization**: Resize images for efficiency
+- **Multi-image**: Analyze multiple images simultaneously
+- **Screenshot debugging**: Visual error analysis
+
+### 🎭 Interactive Mode
+- **Rich REPL**: Beautiful terminal interface
+- **Streaming**: See responses as they arrive
+- **History**: Command history and auto-suggestions
+- **Slash commands**: `/help`, `/clear`, `/model`, etc.
 
 ---
 
@@ -218,101 +311,6 @@ BladeRunner uses GitHub Actions for continuous integration:
 - **Fast feedback**: Tests complete in ~30 seconds
 
 ---
-
-## ✨ Key Features
-
-### 🛠️ Core Tools
-- **Read/Write**: Intelligent file operations with encoding support
-- **Bash**: Safe command execution with timeouts
-- **WebSearch**: Real-time information via Brave Search API
-- **FetchWebpage**: Extract and parse web content
-- **ReadImage**: Vision-based image analysis
-
-### 🔐 Security & Permissions
-- **Three-tier system**: Strict, Standard, Permissive profiles
-- **Command filtering**: Block dangerous operations (`rm -rf`, `sudo`, etc.)
-- **User confirmation**: Interactive prompts for sensitive actions
-- **Glob patterns**: Fine-grained file access control
-
-### 💾 Session Management
-- **Persistent conversations**: JSONL-based storage
-- **Resume anytime**: Continue from where you left off
-- **Session history**: List and manage multiple sessions
-- **Context preservation**: Full conversation state maintained
-
-### 🎨 Skills System
-- **Specialized agents**: Load domain-specific capabilities
-- **Tool restriction**: Limit available tools per skill
-- **Custom prompts**: Define behavior via Markdown files
-- **Easy creation**: YAML frontmatter + instructions
-
-### 🌐 Web Integration
-- **Live search**: Access current information
-- **Content extraction**: Parse and summarize web pages
-- **Modular**: Ready for additional sources
-
-### 👁️ Vision Capabilities
-- **Multi-format**: JPEG, PNG, GIF, WebP support
-- **Auto-optimization**: Resize images for efficiency
-- **Multi-image**: Analyze multiple images simultaneously
-- **Screenshot debugging**: Visual error analysis
-
-### 🎭 Interactive Mode
-- **Rich REPL**: Beautiful terminal interface
-- **Streaming**: See responses as they arrive
-- **History**: Command history and auto-suggestions
-- **Slash commands**: `/help`, `/clear`, `/model`, etc.
-
----
-
-## 📖 Documentation
-
-### System Architecture
-
-![BladeRunner Architecture](/ARCHITECTURE.png)
-
-**Architecture Overview:**
-The diagram above represents the logical execution pipeline of `bladerunner/agent.py`. The broad, gray background lines represent the macro-stages of the request, while the thin colored lines represent the granular data hand-offs between the components.
-
-**The Execution Lifecycle (`execute()`):**
-1. **Ingestion:** User prompts enter through `cli.py` or `interactive.py`.
-2. **Context Compilation:** Before contacting the LLM, the `agent_orchestrator.py` selects an identity, `semantic_memory.py` injects similar successful past code, and `sessions.py` loads the ongoing conversation history.
-3. **Core Generation:** The strategic planner inside `agent.py` formats the compiled context and streams the LLM completion.
-4. **Parsing & Guardrails:** The response is routed to the `parse_tool_calls` function. If a system tool is requested, the command is intercepted by `safety.py` to check for destructive operations, followed by `permissions.py` for user authorization.
-5. **Execution:** The validated command is dispatched to the physical tool registry (`tools/bash.py`, `tools/filesystem.py`, etc.).
-6. **Analytics & Recovery:** - **Success:** The `tool_tracker.py` logs a successful execution, updating system reliability metrics and committing the context to memory.
-   - **Failure:** The output drops into the error handler, triggering an automated reflection loop that injects the error traceback back into the LLM Provider API to dynamically self-correct the code.
-
-**Additional Documentation:**
-- **[AGENTIC-AI.md](AGENTIC-AI.md)** - Complete agentic AI feature reference (Tier 1 + Tier 2)
-- **[EXAMPLES.md](EXAMPLES.md)** - Copy-paste ready examples for all capabilities
-
----
-
-## 🏗️ Architecture
-
-**Project Structure:**
-
-```
-bladerunner/
-├── cli.py              # Command-line interface
-├── agent.py            # Core agent orchestration
-├── config.py           # Configuration management
-├── interactive.py      # REPL interface
-├── permissions.py      # Security & access control
-├── sessions.py         # Session persistence
-├── skills.py           # Specialized capabilities
-├── safety.py           # Critical operation detection (Tier 2)
-├── tool_tracker.py     # Tool effectiveness tracking (Tier 2)
-├── semantic_memory.py  # Solution memory and retrieval (Tier 2)
-├── agent_orchestrator.py # Multi-agent task routing (Tier 2)
-├── tools/              # Tool implementations
-│   ├── base.py         # Tool base class & registry
-│   ├── filesystem.py   # Read/Write operations
-│   ├── bash.py         # Shell command execution
-│   ├── web.py          # Web search & fetching
-│   └── image.py        # Image analysis
-```
 
 ## 🎯 Use Cases
 
