@@ -477,7 +477,9 @@ Be concise and actionable."""
 
             except KeyboardInterrupt:
                 if self.enable_evaluation:
-                    self.evaluator.end_task(success=False, error_message="Interrupted by user")
+                    self.evaluator.end_task(
+                        success=False, error_message="Interrupted by user"
+                    )
                 return "\nInterrupted by user"
             except Exception as e:
                 if self.enable_evaluation:
@@ -486,7 +488,9 @@ Be concise and actionable."""
 
         # Max iterations reached
         if self.enable_evaluation:
-            self.evaluator.end_task(success=False, error_message="Max iterations reached")
+            self.evaluator.end_task(
+                success=False, error_message="Max iterations reached"
+            )
         return f"Warning: Reached max iterations ({MAX_ITERATIONS})"
 
     def _handle_streaming_response(self, stream) -> Any:

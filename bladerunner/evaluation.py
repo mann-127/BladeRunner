@@ -163,9 +163,7 @@ class AgentEvaluator:
         total_tokens = sum(e.total_tokens for e in self.executions_history)
 
         durations = [e.duration for e in self.executions_history if e.duration]
-        avg_duration = (
-            sum(durations) / len(durations) if durations else 0
-        )
+        avg_duration = sum(durations) / len(durations) if durations else 0
 
         # Tool usage statistics
         all_tools = []
@@ -192,7 +190,9 @@ class AgentEvaluator:
             "successful_tasks": successful_tasks,
             "failed_tasks": failed_tasks,
             "success_rate": successful_tasks / total_tasks if total_tasks > 0 else 0,
-            "avg_iterations_per_task": total_iterations / total_tasks if total_tasks > 0 else 0,
+            "avg_iterations_per_task": (
+                total_iterations / total_tasks if total_tasks > 0 else 0
+            ),
             "avg_duration_seconds": avg_duration,
             "total_tokens_used": total_tokens,
             "avg_tokens_per_task": total_tokens / total_tasks if total_tasks > 0 else 0,
@@ -226,7 +226,9 @@ class AgentEvaluator:
 
     def export_metrics(self, output_file: Optional[Path] = None) -> str:
         """Export all metrics to a JSON file."""
-        output_file = output_file or (self.metrics_dir / f"export_{int(time.time())}.json")
+        output_file = output_file or (
+            self.metrics_dir / f"export_{int(time.time())}.json"
+        )
 
         export_data = {
             "summary": self.get_summary(),
@@ -263,26 +265,28 @@ class AgentEvaluator:
         print(f"  ✓ Successful: {summary.get('successful_tasks', 0)}")
         print(f"  ✗ Failed: {summary.get('failed_tasks', 0)}")
         print(f"  Success Rate: {summary.get('success_rate', 0):.1%}")
-        print(f"\nAverage Iterations per Task: {summary.get('avg_iterations_per_task', 0):.1f}")
+        print(
+            f"\nAverage Iterations per Task: {summary.get('avg_iterations_per_task', 0):.1f}"
+        )
         print(f"Average Duration: {summary.get('avg_duration_seconds', 0):.2f}s")
         print(f"\nTotal Tokens Used: {summary.get('total_tokens_used', 0):,}")
         print(f"Average Tokens per Task: {summary.get('avg_tokens_per_task', 0):.0f}")
 
-        most_used = summary.get('most_used_tools', [])
+        most_used = summary.get("most_used_tools", [])
         if most_used:
             print("\nMost Used Tools:")
             for tool, count in most_used[:5]:
                 print(f"  - {tool}: {count} times")
 
-        model_perf = summary.get('model_performance', {})
+        model_perf = summary.get("model_performance", {})
         if model_perf:
             print("\nModel Performance:")
             for model, stats in model_perf.items():
                 success_rate = (
-                    stats['successful'] / stats['total']
-                    if stats['total'] > 0
-                    else 0
+                    stats["successful"] / stats["total"] if stats["total"] > 0 else 0
                 )
-                print(f"  - {model}: {stats['total']} tasks ({success_rate:.1%} success)")
+                print(
+                    f"  - {model}: {stats['total']} tasks ({success_rate:.1%} success)"
+                )
 
         print("\n" + "=" * 60 + "\n")

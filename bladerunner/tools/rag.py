@@ -72,20 +72,23 @@ class RAGStore:
         if ids is None:
             import hashlib
 
-            ids = [
-                hashlib.md5(doc.encode()).hexdigest()[:16] for doc in documents
-            ]
+            ids = [hashlib.md5(doc.encode()).hexdigest()[:16] for doc in documents]
 
         # Generate embeddings
         embeddings = self.embedding_model.encode(documents).tolist()
 
         # Add to collection
-        self.collection.add(
-            documents=documents,
-            embeddings=embeddings,
-            metadatas=metadatas or [{} for _ in documents],
-            ids=ids,
-        )
+        add_params = {
+            "documents": documents,
+            "embeddings": embeddings,
+            "ids": ids,
+        }
+        
+        # Only add metadatas if provided (ChromaDB rejects empty dicts)
+        if metadatas:
+            add_params["metadatas"] = metadatas
+        
+        self.collection.add(**add_params)
 
         return {
             "status": "success",
@@ -125,9 +128,14 @@ class RAGStore:
                 formatted_results.append(
                     {
                         "document": doc,
-                        "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
-                        "distance": results["distances"][0][i] if results["distances"] else None,
-                        "relevance_score": 1 - (results["distances"][0][i] if results["distances"] else 0),
+                        "metadata": (
+                            results["metadatas"][0][i] if results["metadatas"] else {}
+                        ),
+                        "distance": (
+                            results["distances"][0][i] if results["distances"] else None
+                        ),
+                        "relevance_score": 1
+                        - (results["distances"][0][i] if results["distances"] else 0),
                     }
                 )
 
@@ -138,11 +146,16 @@ class RAGStore:
             "count": len(formatted_results),
         }
 
-    def delete_collection(self, collection_name: str = "knowledge_base") -> Dict[str, Any]:
+    def delete_collection(
+        self, collection_name: str = "knowledge_base"
+    ) -> Dict[str, Any]:
         """Delete a collection from the vector store."""
         try:
             self.client.delete_collection(name=collection_name)
-            return {"status": "success", "message": f"Deleted collection: {collection_name}"}
+            return {
+                "status": "success",
+                "message": f"Deleted collection: {collection_name}",
+            }
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
@@ -190,7 +203,9 @@ class RAGIngestTool(Tool):
             "required": ["documents"],
         }
 
-    def execute(self, documents: List[str], metadatas: Optional[List[Dict]] = None) -> str:
+    def execute(
+        self, documents: List[str], metadatas: Optional[List[Dict]] = None
+    ) -> str:
         """Execute document ingestion."""
         if not RAG_AVAILABLE:
             return "Error: RAG dependencies not installed. Install with: uv sync --extra rag"
