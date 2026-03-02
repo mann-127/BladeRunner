@@ -290,7 +290,7 @@ uv run pytest tests/ -v
 
 ### Test Suite Coverage
 
-BladeRunner includes 28+ tests covering:
+BladeRunner includes **40+ tests** covering:
 - **Core imports & initialization** (framework startup)
 - **CLI behavior** (version, verbose output, arguments)
 - **Safety detection** (critical operations, file paths)
@@ -300,6 +300,8 @@ BladeRunner includes 28+ tests covering:
 - **Config management** (defaults, path resolution)
 - **Sessions** (persistence, history)
 - **Skills** (loading, parsing)
+- **Evaluation & metrics** (task tracking, token analytics, performance summaries)
+- **RAG functionality** (document ingestion, semantic search, persistence)
 
 ### Development Setup
 
