@@ -2,7 +2,7 @@
 
 [![Codename](https://img.shields.io/badge/codename-KD6--3.7%20%22K%22-FF6B35.svg)](#)
 
-**Execute orders like a Replicant. Retire the manual. Autonomous AI agent framework.**
+**Execute orders like a Replicant. Retire the manual.**
 
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-green.svg)](...)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](...)
@@ -459,4 +459,4 @@ BladeRunner showcases:
 
 Perfect for demonstrating **Agentic AI** and **AI Engineer** capabilities.
 
-**Built with ❤️ for the film, to demonstrate production-ready AI agent architecture, with hidden easter-eggs 👀**
+**Built with ❤️ for the film, to demonstrate production-ready AI agent architecture, with hidden easter-eggs 👀.**
