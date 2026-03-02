@@ -244,8 +244,6 @@ pip install .
 bladerunner -p "Your prompt here"
 ```
 
-**For comprehensive CLI examples and common workflows:** See [EXAMPLES.md](docs/EXAMPLES.md)
-
 ## 🧪 Development & Testing
 
 ### Running Tests
