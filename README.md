@@ -500,4 +500,4 @@ BladeRunner showcases:
 
 Perfect for demonstrating **Agentic AI** and **AI Engineer** capabilities.
 
-**Built with ❤️ for the film, to demonstrate production-ready AI agent architecture, with hidden easter-eggs 👀.**
+**Built with ❤️ for AI, its engineering & the film, to demonstrate production-ready AI agent architecture, with hidden easter-eggs from the film 👀.**
