@@ -5,17 +5,12 @@
 **Execute orders like a Replicant. Retire the manual.**
 
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-green.svg)](...)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](...)
-
-[![CI](https://github.com/mann-127/BladeRunner/actions/workflows/ci.yml/badge.svg)](https://github.com/mann-127/BladeRunner/actions)
-
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](...)
 [![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue.svg)](https://mypy-lang.org/)
-
+[![CI](https://github.com/mann-127/BladeRunner/actions/workflows/ci.yml/badge.svg)](https://github.com/mann-127/BladeRunner/actions)
 [![Permissions: Standard](https://img.shields.io/badge/permissions-standard-orange.svg)](#)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
