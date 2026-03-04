@@ -19,17 +19,21 @@ debug: false
 # === Agentic AI Features ===
 agent:
   # Tier 1: Strategic thinking and error recovery
-  enable_planning: true
-  enable_reflection: true
-  enable_retry: true
-  enable_streaming: false
+  enable_planning: true       # Create multi-step plans before execution
+  enable_reflection: true     # Analyze tool output and self-correct errors
+  enable_retry: true          # Automatic retries with exponential backoff
+  enable_streaming: false     # Stream tokens in real-time (CLI default: off)
   
   # Tier 2: Safety and learning
-  require_approval: true      # Approve critical operations (rm, dd, etc.)
-  enable_tool_tracking: true  # Track tool success rates over time
-  enable_memory: true         # Store solutions for future similar tasks
+  require_approval: true       # Approve critical operations (rm, dd, etc.)
+  enable_tool_tracking: true   # Track tool success rates over time
+  enable_memory: true          # Store solutions for future similar tasks
   enable_agent_selection: true # Route tasks to specialized agents
-  enable_evaluation: true     # Track performance metrics (success rate, token usage)
+  enable_evaluation: true      # Track performance metrics (success rate, token usage)
+
+# Interactive mode settings
+interactive:
+  streaming: true  # Streaming enabled by default in interactive mode (-i)
 
 # Model configurations
 models:
@@ -127,19 +131,25 @@ skills:
 # For RAG (Vector Storage & Semantic Search):
 #   uv sync --extra rag
 #
-# For LSP Integration:
+# For LSP Integration (Language Server Protocol):
 #   uv sync --extra lsp
+#   Status: ⚠️  Experimental/stub feature (not fully implemented)
 #
-# For MCP Servers:
+# For MCP Servers (Model Context Protocol):
 #   uv sync --extra mcp
+#   Status: ⚠️  Experimental/stub feature (not fully implemented)
 #
 # For ACP Support (editor integration):
 #   Uses stdlib JSON-RPC + streaming I/O (no extra package needed)
+#   Status: ⚠️  Experimental/stub feature (not fully implemented)
 #
 # References:
+# - RAG: Vector storage with ChromaDB and sentence-transformers
 # - LSP: https://microsoft.github.io/language-server-protocol/
 # - MCP: https://modelcontextprotocol.io/
 # - ACP: https://docs.zed.dev/features/acp
+#
+# Note: Only RAG is production-ready. LSP/MCP/ACP are planned features.
 
 # === Preset Profiles (Easter Eggs) ===
 # Named after Officer K's designations in Blade Runner 2049

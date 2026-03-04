@@ -170,13 +170,21 @@ Bash command failed
 **Configuration:**
 ```yaml
 agent:
-  enable_streaming: false  # Default: off (save API cost)
+  enable_streaming: false  # Default for CLI mode
+
+interactive:
+  streaming: true  # Default for interactive mode (enabled)
 ```
+
+**Note:** Streaming is **ON by default** in interactive mode (`-i`), **OFF by default** in CLI mode.
 
 **CLI:**
 ```bash
-# Enable streaming
+# Enable streaming in CLI mode
 uv run bladerunner -p "Your task" --stream
+
+# Interactive mode (streaming already enabled)
+uv run bladerunner -i
 ```
 
 ---
@@ -386,8 +394,37 @@ agent:
 # Evaluation runs automatically in background
 uv run bladerunner -p "Your task"
 
-# View metrics summary
+# View metrics summary (quick)
 uv run python -c "from bladerunner.evaluation import AgentEvaluator; AgentEvaluator().print_summary()"
+
+# Export metrics to JSON
+uv run python -c "from bladerunner.evaluation import AgentEvaluator; import json; print(json.dumps(AgentEvaluator().get_summary(), indent=2))"
+
+# View detailed execution history
+uv run python -c "from bladerunner.evaluation import AgentEvaluator; ev=AgentEvaluator(); [print(ex.to_dict()) for ex in ev.executions_history[-5:]]"
+```
+
+**Programmatic Access:**
+```python
+from bladerunner.evaluation import AgentEvaluator
+
+evaluator = AgentEvaluator()
+
+# Get summary statistics
+summary = evaluator.get_summary()
+print(f"Success Rate: {summary['success_rate']*100:.1f}%")
+print(f"Avg Duration: {summary['avg_duration_seconds']:.1f}s")
+print(f"Total Tokens: {summary['total_tokens_used']:,}")
+
+# Export metrics for external analysis
+metrics_file = evaluator.export_metrics()  # Returns timestamped JSON file path
+print(f"Metrics exported to: {metrics_file}")
+
+# Access current execution
+task_id = evaluator.start_task("Your task", model="haiku")
+evaluator.record_tool_use("Bash")
+evaluator.record_tokens(total=1523, prompt=823, completion=700)
+evaluator.end_task(success=True)
 ```
 
 **Example Output:**
@@ -437,7 +474,47 @@ Model Performance:
 from bladerunner.evaluation import AgentEvaluator
 
 evaluator = AgentEvaluator()
-print(evaluator.export_metrics())  # Exports to timestamped JSON
+
+# Export all metrics to timestamped JSON file
+export_path = evaluator.export_metrics()
+print(export_path)  # Prints: "Metrics exported to: ~/.bladerunner/metrics/export_1234567890.json"
+
+# Export to specific file
+evaluator.export_metrics(output_file="/path/to/metrics.json")
+
+# Get recent executions
+recent = evaluator.get_recent_executions(n=5)  # Last 5 tasks
+for task in recent:
+    print(f"Task: {task['prompt']}")
+    print(f"Duration: {task.get('duration', 'N/A')}s")
+    print(f"Success: {task['success']}")
+
+# Clear all history (use with caution!)
+# evaluator.clear_history()
+```
+
+**JSON Export Structure:**
+```json
+{
+  "summary": {
+    "last_updated": "2026-03-04T10:30:00",
+    "total_tasks": 42,
+    "success_rate": 0.905,
+    "avg_duration_seconds": 12.5,
+    "model_performance": {
+      "haiku": {"total": 32, "successful": 30}
+    }
+  },
+  "executions": [
+    {
+      "task_id": "task_1234567890",
+      "prompt": "Your task",
+      "duration": 15.2,
+      "success": true,
+      "tools_used": ["Bash", "Read", "Write"]
+    }
+  ]
+}
 ```
 
 ---

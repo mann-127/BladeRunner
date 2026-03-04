@@ -1,42 +1,48 @@
-from pathlib import Path
+"""Smoke tests - Quick sanity checks that the project can start.
 
-from bladerunner.config import Config
-from bladerunner.sessions import SessionManager
-from bladerunner.skills import SkillManager
-
-
-def test_config_defaults(tmp_path: Path) -> None:
-    config = Config(tmp_path / "config.yml")
-
-    assert config.get("model") == "haiku"
-    assert config.get("permissions.enabled") is True
-    assert config.resolve_model("haiku").startswith("anthropic/")
+These tests verify basic import ability and framework instantiation.
+Detailed functionality tests are in their respective test_*.py files.
+"""
 
 
-def test_sessions_roundtrip(tmp_path: Path) -> None:
-    manager = SessionManager(tmp_path)
-    session_id = manager.create_session("smoke")
+def test_core_imports() -> None:
+    """Test that core modules can be imported."""
+    from bladerunner.agent import Agent
+    from bladerunner.cli import main
+    from bladerunner.config import Config
+    from bladerunner.sessions import SessionManager
+    from bladerunner.skills import SkillManager
 
-    manager.save_message(session_id, {"role": "user", "content": "hello"})
-    messages = manager.load_session(session_id)
+    assert Agent is not None
+    assert main is not None
+    assert Config is not None
+    assert SessionManager is not None
+    assert SkillManager is not None
 
-    assert messages == [{"role": "user", "content": "hello"}]
+
+def test_tool_imports() -> None:
+    """Test that tools can be imported."""
+    from bladerunner.tools.bash import BashTool
+    from bladerunner.tools.filesystem import ReadTool, WriteTool
+    from bladerunner.tools.base import Tool, ToolRegistry
+
+    assert BashTool is not None
+    assert ReadTool is not None
+    assert WriteTool is not None
+    assert Tool is not None
+    assert ToolRegistry is not None
 
 
-def test_skills_loading(tmp_path: Path) -> None:
-    skill_dir = tmp_path / "example-skill"
-    skill_dir.mkdir(parents=True, exist_ok=True)
+def test_tier2_imports() -> None:
+    """Test that tier 2 agentic features can be imported."""
+    from bladerunner.safety import CriticalOperation
+    from bladerunner.tool_tracker import ToolTracker
+    from bladerunner.semantic_memory import SemanticMemory
+    from bladerunner.agent_orchestrator import AgentOrchestrator
+    from bladerunner.evaluation import AgentEvaluator
 
-    (skill_dir / "SKILL.md").write_text("""---
-name: smoke-skill
-description: smoke test skill
-tools: [Read]
----
-
-You are a test skill.
-""")
-
-    manager = SkillManager(tmp_path)
-    skills = manager.list_skills()
-
-    assert skills[0]["name"] == "smoke-skill"
+    assert CriticalOperation is not None
+    assert ToolTracker is not None
+    assert SemanticMemory is not None
+    assert AgentOrchestrator is not None
+    assert AgentEvaluator is not None

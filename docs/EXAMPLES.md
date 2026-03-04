@@ -241,7 +241,9 @@ uv run bladerunner --continue -p "Generate best practices document based on the 
 
 ## Skills
 
-Use specialized capabilities:
+Use specialized capabilities with custom-defined agent behaviors.
+
+### Using Skills
 
 ```bash
 # List available skills
@@ -249,6 +251,105 @@ uv run bladerunner --list-skills
 
 # Use a specific skill
 uv run bladerunner --skill code-reviewer -p "Review main.py"
+
+# Skills can restrict available tools
+uv run bladerunner --skill read-only -p "Analyze this codebase"
+```
+
+### Creating Custom Skills
+
+Skills are defined as Markdown files with YAML frontmatter. Create them in `~/.bladerunner/skills/`:
+
+**Step 1:** Create skill directory and file:
+```bash
+mkdir -p ~/.bladerunner/skills/my-skill
+```
+
+**Step 2:** Create `~/.bladerunner/skills/my-skill/SKILL.md`:
+
+```markdown
+---
+name: code-optimizer
+description: Optimize Python code for performance and readability
+tools: [Read, Write, Bash]
+model: sonnet
+temperature: 0.3
+---
+
+You are a specialized Python performance optimization expert.
+
+When given code to optimize:
+
+1. **Read and analyze** - Understand the current implementation
+2. **Identify bottlenecks** - Find performance issues (loops, I/O, algorithms)
+3. **Refactor** - Apply optimization patterns:
+   - List comprehensions over loops
+   - Generator expressions for large data
+   - Proper data structures (sets vs lists)
+   - Caching with functools.lru_cache
+4. **Preserve functionality** - Never break existing behavior
+5. **Add comments** - Explain optimizations made
+6. **Benchmark** - Show before/after improvements
+
+Focus on readability AND performance.
+```
+
+**Step 3:** Use your skill:
+```bash
+uv run bladerunner --skill code-optimizer -p "Optimize the data processing in analytics.py"
+```
+
+### Skill Schema
+
+**Required frontmatter fields:**
+- `name`: Unique skill identifier (kebab-case)
+- `description`: Brief description of skill purpose
+
+**Optional frontmatter fields:**
+- `tools`: List of allowed tools (restricts agent to these tools only)
+  - Available: `Read`, `Write`, `Bash`, `WebSearch`, `FetchWebpage`, `ReadImage`, `rag_ingest`, `rag_search`
+- `model`: Default model for this skill (e.g., `haiku`, `sonnet`, `opus`)
+- `temperature`: Temperature setting (0.0-1.0, lower = more focused)
+
+**Body:** The skill's system prompt (instructions for the agent)
+
+### Example Skills
+
+**Read-Only Auditor:**
+```markdown
+---
+name: security-auditor
+description: Audit code for security vulnerabilities
+tools: [Read]
+temperature: 0.2
+---
+
+You are a security auditor. Analyze code for:
+- SQL injection risks
+- XSS vulnerabilities  
+- Insecure dependencies
+- Hardcoded secrets
+
+Provide a detailed security report with severity ratings.
+```
+
+**Documentation Generator:**
+```markdown
+---
+name: doc-generator
+description: Generate comprehensive documentation
+tools: [Read, Write]
+model: opus
+temperature: 0.6
+---
+
+You are a technical writer. Create clear, comprehensive documentation:
+- API references with examples
+- Usage guides for end users
+- Architecture explanations
+- Installation instructions
+
+Use Markdown formatting and ensure all code examples are tested.
 ```
 
 ---
@@ -264,6 +365,215 @@ uv run bladerunner --model sonnet -p "Your task" --permissions strict
 
 # Budget-friendly: Free Llama model
 uv run bladerunner --model llama -p "Your task"
+```
+
+---
+
+## Backend Configuration
+
+BladeRunner supports multiple LLM backends with automatic switching.
+
+### Available Backends
+
+**OpenRouter (default):**
+- Supports all Claude models (Haiku, Sonnet, Opus)
+- Vision capabilities (image analysis)
+- Free tier models (Llama, Gemini, Mistral)
+- API Key: `OPENROUTER_API_KEY`
+
+**Groq:**
+- Ultra-fast inference (14,400 requests/day free)
+- Llama 70B and Mixtral 8x7B
+- No vision support
+- API Key: `GROQ_API_KEY`
+
+### Switching Backends
+
+The backend is automatically selected based on your chosen model:
+
+```bash
+# OpenRouter models (default)
+uv run bladerunner --model haiku -p "Your task"
+uv run bladerunner --model sonnet -p "Your task"
+uv run bladerunner --model llama -p "Your task"
+
+# Groq models (auto-switches to Groq backend)
+uv run bladerunner --model groq-llama -p "Your task"
+uv run bladerunner --model groq-mixtral -p "Your task"
+```
+
+### Custom Backend Configuration
+
+Add custom backends in `config.yml`:
+
+```yaml
+backends:
+  openrouter:
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+  
+  groq:
+    base_url: https://api.groq.com/openai/v1
+    api_key_env: GROQ_API_KEY
+  
+  # Add your own backend
+  custom:
+    base_url: https://api.example.com/v1
+    api_key_env: CUSTOM_API_KEY
+```
+
+### Model Aliases
+
+Define custom model aliases with specific settings:
+
+```yaml
+models:
+  my-fast-model:
+    full_name: meta-llama/llama-3.1-8b-instruct:free
+    temperature: 0.5
+    max_tokens: 2048
+    backend: openrouter  # Optional: specify backend
+```
+
+```bash
+# Use your custom alias
+uv run bladerunner --model my-fast-model -p "Your task"
+```
+
+### Environment Variables
+
+Set up your API keys:
+
+```bash
+# OpenRouter (for Claude, Llama, Gemini, Mistral)
+export OPENROUTER_API_KEY="sk-or-v1-..."
+
+# Groq (for ultra-fast Llama and Mixtral)
+export GROQ_API_KEY="gsk_..."
+
+# Web search (optional)
+export BRAVE_API_KEY="..."
+
+# Or use a .env file
+echo 'OPENROUTER_API_KEY=sk-or-v1-...' > .env
+echo 'GROQ_API_KEY=gsk_...' >> .env
+```
+
+---
+
+## Interactive Mode
+
+Detailed guide to BladeRunner's REPL interface.
+
+### Starting Interactive Mode
+
+```bash
+# Basic interactive mode
+uv run bladerunner -i
+
+# Interactive with specific model
+uv run bladerunner -i --model sonnet
+
+# Interactive with session
+uv run bladerunner -i --session my-project
+```
+
+### Available Commands
+
+```
+/help              Show all available commands
+/clear             Clear conversation history and screen
+/history           Display full conversation history
+/model [name]      Show current model or switch to new model
+/exit              Exit interactive mode (or Ctrl+D)
+/quit              Same as /exit
+```
+
+### Features
+
+**Command History:**
+- Press ↑/↓ to navigate through previous prompts
+- History persisted to `~/.bladerunner/history`
+- Auto-suggestions based on past commands
+
+**Streaming Responses:**
+- Enabled by default in interactive mode
+- See AI responses appear token-by-token
+- Real-time feedback
+
+**Multi-line Input:**
+- Single-line by default
+- For longer prompts, use external editor or paste
+
+**Session Integration:**
+- Continue conversations across restarts
+- Full context preserved
+
+### Example Session
+
+```
+$ uv run bladerunner -i
+BladeRunner Interactive Mode
+Type /help for commands, Ctrl+D to exit
+
+You: Create a simple Flask API
+
+Assistant: I'll create a basic Flask API...
+[creates files and shows output]
+
+You: /model
+Current model: haiku
+
+You: /model sonnet
+Switched to model: sonnet
+
+You: Add authentication
+[continues with new model]
+
+You: /history
+Conversation History:
+You: Create a simple Flask API
+Assistant: I'll create a basic Flask API...
+You: Add authentication
+...
+
+You: /clear
+Conversation cleared
+
+You: /exit
+Goodbye!
+```
+
+---
+
+## Profile Presets (Easter Eggs)
+
+BladeRunner includes profile presets named after Officer K's designations from Blade Runner 2049:
+
+```bash
+# Officer K - Maximum safety (strict approvals)
+uv run bladerunner --profile officer-k -p "Deploy to production"
+
+# Constant K - Balanced approach (default settings)
+uv run bladerunner --profile constant-k -p "Refactor code"
+
+# Agent K - Autonomous mode (minimal oversight)
+uv run bladerunner --profile agent-k -p "Quick prototype"
+```
+
+**Profile Configurations:**
+
+| Profile | Permissions | Planning | Reflection | Approvals |
+|---------|-------------|----------|------------|----------|
+| officer-k | strict | ✅ | ✅ | ✅ |
+| constant-k | standard | ✅ | ❌ | ✅ |
+| agent-k | permissive | ❌ | ❌ | ❌ |
+
+**Hidden flags** (same as profiles):
+```bash
+uv run bladerunner --officer-k -p "Your task"
+uv run bladerunner --constant-k -p "Your task"
+uv run bladerunner --agent-k -p "Your task"
 ```
 
 ---

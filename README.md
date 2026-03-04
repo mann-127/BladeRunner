@@ -7,6 +7,16 @@
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-green.svg)](...)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](...)
 
+[![CI](https://github.com/mann-127/BladeRunner/actions/workflows/ci.yml/badge.svg)](https://github.com/mann-127/BladeRunner/actions)
+
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+[![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue.svg)](https://mypy-lang.org/)
+
+[![Permissions: Standard](https://img.shields.io/badge/permissions-standard-orange.svg)](#)
+
 ---
 
 ## 🎯 Overview
@@ -145,10 +155,11 @@ All features are configurable and optional. **For complete details, configuratio
 - **Export capabilities**: JSON export for external analysis
 
 ### 🎭 Interactive Mode
-- **Rich REPL**: Beautiful terminal interface
-- **Streaming**: See responses as they arrive
+- **Rich REPL**: Beautiful terminal interface with prompt_toolkit
+- **Streaming**: See responses as they arrive (enabled by default)
+- **Slash commands**: `/help`, `/clear`, `/history`, `/model`, `/exit`
 - **History**: Command history and auto-suggestions
-- **Slash commands**: `/help`, `/clear`, `/model`, etc.
+- **Multi-line**: Support for complex prompts
 
 ---
 
@@ -290,18 +301,23 @@ uv run pytest tests/ -v
 
 ### Test Suite Coverage
 
-BladeRunner includes **40+ tests** covering:
-- **Core imports & initialization** (framework startup)
+BladeRunner includes **177 comprehensive tests** across **20 test files** covering:
+- **Core imports & initialization** (framework startup, smoke tests)
 - **CLI behavior** (version, verbose output, arguments)
-- **Safety detection** (critical operations, file paths)
-- **Tool tracking** (success rates, reliability ranking)
-- **Semantic memory** (solution storage, similarity matching)
-- **Agent orchestration** (routing, specialization)
-- **Config management** (defaults, path resolution)
-- **Sessions** (persistence, history)
-- **Skills** (loading, parsing)
-- **Evaluation & metrics** (task tracking, token analytics, performance summaries)
-- **RAG functionality** (document ingestion, semantic search, persistence)
+- **Agent core functionality** (initialization, model selection, feature configuration, 25 tests)
+- **Safety detection** (critical operations, file paths, 4 tests)
+- **Tool implementations** (Bash, Filesystem, Web, Image tools, 50 tests)
+- **Tool tracking** (success rates, reliability ranking, 3 tests)
+- **Semantic memory** (solution storage, similarity matching, 3 tests)
+- **Agent orchestration** (routing, specialization, 3 tests)
+- **Config management** (defaults, path resolution, 14 tests)
+- **Sessions** (persistence, history, 9 tests)
+- **Skills** (loading, parsing, matching, 10 tests)
+- **Evaluation & metrics** (task tracking, token analytics, performance summaries, 9 tests)
+- **RAG functionality** (document ingestion, semantic search, persistence, 6 tests)
+- **Interactive mode** (commands, history, model switching, 13 tests)
+- **Permissions** (profiles, path patterns, glob matching, 7 tests)
+- **Integration tests** (cross-module functionality, tool registry, semantic memory tracking, 3 tests)
 
 ### Development Setup
 
