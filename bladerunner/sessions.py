@@ -3,7 +3,7 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 class SessionManager:
@@ -95,5 +95,27 @@ class SessionManager:
 
     def _append_log(self, file: Path, entry: Dict):
         """Append JSON entry to log file."""
+        entry = self._make_serializable(entry)
         with open(file, "a") as f:
-            f.write(json.dumps(entry) + "\n")
+            f.write(json.dumps(entry, default=str) + "\n")
+
+    def _make_serializable(self, obj: Any) -> Any:
+        """Convert nested objects to JSON-safe structures."""
+        if isinstance(obj, dict):
+            return {k: self._make_serializable(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [self._make_serializable(item) for item in obj]
+        if hasattr(obj, "model_dump"):
+            return self._make_serializable(obj.model_dump())
+        if hasattr(obj, "dict") and callable(getattr(obj, "dict")):
+            try:
+                return self._make_serializable(obj.dict())
+            except Exception:
+                pass
+        if hasattr(obj, "__dict__"):
+            return {
+                k: self._make_serializable(v)
+                for k, v in obj.__dict__.items()
+                if not k.startswith("_")
+            }
+        return obj

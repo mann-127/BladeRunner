@@ -36,44 +36,44 @@ class Config:
                 "haiku": {
                     "full_name": "anthropic/claude-haiku-4.5",
                     "temperature": 0.7,
-                    "max_tokens": 4096,
+                    "max_tokens": 2048,
                 },
                 "sonnet": {
                     "full_name": "anthropic/claude-sonnet-4",
                     "temperature": 0.7,
-                    "max_tokens": 4096,
+                    "max_tokens": 2048,
                 },
                 "opus": {
                     "full_name": "anthropic/claude-opus-4",
                     "temperature": 0.8,
-                    "max_tokens": 4096,
+                    "max_tokens": 2048,
                 },
                 # Free alternatives
                 "llama": {
                     "full_name": "meta-llama/llama-3.1-8b-instruct:free",
                     "temperature": 0.7,
-                    "max_tokens": 4096,
+                    "max_tokens": 2048,
                 },
                 "gemini": {
                     "full_name": "google/gemini-flash-1.5:free",
                     "temperature": 0.7,
-                    "max_tokens": 4096,
+                    "max_tokens": 2048,
                 },
                 "mistral": {
                     "full_name": "mistralai/mistral-7b-instruct:free",
                     "temperature": 0.7,
-                    "max_tokens": 4096,
+                    "max_tokens": 2048,
                 },
                 # Groq models (when using Groq backend)
                 "groq-llama": {
                     "full_name": "llama-3.1-70b-versatile",
                     "temperature": 0.7,
-                    "max_tokens": 4096,
+                    "max_tokens": 2048,
                 },
                 "groq-mixtral": {
                     "full_name": "mixtral-8x7b-32768",
                     "temperature": 0.7,
-                    "max_tokens": 4096,
+                    "max_tokens": 2048,
                 },
             },
             "backends": {
@@ -85,13 +85,46 @@ class Config:
                     "base_url": "https://api.groq.com/openai/v1",
                     "api_key_env": "GROQ_API_KEY",
                 },
+                "google_adk": {
+                    "base_url": "",
+                    "api_key_env": "GOOGLE_API_KEY",
+                },
             },
             "permissions": {"enabled": True, "profile": "standard"},
             "sessions": {
                 "enabled": True,
                 "directory": str(self.config_dir / "sessions"),
             },
-            "web_search": {"enabled": False, "provider": "brave", "max_results": 5},
+            "web_search": {"enabled": False, "provider": "duckduckgo", "max_results": 5},
+            "google_adk": {
+                "enabled": False,
+                "model": "gemini-2.0-flash",
+                "enable_search_grounding": True,
+            },
+            "api": {
+                "host": "127.0.0.1",
+                "port": 8000,
+                "database": str(self.config_dir / "api.db"),
+                "uploads_dir": str(self.config_dir / "uploads"),
+                "auth": {
+                    "enabled": False,
+                    "keys": [],
+                    "jwt": {
+                        "enabled": False,
+                        "secret_key": "",  # Set via BLADERUNNER_JWT_SECRET
+                        "algorithm": "HS256",
+                        "access_token_expire_minutes": 60,
+                        "refresh_token_expire_days": 7,
+                    },
+                    "users": [],  # List of {username, password_hash, permissions}
+                },
+                "uploads": {
+                    "max_size_mb": 10,
+                    "allowed_types": ["image/jpeg", "image/png", "image/gif", "image/webp"],
+                    "retention_days": 30,
+                    "per_user_quota_mb": 100,
+                },
+            },
             "skills": {"enabled": False, "directory": str(self.config_dir / "skills")},
             "lsp": {"enabled": False},
             "mcp": {"enabled": False},
@@ -129,3 +162,11 @@ class Config:
             return model_config["full_name"]
         # Return as-is (assume it's a full model name)
         return model_name
+
+    def get_model_settings(self, model_name: str) -> dict:
+        """Get model settings (temperature, max_tokens, etc.)."""
+        model_config = self.get(f"models.{model_name}", {})
+        return {
+            "temperature": model_config.get("temperature", 0.7),
+            "max_tokens": model_config.get("max_tokens", 2048),
+        }

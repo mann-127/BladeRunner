@@ -74,6 +74,36 @@ uv run bladerunner --model meta-llama/llama-3.1-8b-instruct:free -p "Your task"
 
 ---
 
+## Backend Fallback
+
+Use both provider keys so BladeRunner can switch automatically on provider limits:
+
+```bash
+export OPENROUTER_API_KEY="your-openrouter-key"
+export GROQ_API_KEY="your-groq-key"
+
+# Primary backend still comes from config.yml
+# backend: openrouter
+
+uv run bladerunner -p "Implement a REST endpoint with tests"
+```
+
+Enable debug logging to see switches:
+
+```yaml
+debug: true
+```
+
+Example stderr flow:
+
+```text
+Backend openrouter failed: 429 ...
+Attempting fallback to groq...
+Switched to groq backend
+```
+
+---
+
 ## Permission Profiles
 
 Control how much approval is required:
@@ -157,18 +187,124 @@ uv run bladerunner -p "Write tests for the refactored code"
 
 ## Web Search Integration
 
-Access real-time information:
+Access real-time information using **DuckDuckGo (no API key required)** or Brave Search:
 
 ```bash
-# Set up API key
-export BRAVE_API_KEY="your-brave-search-api-key"
-
-# Web search example
+# Works out of the box with DuckDuckGo (default)
 uv run bladerunner -p "What's the latest Python version and implement a feature using it?"
+
+# Optional: Use Brave for higher quality results
+export BRAVE_API_KEY="your-brave-search-api-key"
 
 # Combined with sessions
 uv run bladerunner --session research -p "Find the latest FastAPI patterns"
 uv run bladerunner --continue -p "Implement a REST API using those patterns"
+```
+
+**Provider Configuration:**
+
+```yaml
+# config.yml
+web_search:
+  enabled: true
+  provider: duckduckgo  # or "brave" (requires BRAVE_API_KEY)
+  max_results: 5
+```
+
+---
+
+## API Server + Web Console
+
+Run BladeRunner as a local API and browser console:
+
+```bash
+uv run bladerunner-api
+# open http://127.0.0.1:8000
+```
+
+Optional: enable auth in `~/.bladerunner/config.yml` and set secrets in `.env`:
+
+```bash
+export BLADERUNNER_API_KEYS="dev-key-1,dev-key-2"
+export BLADERUNNER_JWT_SECRET="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+```
+
+Create a session:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/sessions \
+  -H "Content-Type: application/json" \
+  -d '{"user_id":"demo-user","title":"Case File"}'
+```
+
+JWT login (if `api.auth.jwt.enabled: true`):
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"your-password"}'
+```
+
+Chat with BladeRunner engine:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id":"demo-user",
+    "message":"Refactor parser.py and add tests",
+    "engine":"bladerunner",
+    "enable_web_search": true,
+    "enable_streaming": false
+  }'
+```
+
+Check upload quota:
+
+```bash
+curl http://127.0.0.1:8000/api/uploads/quota/demo-user \
+  -H "X-API-Key: dev-key-1"
+```
+
+Bidirectional WebSocket streaming (with interrupt):
+
+```javascript
+const ws = new WebSocket("ws://127.0.0.1:8000/ws/chat?api_key=dev-key-1");
+
+ws.onopen = () => {
+  ws.send(JSON.stringify({
+    user_id: "demo-user",
+    message: "Draft migration plan",
+    engine: "bladerunner",
+    enable_streaming: true,
+    permission_profile: "none"
+  }));
+};
+
+ws.onmessage = (ev) => {
+  const msg = JSON.parse(ev.data);
+  if (msg.type === "chunk") process.stdout.write(msg.delta);
+  if (msg.type === "status") console.log("status:", msg.status);
+  if (msg.type === "final") console.log("\nfinal:", msg.answer);
+};
+
+// Interrupt long-running tasks
+setTimeout(() => ws.send(JSON.stringify({ type: "interrupt" })), 1500);
+```
+
+Chat with Google ADK engine:
+
+```bash
+export GOOGLE_API_KEY="your-key"
+uv sync --extra google
+
+curl -X POST http://127.0.0.1:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id":"demo-user",
+    "message":"What happened in AI this week? Include sources.",
+    "engine":"google_adk"
+  }'
 ```
 
 ---
@@ -451,7 +587,8 @@ export OPENROUTER_API_KEY="sk-or-v1-..."
 # Groq (for ultra-fast Llama and Mixtral)
 export GROQ_API_KEY="gsk_..."
 
-# Web search (optional)
+# Web search: DuckDuckGo is used by default (no key needed)
+# Optional: Use Brave for better quality
 export BRAVE_API_KEY="..."
 
 # Or use a .env file

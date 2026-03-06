@@ -1,0 +1,384 @@
+const chatPanel = document.getElementById("chat-panel");
+const form = document.getElementById("chat-form");
+const messageInput = document.getElementById("message");
+const userIdInput = document.getElementById("user-id");
+const apiKeyInput = document.getElementById("api-key");
+const engineSelect = document.getElementById("engine");
+const modelInput = document.getElementById("model");
+const modelList = document.getElementById("model-list");
+const permissionProfileSelect = document.getElementById("permission-profile");
+const skillSelect = document.getElementById("skill");
+const enableWebSearchCheckbox = document.getElementById("enable-web-search");
+const enableRagCheckbox = document.getElementById("enable-rag");
+const autoMatchSkillCheckbox = document.getElementById("auto-match-skill");
+const googleSearchGroundingCheckbox = document.getElementById("google-search-grounding");
+const enablePlanningCheckbox = document.getElementById("enable-planning");
+const enableReflectionCheckbox = document.getElementById("enable-reflection");
+const enableRetryCheckbox = document.getElementById("enable-retry");
+const enableStreamingCheckbox = document.getElementById("enable-streaming");
+const imageFileInput = document.getElementById("image-file");
+const newSessionButton = document.getElementById("new-session");
+const interruptBtn = document.getElementById("interrupt-btn");
+const healthPill = document.getElementById("health-pill");
+
+let sessionId = null;
+let activeWebSocket = null;  // Track active WebSocket connection for interruption
+
+function appendBubble(
+  role,
+  text,
+  meta,
+  sources = [],
+  webSearchUsed = false,
+  webSearchRequested = false,
+  ragRequested = false,
+  ragAvailable = false,
+  appliedSkill = null,
+  warnings = []
+) {
+  const bubble = document.createElement("article");
+  bubble.className = `bubble ${role}`;
+
+  const metaNode = document.createElement("div");
+  metaNode.className = "meta";
+  let metaText = meta;
+  if (role === "assistant") {
+    if (webSearchUsed) {
+      metaText += " | Web: used";
+      bubble.classList.add("web-search-used");
+    } else if (webSearchRequested) {
+      metaText += " | Web: on (not used)";
+      bubble.classList.add("web-search-requested");
+    } else {
+      metaText += " | Web: off";
+    }
+
+    if (ragRequested) {
+      metaText += ragAvailable ? " | RAG: on" : " | RAG: unavailable";
+    }
+
+    if (appliedSkill) {
+      metaText += ` | Skill: ${appliedSkill}`;
+    }
+  }
+  metaNode.textContent = metaText;
+  bubble.appendChild(metaNode);
+
+  const textNode = document.createElement("div");
+  textNode.textContent = text;
+  bubble.appendChild(textNode);
+
+  if (sources.length > 0) {
+    const srcWrap = document.createElement("div");
+    srcWrap.className = "sources";
+    for (const src of sources) {
+      const a = document.createElement("a");
+      a.href = src.url;
+      a.target = "_blank";
+      a.rel = "noreferrer";
+      a.textContent = src.title;
+      srcWrap.appendChild(a);
+    }
+    bubble.appendChild(srcWrap);
+  }
+
+  if (warnings.length > 0) {
+    const warnWrap = document.createElement("div");
+    warnWrap.className = "sources";
+    for (const warning of warnings) {
+      const line = document.createElement("div");
+      line.textContent = `Warning: ${warning}`;
+      warnWrap.appendChild(line);
+    }
+    bubble.appendChild(warnWrap);
+  }
+
+  chatPanel.appendChild(bubble);
+  chatPanel.scrollTop = chatPanel.scrollHeight;
+}
+
+function getAuthHeaders(extra = {}) {
+  const key = apiKeyInput.value.trim();
+  return {
+    ...extra,
+    ...(key ? { "X-API-Key": key } : {}),
+  };
+}
+
+async function checkHealth() {
+  try {
+    const res = await fetch("/api/health", {
+      headers: getAuthHeaders(),
+    });
+
+    if (res.status === 401) {
+      healthPill.textContent = "Auth required | provide API key";
+      return;
+    }
+
+    const payload = await res.json();
+    if (payload.ok) {
+      healthPill.classList.add("ok");
+      healthPill.textContent = payload.google_adk_available
+        ? "Core online | ADK detected"
+        : "Core online | ADK optional";
+    }
+  } catch (_) {
+    healthPill.textContent = "Core unreachable";
+  }
+}
+
+async function loadMeta() {
+  try {
+    const res = await fetch("/api/meta", {
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+      return;
+    }
+
+    const payload = await res.json();
+    const models = payload.models || [];
+    const skills = payload.skills || [];
+
+    modelList.innerHTML = "";
+    for (const model of models) {
+      const option = document.createElement("option");
+      option.value = model;
+      modelList.appendChild(option);
+    }
+
+    if (!modelInput.value && payload.default_model) {
+      modelInput.value = payload.default_model;
+    }
+
+    skillSelect.innerHTML = '<option value="">none</option>';
+    for (const skill of skills) {
+      const option = document.createElement("option");
+      option.value = skill.name;
+      option.textContent = `${skill.name} - ${skill.description}`;
+      skillSelect.appendChild(option);
+    }
+  } catch (_) {
+    // Keep UI usable even if metadata endpoint is unavailable.
+  }
+}
+
+async function createSession() {
+  const user_id = userIdInput.value.trim();
+  if (!user_id) {
+    alert("Enter a user id first.");
+    return;
+  }
+
+  const res = await fetch("/api/sessions", {
+    method: "POST",
+    headers: getAuthHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ user_id, title: "Web Console Session" }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.detail || "Failed to create session");
+  }
+
+  const data = await res.json();
+  sessionId = data.session_id;
+  appendBubble("assistant", `Session ready: ${sessionId}`, "system");
+}
+
+newSessionButton.addEventListener("click", async () => {
+  try {
+    await createSession();
+  } catch (error) {
+    appendBubble("assistant", error.message, "system/error");
+  }
+});
+
+async function uploadImage(user_id) {
+  const file = imageFileInput.files[0];
+  if (!file) {
+    return null;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`/api/uploads/image?user_id=${encodeURIComponent(user_id)}`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: formData,
+  });
+
+  const payload = await res.json();
+  if (!res.ok) {
+    throw new Error(payload.detail || "Image upload failed");
+  }
+
+  return payload.file_path;
+}
+
+async function sendViaWebSocket(payload) {
+  return new Promise((resolve, reject) => {
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const key = apiKeyInput.value.trim();
+    const keyQuery = key ? `?api_key=${encodeURIComponent(key)}` : "";
+    const ws = new WebSocket(`${protocol}://${window.location.host}/ws/chat${keyQuery}`);
+    activeWebSocket = ws;
+
+    let streamed = "";
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify(payload));
+    };
+
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.type === "status") {
+        // Status update (executing, interrupting, etc.)
+        console.log("Status:", msg.status);
+      } else if (msg.type === "chunk") {
+        streamed += msg.delta;
+      } else if (msg.type === "final") {
+        if (!msg.answer && streamed) {
+          msg.answer = streamed;
+        }
+        activeWebSocket = null;
+        resolve(msg);
+      } else if (msg.type === "error") {
+        activeWebSocket = null;
+        reject(new Error(msg.message || "WebSocket error"));
+      } else if (msg.type === "pong") {
+        // Heartbeat response
+        console.log("Pong received");
+      }
+    };
+
+    ws.onerror = () => {
+      activeWebSocket = null;
+      reject(new Error("WebSocket connection failed"));
+    };
+
+    ws.onclose = () => {
+      activeWebSocket = null;
+    };
+  });
+}
+
+function interruptStream() {
+  if (activeWebSocket && activeWebSocket.readyState === WebSocket.OPEN) {
+    activeWebSocket.send(JSON.stringify({ type: "interrupt" }));
+    console.log("Interrupt signal sent");
+  }
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const message = messageInput.value.trim();
+  const user_id = userIdInput.value.trim();
+  const engine = engineSelect.value;
+  const enable_web_search = enableWebSearchCheckbox.checked;
+  const enable_rag = enableRagCheckbox.checked;
+  const auto_match_skill = autoMatchSkillCheckbox.checked;
+  const google_search_grounding = googleSearchGroundingCheckbox.checked;
+  const enable_planning = enablePlanningCheckbox.checked;
+  const enable_reflection = enableReflectionCheckbox.checked;
+  const enable_retry = enableRetryCheckbox.checked;
+  const enable_streaming = enableStreamingCheckbox.checked;
+  const permission_profile = permissionProfileSelect.value;
+  const skill = skillSelect.value || null;
+  const model = modelInput.value.trim() || null;
+
+  if (!message || !user_id) {
+    return;
+  }
+
+  appendBubble("user", message, `${user_id} | ${engine}`);
+  messageInput.value = "";
+
+  try {
+    if (!sessionId) {
+      await createSession();
+    }
+
+    const uploadedImagePath = await uploadImage(user_id);
+    const image_paths = uploadedImagePath ? [uploadedImagePath] : [];
+
+    const requestPayload = {
+      user_id,
+      message,
+      session_id: sessionId,
+      engine,
+      enable_web_search,
+      enable_rag,
+      image_paths,
+      auto_match_skill,
+      google_search_grounding,
+      enable_planning,
+      enable_reflection,
+      enable_retry,
+      enable_streaming,
+      permission_profile,
+      skill,
+      model,
+    };
+
+    // Show interrupt button if streaming
+    if (enable_streaming && engine === "bladerunner") {
+      interruptBtn.style.display = "inline-block";
+    }
+
+    const payload =
+      enable_streaming && engine === "bladerunner"
+        ? await sendViaWebSocket(requestPayload)
+        : await (async () => {
+            const res = await fetch("/api/chat", {
+              method: "POST",
+              headers: getAuthHeaders({ "Content-Type": "application/json" }),
+              body: JSON.stringify(requestPayload),
+            });
+            const body = await res.json();
+            if (!res.ok) {
+              throw new Error(body.detail || "Chat request failed");
+            }
+            return body;
+          })();
+
+    // Hide interrupt button
+    interruptBtn.style.display = "none";
+
+    appendBubble(
+      "assistant",
+      payload.answer,
+      `${payload.engine} | ${payload.model}`,
+      payload.sources || [],
+      payload.web_search_used,
+      payload.web_search_requested,
+      payload.rag_requested,
+      payload.rag_available,
+      payload.applied_skill,
+      payload.warnings || []
+    );
+  } catch (error) {
+    appendBubble("assistant", error.message, "system/error");
+  } finally {
+    interruptBtn.style.display = "none";
+    imageFileInput.value = "";
+  }
+});
+
+// Wire up interrupt button
+interruptBtn.addEventListener("click", () => {
+  interruptStream();
+});
+
+checkHealth();
+loadMeta();
+appendBubble(
+  "assistant",
+  "Console initialized. Create a session and transmit your first query.",
+  "system",
+  [],
+  false
+);
