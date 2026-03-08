@@ -156,6 +156,101 @@ Bash command failed
 ↓ Return error (all retries exhausted)
 ```
 
+### Backend Fallback (OpenRouter <-> Groq)
+
+**What it does:** When both backend API keys are configured, BladeRunner automatically switches to the next available backend on hard provider failures.
+
+**Fallback triggers:**
+- `429` rate limit errors
+- `402` credit/payment errors
+- repeated transient failures
+
+**Cooldown behavior:**
+- `429`: 120s cooldown
+- `402`: 300s cooldown
+- other errors: 60s cooldown
+
+After cooldown, backends are retried automatically.
+
+**Setup:**
+```bash
+OPENROUTER_API_KEY=your-openrouter-key
+GROQ_API_KEY=your-groq-key
+```
+
+**Debug output:**
+Set `debug: true` in config to see fallback events in stderr.
+
+---
+
+### FastAPI API Backend + Web Console
+
+**What it does:** Exposes BladeRunner through HTTP endpoints and serves a themed browser UI.
+
+**Endpoints:**
+- `GET /` - Web console UI
+- `GET /api/health` - Service health + ADK/auth availability
+- `GET /api/meta` - UI metadata (models, skills, profiles)
+- `GET /api/skills` - List configured skills
+- `POST /api/auth/login` - JWT login (access + refresh tokens)
+- `POST /api/auth/refresh` - JWT access token refresh
+- `GET /api/auth/me` - Resolve current JWT identity
+- `POST /api/sessions` - Create user session
+- `GET /api/sessions` - List sessions by `user_id`
+- `GET /api/sessions/{id}/messages` - Retrieve session messages
+- `POST /api/uploads/image` - Upload image with per-user quota/type/size checks
+- `GET /api/uploads/quota/{user_id}` - Inspect upload usage and remaining quota
+- `POST /api/chat` - Chat completion (`bladerunner` or `google_adk` engine)
+- `WS /ws/chat` - Bidirectional streaming (`chunk`, `status`, `final`, `interrupt`, `ping/pong`)
+
+**Run:**
+```bash
+uv run bladerunner-console
+```
+
+**Configuration:**
+```yaml
+api:
+  host: 127.0.0.1
+  port: 8000
+  database: ~/.bladerunner/api.db
+  auth:
+    enabled: false
+    jwt:
+      enabled: false
+      secret_key: ""  # Set via BLADERUNNER_JWT_SECRET
+  uploads:
+    max_size_mb: 10
+    per_user_quota_mb: 100
+    retention_days: 30
+```
+
+---
+
+### Google ADK / Gemini Grounding Engine
+
+**What it does:** Adds a Google-first answer path for web-grounded responses in API mode.
+
+**Behavior:**
+- Checks for `google-adk` availability
+- Uses Gemini grounded generation path
+- Extracts source links from grounding metadata
+- Returns answer + sources to API clients
+
+**Setup:**
+```bash
+uv sync --extra google
+export GOOGLE_API_KEY="your-key"
+```
+
+**Configuration:**
+```yaml
+google_adk:
+  enabled: false
+  model: gemini-2.0-flash
+  enable_search_grounding: true
+```
+
 ---
 
 ### 4. Streaming Responses
@@ -653,10 +748,10 @@ uv run bladerunner -p "task" --no-reflection
 uv run bladerunner -p "task" --no-retry
 
 # Stream response tokens
-uv run bladeRuner -p "task" --stream
+uv run bladerunner -p "task" --stream
 
 # Combine flags
-uv run bladeRuner -p "task" --stream --no-planning --no-reflection
+uv run bladerunner -p "task" --stream --no-planning --no-reflection
 ```
 
 ### Feature Combinations

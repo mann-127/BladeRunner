@@ -4,7 +4,7 @@ import json
 import os
 import sys
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 from openai import OpenAI
 
 from .config import Config
@@ -13,6 +13,7 @@ from .tool_tracker import ToolTracker
 from .semantic_memory import SemanticMemory
 from .agent_orchestrator import AgentOrchestrator, AgentRole
 from .evaluation import AgentEvaluator
+from .backend_manager import BackendManager
 from .tools.base import ToolRegistry
 from .tools.filesystem import ReadTool, WriteTool
 from .tools.bash import BashTool
@@ -78,6 +79,9 @@ class Agent:
         self.config = config
         self.model = model or config.get("model", "haiku")
         self.backend = config.get("backend", "openrouter")
+
+        # Initialize backend manager for automatic fallback
+        self.backend_manager = BackendManager(config.config, self.backend)
 
         # Initialize API client with backend-specific settings
         api_key = config.get("api_key") or self._get_api_key_for_backend()
@@ -154,24 +158,123 @@ class Agent:
         self.enable_evaluation = config.get("agent.enable_evaluation", True)
         self.current_task_id: Optional[str] = None
 
+        # Optional callback for external token streaming consumers.
+        self.stream_callback: Optional[Callable[[str], None]] = None
+
+        # Interruption flag for graceful termination
+        self.interrupted = False
+
     def _get_base_url(self) -> str:
         """Get base URL for the selected backend."""
         backends = self.config.get("backends", {})
         backend_config = backends.get(self.backend, {})
         return backend_config.get("base_url", "https://openrouter.ai/api/v1")
 
-    def _get_api_key_for_backend(self) -> str:
-        """Get API key from environment based on backend."""
+    def _get_api_key_for_backend(self, backend_name: Optional[str] = None) -> str:
+        """Get API key from environment based on backend.
+
+        Args:
+            backend_name: Backend to get key for (defaults to self.backend)
+        """
+        backend_name = backend_name or self.backend
         backends = self.config.get("backends", {})
-        backend_config = backends.get(self.backend, {})
+        backend_config = backends.get(backend_name, {})
         env_var = backend_config.get("api_key_env", "OPENROUTER_API_KEY")
 
         api_key = os.getenv(env_var)
         if not api_key:
             raise RuntimeError(
-                f"{env_var} environment variable not set for {self.backend} backend"
+                f"{env_var} environment variable not set for {backend_name} backend. "
+                f"Please set the environment variable or add 'api_key' to your config file."
             )
         return api_key
+
+    def _switch_backend(self, new_backend: str):
+        """Switch to a different backend.
+
+        Args:
+            new_backend: Name of the backend to switch to
+        """
+        try:
+            api_key = self._get_api_key_for_backend(new_backend)
+            backends = self.config.get("backends", {})
+            backend_config = backends.get(new_backend, {})
+            base_url = backend_config.get("base_url", "https://openrouter.ai/api/v1")
+
+            self.backend = new_backend
+            self.client = OpenAI(api_key=api_key, base_url=base_url)
+
+            if self.config.get("debug"):
+                print(f"Switched to {new_backend} backend", file=sys.stderr)
+        except Exception as e:
+            if self.config.get("debug"):
+                print(f"Failed to switch to {new_backend}: {e}", file=sys.stderr)
+            raise
+
+    def _chat_completion_with_fallback(self, **kwargs) -> Any:
+        """Make a chat completion request with automatic backend fallback.
+
+        Args:
+            **kwargs: Arguments to pass to client.chat.completions.create()
+
+        Returns:
+            Chat completion response
+        """
+        attempted_backends: List[str] = []
+        last_error = None
+
+        # Try all configured backends at most once per request.
+        max_attempts = max(1, len(self.backend_manager.backends))
+        for _ in range(max_attempts):
+            try:
+                attempted_backends.append(self.backend)
+                response = self.client.chat.completions.create(**kwargs)
+
+                # Success! Record it and return
+                self.backend_manager.record_request_success(self.backend)
+                return response
+
+            except Exception as e:
+                last_error = e
+                error_code = None
+
+                # Extract error code if available
+                if hasattr(e, "status_code"):
+                    error_code = e.status_code
+                elif hasattr(e, "response") and hasattr(e.response, "status_code"):
+                    error_code = e.response.status_code
+
+                # Record the failure
+                self.backend_manager.record_request_failure(self.backend, error_code)
+
+                if self.config.get("debug"):
+                    print(f"Backend {self.backend} failed: {e}", file=sys.stderr)
+
+                # Check if we should attempt fallback
+                if not self.backend_manager.should_attempt_fallback(self.backend, error_code):
+                    raise
+
+                # Try to get next available backend
+                next_backend = self.backend_manager.get_next_backend(exclude=attempted_backends)
+
+                if next_backend:
+                    if self.config.get("debug"):
+                        print(f"Attempting fallback to {next_backend}...", file=sys.stderr)
+
+                    try:
+                        self._switch_backend(next_backend)
+                        continue  # Try again with new backend
+                    except Exception as switch_error:
+                        if self.config.get("debug"):
+                            print(f"Switch failed: {switch_error}", file=sys.stderr)
+                        # Can't switch, raise original error
+                        raise last_error
+                else:
+                    # No more backends to try
+                    raise last_error
+
+        # If we get here, all backends failed
+        raise last_error
 
     def _register_core_tools(self):
         """Register core tools."""
@@ -181,7 +284,9 @@ class Agent:
 
     def _register_web_tools(self):
         """Register web-related tools."""
-        self.registry.register(WebSearchTool())
+        provider = self.config.get("web_search.provider", "duckduckgo")
+        max_results = self.config.get("web_search.max_results", 5)
+        self.registry.register(WebSearchTool(provider=provider, max_results=max_results))
         self.registry.register(FetchWebpageTool())
 
     def _register_image_tools(self):
@@ -215,7 +320,7 @@ Respond with a brief numbered plan (3-5 steps). Be concise."""
         plan_messages.append({"role": "user", "content": planning_prompt})
 
         try:
-            response = self.client.chat.completions.create(
+            response = self._chat_completion_with_fallback(
                 model=self.config.resolve_model(self.model),
                 messages=plan_messages,
                 temperature=0.3,  # Lower temp for plans
@@ -270,7 +375,7 @@ Be concise and actionable."""
         reflection_messages.append({"role": "user", "content": reflection_prompt})
 
         try:
-            response = self.client.chat.completions.create(
+            response = self._chat_completion_with_fallback(
                 model=self.config.resolve_model(self.model),
                 messages=reflection_messages,
                 temperature=0.5,
@@ -408,6 +513,12 @@ Be concise and actionable."""
 
         # Agent loop
         for iteration in range(MAX_ITERATIONS):
+            # Check for interruption
+            if self.interrupted:
+                if self.enable_evaluation:
+                    self.evaluator.end_task(success=False, error_message="Interrupted by external signal")
+                return "\n⚠️ Task interrupted by user"
+
             try:
                 # Record iteration for evaluation
                 if self.enable_evaluation:
@@ -415,10 +526,13 @@ Be concise and actionable."""
 
                 # Get model response
                 stream = use_streaming or self.enable_streaming
-                response = self.client.chat.completions.create(
+                model_settings = self.config.get_model_settings(self.model)
+                response = self._chat_completion_with_fallback(
                     model=self.config.resolve_model(self.model),
                     messages=self.messages,
                     tools=self.registry.get_definitions(),
+                    temperature=model_settings["temperature"],
+                    max_tokens=model_settings["max_tokens"],
                     stream=stream,
                 )
 
@@ -508,6 +622,12 @@ Be concise and actionable."""
             if delta.content:
                 content += delta.content
                 print(delta.content, end="", flush=True)
+                if self.stream_callback:
+                    try:
+                        self.stream_callback(delta.content)
+                    except Exception:
+                        # Callback failures must not interrupt execution.
+                        pass
 
             # Handle tool calls in streaming
             if delta.tool_calls:
@@ -637,6 +757,13 @@ Be concise and actionable."""
                 self.tool_tracker.record_execution(function_name, False, str(e))
 
             return f"Error executing {function_name}: {str(e)}"
+
+    def was_web_search_used(self) -> bool:
+        """Check if web search was used in this execution."""
+        if self.enable_tool_tracking:
+            session_stats = self.tool_tracker.session_stats
+            return "WebSearch" in session_stats and session_stats["WebSearch"]["calls"] > 0
+        return False
 
     def clear_history(self):
         """Clear conversation history."""

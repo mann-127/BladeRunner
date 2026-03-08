@@ -124,7 +124,7 @@ def test_config_web_search_settings() -> None:
     
     # Web search is disabled by default (enabled in example.yml)
     assert isinstance(config.get("web_search.enabled"), bool)
-    assert config.get("web_search.provider") == "brave"
+    assert config.get("web_search.provider") == "duckduckgo"
     assert isinstance(config.get("web_search.max_results"), int)
 
 

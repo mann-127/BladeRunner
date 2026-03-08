@@ -1,9 +1,14 @@
 # BladeRunner Configuration File
 # Requires OPENROUTER_API_KEY or GROQ_API_KEY environment variable
 
-# Backend selection (openrouter or groq)
+# Backend selection (openrouter, groq, or google_adk)
 # backend: openrouter  # Default: OpenRouter (all models, vision support)
 # backend: groq        # Alternative: Groq (free tier, fastest, no vision)
+# backend: google_adk  # Google ADK + Gemini (optional integration)
+#
+# AUTOMATIC FALLBACK: If your primary backend hits rate limits (429) or credit
+# limits (402), BladeRunner automatically switches to an available fallback
+# backend. Set up multiple API keys in .env to enable this feature.
 
 # Default model (use alias or full name)
 # OpenRouter: haiku, sonnet, opus (paid) | llama, gemini, mistral (free)
@@ -13,7 +18,7 @@ model: haiku
 # Optional: override API base URL (auto-selected by backend)
 base_url: https://openrouter.ai/api/v1
 
-# Debug mode
+# Debug mode (shows backend switching and fallback info)
 debug: false
 
 # === Agentic AI Features ===
@@ -43,33 +48,33 @@ models:
   haiku:
     full_name: anthropic/claude-haiku-4.5
     temperature: 0.7
-    max_tokens: 4096
+    max_tokens: 2048
   
   sonnet:
     full_name: anthropic/claude-sonnet-4
     temperature: 0.7
-    max_tokens: 4096
+    max_tokens: 2048
   
   opus:
     full_name: anthropic/claude-opus-4
     temperature: 0.8
-    max_tokens: 4096
+    max_tokens: 2048
   
   # Free alternatives (good for testing)
   llama:
     full_name: meta-llama/llama-3.1-8b-instruct:free
     temperature: 0.7
-    max_tokens: 4096
+    max_tokens: 2048
   
   gemini:
     full_name: google/gemini-flash-1.5:free
     temperature: 0.7
-    max_tokens: 4096
+    max_tokens: 2048
   
   mistral:
     full_name: mistralai/mistral-7b-instruct:free
     temperature: 0.7
-    max_tokens: 4096
+    max_tokens: 2048
   
   # === Groq Models (backend: groq) ===
   # Free tier: 14,400 requests/day, blazing fast
@@ -77,12 +82,12 @@ models:
   groq-llama:
     full_name: llama-3.1-70b-versatile
     temperature: 0.7
-    max_tokens: 4096
+    max_tokens: 2048
   
   groq-mixtral:
     full_name: mixtral-8x7b-32768
     temperature: 0.7
-    max_tokens: 4096
+    max_tokens: 2048
 
 # Backend configurations (auto-managed)
 backends:
@@ -94,6 +99,10 @@ backends:
     base_url: https://api.groq.com/openai/v1
     api_key_env: GROQ_API_KEY
 
+  google_adk:
+    base_url: ""
+    api_key_env: GOOGLE_API_KEY
+
 # Permission settings
 permissions:
   enabled: true
@@ -104,12 +113,57 @@ sessions:
   enabled: true
   directory: ~/.bladerunner/sessions
 
-# Web search settings
+# Web search settings (DuckDuckGo by default - no API key needed)
 web_search:
   enabled: true
-  provider: brave
+  provider: duckduckgo  # or "brave" (requires BRAVE_API_KEY)
   max_results: 5
   timeout: 10
+
+# Google ADK settings (optional)
+google_adk:
+  enabled: false
+  model: gemini-2.0-flash
+  enable_search_grounding: true
+
+# FastAPI service settings
+api:
+  host: 127.0.0.1
+  port: 8000
+  database: ~/.bladerunner/api.db
+  uploads_dir: ~/.bladerunner/uploads
+  
+  # Authentication settings
+  auth:
+    enabled: false
+    keys: []  # Static API keys for basic auth (comma-separated in BLADERUNNER_API_KEYS env var)
+    
+    # JWT authentication (more secure for production)
+    jwt:
+      enabled: false
+      secret_key: ""  # REQUIRED: Set via BLADERUNNER_JWT_SECRET env var, 32+ chars for HS256
+      algorithm: HS256
+      access_token_expire_minutes: 60
+      refresh_token_expire_days: 7
+    
+    # User credentials for JWT login (use bladerunner-create-user to generate password hashes)
+    users: []
+      # Example user entry:
+      # - username: admin
+      #   password_hash: $2b$12$... (bcrypt hash)
+      #   user_id: admin-001
+      #   permissions: ["read", "write", "admin"]
+  
+  # Upload restrictions and retention
+  uploads:
+    max_size_mb: 10  # Maximum file size per upload
+    allowed_types:  # MIME types allowed for uploads
+      - image/jpeg
+      - image/png
+      - image/gif
+      - image/webp
+    retention_days: 30  # Automatically delete uploads older than this
+    per_user_quota_mb: 100  # Maximum total storage per user
 
 # RAG (Retrieval-Augmented Generation) settings
 # Requires: uv sync --extra rag
@@ -130,6 +184,9 @@ skills:
 #
 # For RAG (Vector Storage & Semantic Search):
 #   uv sync --extra rag
+#
+# For Google ADK (Gemini grounding bridge used by API engine):
+#   uv sync --extra google
 #
 # For LSP Integration (Language Server Protocol):
 #   uv sync --extra lsp
