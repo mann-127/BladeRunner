@@ -307,6 +307,12 @@ button#interrupt-btn {
   border-color: color-mix(in srgb, var(--danger), transparent 52%);
 }
 
+button.secondary-btn {
+  background: rgba(12, 22, 35, 0.9);
+  border-color: color-mix(in srgb, var(--accent-cyan), transparent 68%);
+  color: color-mix(in srgb, var(--text-primary), var(--accent-cyan) 12%);
+}
+
 .action-row {
   display: grid;
   gap: 0.46rem;
@@ -430,6 +436,70 @@ button#interrupt-btn {
   margin-bottom: 0.28rem;
   font-size: 0.74rem;
   color: var(--text-muted);
+}
+
+.bubble .content {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.bubble .content > *:first-child {
+  margin-top: 0;
+}
+
+.bubble .content > *:last-child {
+  margin-bottom: 0;
+}
+
+.bubble .content p,
+.bubble .content ul,
+.bubble .content ol,
+.bubble .content blockquote,
+.bubble .content pre {
+  margin: 0.42rem 0;
+}
+
+.bubble .content ul,
+.bubble .content ol {
+  padding-left: 1.2rem;
+}
+
+.bubble .content li + li {
+  margin-top: 0.2rem;
+}
+
+.bubble .content pre {
+  border: 1px solid color-mix(in srgb, var(--accent-cyan), transparent 75%);
+  border-radius: 9px;
+  padding: 0.52rem 0.62rem;
+  background: rgba(7, 14, 24, 0.9);
+  overflow-x: auto;
+}
+
+.bubble .content code {
+  border: 1px solid color-mix(in srgb, var(--accent-cyan), transparent 75%);
+  border-radius: 6px;
+  padding: 0.06rem 0.3rem;
+  background: rgba(10, 19, 30, 0.86);
+  font-size: 0.86em;
+}
+
+.bubble .content pre code {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.bubble .content blockquote {
+  border-left: 3px solid color-mix(in srgb, var(--accent-cyan), transparent 46%);
+  padding-left: 0.62rem;
+  color: color-mix(in srgb, var(--text-primary), var(--text-muted) 42%);
+}
+
+.bubble .content a {
+  color: var(--accent-cyan);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .web-search-used .meta {

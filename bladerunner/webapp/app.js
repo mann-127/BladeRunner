@@ -19,6 +19,7 @@ const enableRetryCheckbox = document.getElementById("enable-retry");
 const enableStreamingCheckbox = document.getElementById("enable-streaming");
 const streamingLabelText = document.getElementById("streaming-label-text");
 const imageFileInput = document.getElementById("image-file");
+const clearChatInlineButton = document.getElementById("clear-chat-inline");
 const newSessionButton = document.getElementById("new-session");
 const interruptBtn = document.getElementById("interrupt-btn");
 const healthPill = document.getElementById("health-pill");
@@ -39,6 +40,7 @@ const qaClearChat = document.getElementById("qa-clear-chat");
 const qaCopySession = document.getElementById("qa-copy-session");
 const qaResearchMode = document.getElementById("qa-research-mode");
 const focusExitBtn = document.getElementById("focus-exit");
+const clearChatButton = document.getElementById("clear-chat");
 
 let sessionId = null;
 let activeWebSocket = null;  // Track active WebSocket connection for interruption
@@ -174,6 +176,161 @@ function populateModelHints(models) {
   }
 }
 
+function escapeHtml(text) {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function sanitizeHref(rawUrl) {
+  try {
+    const url = new URL(rawUrl, window.location.origin);
+    if (["http:", "https:", "mailto:"].includes(url.protocol)) {
+      return url.href;
+    }
+    return null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function renderInlineMarkdown(text) {
+  let html = escapeHtml(text);
+
+  const codeTokens = [];
+  html = html.replace(/`([^`]+)`/g, (_, code) => {
+    const token = `@@CODE_${codeTokens.length}@@`;
+    codeTokens.push(`<code>${code}</code>`);
+    return token;
+  });
+
+  html = html.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, href) => {
+    const safeHref = sanitizeHref(href);
+    if (!safeHref) {
+      return label;
+    }
+    return `<a href="${escapeHtml(safeHref)}" target="_blank" rel="noreferrer">${label}</a>`;
+  });
+
+  html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+
+  codeTokens.forEach((value, index) => {
+    html = html.replaceAll(`@@CODE_${index}@@`, value);
+  });
+
+  return html;
+}
+
+function renderMarkdown(text) {
+  const fragment = document.createDocumentFragment();
+  const lines = String(text || "").replace(/\r\n?/g, "\n").split("\n");
+
+  let inCodeBlock = false;
+  let codeLines = [];
+  let listType = null;
+  let listElement = null;
+
+  const closeList = () => {
+    if (listElement) {
+      fragment.appendChild(listElement);
+      listElement = null;
+      listType = null;
+    }
+  };
+
+  const flushCodeBlock = () => {
+    const pre = document.createElement("pre");
+    const code = document.createElement("code");
+    code.textContent = codeLines.join("\n");
+    pre.appendChild(code);
+    fragment.appendChild(pre);
+    codeLines = [];
+  };
+
+  for (const line of lines) {
+    if (line.startsWith("```")) {
+      closeList();
+      if (!inCodeBlock) {
+        inCodeBlock = true;
+      } else {
+        inCodeBlock = false;
+        flushCodeBlock();
+      }
+      continue;
+    }
+
+    if (inCodeBlock) {
+      codeLines.push(line);
+      continue;
+    }
+
+    if (!line.trim()) {
+      closeList();
+      continue;
+    }
+
+    const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+    if (headingMatch) {
+      closeList();
+      const level = Math.min(headingMatch[1].length, 6);
+      const heading = document.createElement(`h${level}`);
+      heading.innerHTML = renderInlineMarkdown(headingMatch[2]);
+      fragment.appendChild(heading);
+      continue;
+    }
+
+    const unorderedMatch = line.match(/^[-*]\s+(.*)$/);
+    const orderedMatch = line.match(/^\d+\.\s+(.*)$/);
+    if (unorderedMatch || orderedMatch) {
+      const nextListType = unorderedMatch ? "ul" : "ol";
+      if (!listElement || listType !== nextListType) {
+        closeList();
+        listType = nextListType;
+        listElement = document.createElement(nextListType);
+      }
+
+      const li = document.createElement("li");
+      li.innerHTML = renderInlineMarkdown((unorderedMatch || orderedMatch)[1]);
+      listElement.appendChild(li);
+      continue;
+    }
+
+    const quoteMatch = line.match(/^>\s?(.*)$/);
+    if (quoteMatch) {
+      closeList();
+      const quote = document.createElement("blockquote");
+      quote.innerHTML = renderInlineMarkdown(quoteMatch[1]);
+      fragment.appendChild(quote);
+      continue;
+    }
+
+    closeList();
+    const paragraph = document.createElement("p");
+    paragraph.innerHTML = renderInlineMarkdown(line);
+    fragment.appendChild(paragraph);
+  }
+
+  if (inCodeBlock && codeLines.length > 0) {
+    flushCodeBlock();
+  }
+  closeList();
+
+  return fragment;
+}
+
+function clearFeed() {
+  chatPanel.innerHTML = "";
+  userTurns = 0;
+  assistantTurns = 0;
+  webSearchHits = 0;
+  lastLatencyMs = null;
+  updateTelemetry();
+}
+
 function appendBubble(
   role,
   text,
@@ -223,7 +380,12 @@ function appendBubble(
   bubble.appendChild(metaNode);
 
   const textNode = document.createElement("div");
-  textNode.textContent = text;
+  textNode.className = "content";
+  if (role === "assistant" && !isSystemMeta) {
+    textNode.appendChild(renderMarkdown(text));
+  } else {
+    textNode.textContent = text;
+  }
   bubble.appendChild(textNode);
 
   if (sources.length > 0) {
@@ -586,12 +748,15 @@ document.addEventListener("keydown", (event) => {
 });
 
 qaClearChat?.addEventListener("click", () => {
-  chatPanel.innerHTML = "";
-  userTurns = 0;
-  assistantTurns = 0;
-  webSearchHits = 0;
-  lastLatencyMs = null;
-  updateTelemetry();
+  clearFeed();
+});
+
+clearChatButton?.addEventListener("click", () => {
+  clearFeed();
+});
+
+clearChatInlineButton?.addEventListener("click", () => {
+  clearFeed();
 });
 
 qaCopySession?.addEventListener("click", async () => {
