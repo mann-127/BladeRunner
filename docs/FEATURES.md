@@ -205,7 +205,7 @@ Set `debug: true` in config to see fallback events in stderr.
 
 **Run:**
 ```bash
-uv run bladerunner-api
+uv run bladerunner-console
 ```
 
 **Configuration:**

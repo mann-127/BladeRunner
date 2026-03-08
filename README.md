@@ -301,7 +301,7 @@ uv run python -m bladerunner -p "Your prompt here"
 
 ```bash
 # Start backend API + film-themed web console
-uv run bladerunner-api
+uv run bladerunner-console
 
 # Open in browser
 # http://127.0.0.1:8000

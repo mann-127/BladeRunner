@@ -218,7 +218,7 @@ web_search:
 Run BladeRunner as a local API and browser console:
 
 ```bash
-uv run bladerunner-api
+uv run bladerunner-console
 # open http://127.0.0.1:8000
 ```
 

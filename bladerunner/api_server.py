@@ -301,12 +301,19 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=404, detail="Web UI not available")
         return FileResponse(static_dir / "index.html")
 
+    @app.get("/favicon.ico")
+    def favicon() -> FileResponse:
+        favicon_path = static_dir / "favicon.png"
+        if not favicon_path.exists():
+            raise HTTPException(status_code=404, detail="Favicon not found")
+        return FileResponse(favicon_path, media_type="image/png")
+
     @app.get("/api/health")
     def health(x_api_key: Optional[str] = Header(default=None, alias="X-API-Key")) -> dict:
         _require_api_key(x_api_key)
         return {
             "ok": True,
-            "service": "bladerunner-api",
+            "service": "bladerunner-console",
             "google_adk_available": GoogleADKBridge.adk_available(),
             "auth_enabled": auth_enabled,
             "jwt_enabled": jwt_enabled and bool(jwt_secret),

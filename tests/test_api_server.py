@@ -22,7 +22,7 @@ def test_health_endpoint() -> None:
     assert res.status_code == 200
     payload = res.json()
     assert payload["ok"] is True
-    assert payload["service"] == "bladerunner-api"
+    assert payload["service"] == "bladerunner-console"
 
 
 def test_google_adk_runtime_error_maps_to_400(monkeypatch) -> None:
