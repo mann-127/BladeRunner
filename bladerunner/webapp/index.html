@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/assets/styles.css?v=20260308e" />
+    <link rel="stylesheet" href="/assets/styles.css?v=20260308f" />
   </head>
   <body>
     <div class="backdrop"></div>
@@ -21,50 +21,149 @@
         <div class="header-left">
           <p class="kicker">LAPD ARCHIVE NODE</p>
           <h1>BladeRunner Agent Console</h1>
-          <p class="subtitle">Operational interface for agent sessions, tool policy, and retrieval controls.</p>
         </div>
-        <div class="header-status">
+        <div class="header-status" role="group" aria-label="Console status">
           <div class="status-pill" id="health-pill">Checking core...</div>
           <div class="status-pill session" id="session-pill">Session idle</div>
+          <div class="status-pill run-state" id="run-state-pill">Ready</div>
+          <button type="button" id="context-toggle" class="context-toggle" aria-expanded="true" aria-controls="context-drawer">Configure</button>
         </div>
       </header>
 
-      <section class="telemetry-hud">
-        <div class="telemetry-grid">
-          <article class="telemetry-cell">
-            <span class="telemetry-label">Session</span>
-            <span class="telemetry-value" id="telemetry-session">idle</span>
-          </article>
-          <article class="telemetry-cell">
-            <span class="telemetry-label">Engine</span>
-            <span class="telemetry-value" id="telemetry-engine">bladerunner</span>
-          </article>
-          <article class="telemetry-cell">
-            <span class="telemetry-label">Model</span>
-            <span class="telemetry-value" id="telemetry-model">(default)</span>
-          </article>
-          <article class="telemetry-cell">
-            <span class="telemetry-label">Permission</span>
-            <span class="telemetry-value" id="telemetry-permission">none</span>
-          </article>
-          <article class="telemetry-cell">
-            <span class="telemetry-label">Web/RAG</span>
-            <span class="telemetry-value" id="telemetry-retrieval">off/off</span>
-          </article>
-          <article class="telemetry-cell">
-            <span class="telemetry-label">Turns</span>
-            <span class="telemetry-value" id="telemetry-turns">0/0</span>
-          </article>
-          <article class="telemetry-cell">
-            <span class="telemetry-label">Last RTT</span>
-            <span class="telemetry-value" id="telemetry-latency">--</span>
-          </article>
-          <article class="telemetry-cell">
-            <span class="telemetry-label">Web Hits</span>
-            <span class="telemetry-value" id="telemetry-web-used">0</span>
-          </article>
-        </div>
+      <section class="deck-layout">
+        <section class="command-deck">
+          <section class="chat-panel" id="chat-panel"></section>
 
+          <form id="chat-form" class="composer">
+            <textarea id="message" rows="3" placeholder="Ask anything..." required></textarea>
+            <div class="composer-side">
+              <input id="image-file" type="file" accept="image/*" />
+              <button type="submit">Transmit</button>
+            </div>
+          </form>
+        </section>
+
+        <aside class="context-drawer" id="context-drawer">
+          <article class="drawer-group">
+            <h2>Session Profile</h2>
+            <div class="drawer-fields">
+              <label>
+                User ID
+                <input id="user-id" value="indie-runner" maxlength="128" />
+              </label>
+
+              <label id="api-key-row">
+                API Key (optional)
+                <input id="api-key" type="password" placeholder="X-API-Key when auth is enabled" />
+              </label>
+
+              <label>
+                Engine
+                <select id="engine">
+                  <option value="bladerunner">BladeRunner Agent</option>
+                  <option value="google_adk">Google ADK/Gemini</option>
+                </select>
+              </label>
+
+              <label>
+                Model
+                <input id="model" placeholder="haiku, sonnet, groq-llama..." list="model-list" />
+                <datalist id="model-list"></datalist>
+              </label>
+            </div>
+          </article>
+
+          <article class="drawer-group">
+            <h2>Policy & Skill</h2>
+            <div class="drawer-fields">
+              <label>
+                Permission Profile
+                <select id="permission-profile">
+                  <option value="none">none (default)</option>
+                  <option value="permissive">permissive</option>
+                  <option value="standard">standard</option>
+                  <option value="strict">strict</option>
+                </select>
+              </label>
+
+              <label>
+                Skill (preset)
+                <select id="skill">
+                  <option value="">none</option>
+                </select>
+                <small class="field-help">Optional preset instructions/tool scope. Use none for general chat.</small>
+              </label>
+            </div>
+          </article>
+
+          <article class="drawer-group">
+            <h2>Capabilities</h2>
+            <div class="toggle-grid">
+              <label>
+                <input type="checkbox" id="enable-web-search" />
+                Web Search
+              </label>
+
+              <label>
+                <input type="checkbox" id="enable-rag" />
+                RAG
+              </label>
+
+              <label>
+                <input type="checkbox" id="auto-match-skill" />
+                Auto Skill Match
+              </label>
+
+              <label>
+                <input type="checkbox" id="google-search-grounding" checked />
+                Google Search Grounding
+              </label>
+
+              <label>
+                <input type="checkbox" id="enable-planning" checked />
+                Planning
+              </label>
+
+              <label>
+                <input type="checkbox" id="enable-reflection" checked />
+                Reflection
+              </label>
+
+              <label>
+                <input type="checkbox" id="enable-retry" checked />
+                Retry
+              </label>
+
+              <label>
+                <input type="checkbox" id="enable-streaming" />
+                <span id="streaming-label-text">Streaming (BladeRunner only)</span>
+              </label>
+            </div>
+          </article>
+
+          <article class="drawer-group">
+            <h2>Session Actions</h2>
+            <div class="action-row">
+              <button id="new-session" type="button">New Session</button>
+              <button id="interrupt-btn" type="button" style="display: none; background: #ff4444;">Stop</button>
+            </div>
+          </article>
+
+          <section class="session-flags" id="session-flags" aria-live="polite"></section>
+        </aside>
+      </section>
+
+      <section class="ops-strip">
+        <div class="ops-metrics">
+          <span class="ops-chip">Session <strong id="telemetry-session">idle</strong></span>
+          <span class="ops-chip">Engine <strong id="telemetry-engine">bladerunner</strong></span>
+          <span class="ops-chip">Model <strong id="telemetry-model">(default)</strong></span>
+          <span class="ops-chip">Policy <strong id="telemetry-permission">none</strong></span>
+          <span class="ops-chip">Web/RAG <strong id="telemetry-retrieval">off/off</strong></span>
+          <span class="ops-chip">Turns <strong id="telemetry-turns">0/0</strong></span>
+          <span class="ops-chip">RTT <strong id="telemetry-latency">--</strong></span>
+          <span class="ops-chip">Web Hits <strong id="telemetry-web-used">0</strong></span>
+        </div>
         <div class="quick-actions">
           <button type="button" class="quick-btn" id="qa-focus">Focus</button>
           <button type="button" class="quick-btn" id="qa-clear-chat">Clear Feed</button>
@@ -72,127 +171,8 @@
           <button type="button" class="quick-btn" id="qa-research-mode">Research Mode</button>
         </div>
       </section>
-
-      <section class="controls">
-        <article class="control-card profile">
-          <h2>Session Profile</h2>
-          <div class="control-fields two-col">
-            <label>
-              User ID
-              <input id="user-id" value="indie-runner" maxlength="128" />
-            </label>
-
-            <label id="api-key-row">
-              API Key (optional)
-              <input id="api-key" type="password" placeholder="X-API-Key when auth is enabled" />
-            </label>
-
-            <label>
-              Engine
-              <select id="engine">
-                <option value="bladerunner">BladeRunner Agent</option>
-                <option value="google_adk">Google ADK/Gemini</option>
-              </select>
-            </label>
-
-            <label>
-              Model
-              <input id="model" placeholder="haiku, sonnet, groq-llama..." list="model-list" />
-              <datalist id="model-list"></datalist>
-            </label>
-          </div>
-        </article>
-
-        <article class="control-card policy">
-          <h2>Policy & Skill</h2>
-          <div class="control-fields two-col">
-            <label>
-              Permission Profile
-              <select id="permission-profile">
-                <option value="none">none (default)</option>
-                <option value="permissive">permissive</option>
-                <option value="standard">standard</option>
-                <option value="strict">strict</option>
-              </select>
-            </label>
-
-            <label>
-              Skill (preset)
-              <select id="skill">
-                <option value="">none</option>
-              </select>
-              <small class="field-help">Optional preset instructions/tool scope. Use none for general chat.</small>
-            </label>
-          </div>
-        </article>
-
-        <article class="control-card features">
-          <h2>Capabilities</h2>
-          <div class="toggle-grid">
-            <label>
-              <input type="checkbox" id="enable-web-search" />
-              Web Search
-            </label>
-
-            <label>
-              <input type="checkbox" id="enable-rag" />
-              RAG
-            </label>
-
-            <label>
-              <input type="checkbox" id="auto-match-skill" />
-              Auto Skill Match
-            </label>
-
-            <label>
-              <input type="checkbox" id="google-search-grounding" checked />
-              Google Search Grounding
-            </label>
-
-            <label>
-              <input type="checkbox" id="enable-planning" checked />
-              Planning
-            </label>
-
-            <label>
-              <input type="checkbox" id="enable-reflection" checked />
-              Reflection
-            </label>
-
-            <label>
-              <input type="checkbox" id="enable-retry" checked />
-              Retry
-            </label>
-
-            <label>
-              <input type="checkbox" id="enable-streaming" />
-              <span id="streaming-label-text">Streaming (BladeRunner only)</span>
-            </label>
-          </div>
-        </article>
-
-        <article class="control-card actions">
-          <h2>Session Actions</h2>
-          <div class="action-row">
-            <button id="new-session" type="button">New Session</button>
-            <button id="interrupt-btn" type="button" style="display: none; background: #ff4444;">Stop</button>
-          </div>
-        </article>
-      </section>
-
-      <section class="session-flags" id="session-flags" aria-live="polite"></section>
-
-      <section class="chat-panel" id="chat-panel"></section>
-
-      <form id="chat-form" class="composer">
-        <textarea id="message" rows="3" placeholder="Ask anything..." required></textarea>
-        <div class="composer-side">
-          <input id="image-file" type="file" accept="image/*" />
-          <button type="submit">Transmit</button>
-        </div>
-      </form>
     </main>
 
-    <script src="/assets/app.js?v=20260308d" defer></script>
+    <script src="/assets/app.js?v=20260308e" defer></script>
   </body>
 </html>

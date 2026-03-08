@@ -23,6 +23,8 @@ const newSessionButton = document.getElementById("new-session");
 const interruptBtn = document.getElementById("interrupt-btn");
 const healthPill = document.getElementById("health-pill");
 const sessionPill = document.getElementById("session-pill");
+const runStatePill = document.getElementById("run-state-pill");
+const contextToggleBtn = document.getElementById("context-toggle");
 const sessionFlags = document.getElementById("session-flags");
 const telemetrySession = document.getElementById("telemetry-session");
 const telemetryEngine = document.getElementById("telemetry-engine");
@@ -62,6 +64,21 @@ function updateSessionPill() {
     return;
   }
   sessionPill.textContent = sessionId ? `Session ${sessionId.slice(0, 8)}` : "Session idle";
+}
+
+function setRunState(text) {
+  if (!runStatePill) {
+    return;
+  }
+  runStatePill.textContent = text;
+}
+
+function setDrawerCollapsed(collapsed) {
+  document.body.classList.toggle("drawer-collapsed", collapsed);
+  if (contextToggleBtn) {
+    contextToggleBtn.textContent = collapsed ? "Configure" : "Hide Config";
+    contextToggleBtn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  }
 }
 
 function setFocusMode(enabled) {
@@ -381,6 +398,11 @@ async function sendViaWebSocket(payload) {
       if (msg.type === "status") {
         // Status update (executing, interrupting, etc.)
         console.log("Status:", msg.status);
+        if (msg.status === "executing") {
+          setRunState("Streaming");
+        } else if (msg.status === "interrupting") {
+          setRunState("Interrupting");
+        }
       } else if (msg.type === "chunk") {
         streamed += msg.delta;
       } else if (msg.type === "final") {
@@ -419,6 +441,7 @@ function interruptStream() {
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const requestStartedAt = performance.now();
+  setRunState("Executing");
 
   const message = messageInput.value.trim();
   const user_id = userIdInput.value.trim();
@@ -515,8 +538,10 @@ form.addEventListener("submit", async (event) => {
       updateTelemetry();
     }
   } catch (error) {
+    setRunState("Error");
     appendBubble("assistant", error.message, "system/error");
   } finally {
+    setRunState("Ready");
     interruptBtn.style.display = "none";
     imageFileInput.value = "";
   }
@@ -592,12 +617,19 @@ qaResearchMode?.addEventListener("click", () => {
   renderSessionFlags();
 });
 
+contextToggleBtn?.addEventListener("click", () => {
+  const collapsed = !document.body.classList.contains("drawer-collapsed");
+  setDrawerCollapsed(collapsed);
+});
+
 checkHealth();
 loadMeta();
 syncStreamingAvailability();
 renderSessionFlags();
 updateSessionPill();
 updateTelemetry();
+setRunState("Ready");
+setDrawerCollapsed(false);
 appendBubble(
   "assistant",
   "Console initialized. Create a session and transmit your first query.",
