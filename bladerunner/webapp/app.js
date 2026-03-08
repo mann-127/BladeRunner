@@ -22,10 +22,28 @@ const imageFileInput = document.getElementById("image-file");
 const newSessionButton = document.getElementById("new-session");
 const interruptBtn = document.getElementById("interrupt-btn");
 const healthPill = document.getElementById("health-pill");
+const sessionPill = document.getElementById("session-pill");
 const sessionFlags = document.getElementById("session-flags");
+const telemetrySession = document.getElementById("telemetry-session");
+const telemetryEngine = document.getElementById("telemetry-engine");
+const telemetryModel = document.getElementById("telemetry-model");
+const telemetryPermission = document.getElementById("telemetry-permission");
+const telemetryRetrieval = document.getElementById("telemetry-retrieval");
+const telemetryTurns = document.getElementById("telemetry-turns");
+const telemetryLatency = document.getElementById("telemetry-latency");
+const telemetryWebUsed = document.getElementById("telemetry-web-used");
+const qaFocus = document.getElementById("qa-focus");
+const qaClearChat = document.getElementById("qa-clear-chat");
+const qaCopySession = document.getElementById("qa-copy-session");
+const qaResearchMode = document.getElementById("qa-research-mode");
+const focusExitBtn = document.getElementById("focus-exit");
 
 let sessionId = null;
 let activeWebSocket = null;  // Track active WebSocket connection for interruption
+let userTurns = 0;
+let assistantTurns = 0;
+let webSearchHits = 0;
+let lastLatencyMs = null;
 
 const FALLBACK_MODEL_HINTS = [
   "haiku",
@@ -39,6 +57,48 @@ const FALLBACK_MODEL_HINTS = [
   "gemini-2.0-flash",
 ];
 
+function updateSessionPill() {
+  if (!sessionPill) {
+    return;
+  }
+  sessionPill.textContent = sessionId ? `Session ${sessionId.slice(0, 8)}` : "Session idle";
+}
+
+function setFocusMode(enabled) {
+  document.body.classList.toggle("focus-mode", enabled);
+  if (qaFocus) {
+    qaFocus.textContent = enabled ? "Focus: On" : "Focus";
+    qaFocus.setAttribute("aria-pressed", enabled ? "true" : "false");
+  }
+}
+
+function updateTelemetry() {
+  if (telemetrySession) {
+    telemetrySession.textContent = sessionId ? sessionId.slice(0, 8) : "idle";
+  }
+  if (telemetryEngine) {
+    telemetryEngine.textContent = engineSelect.value;
+  }
+  if (telemetryModel) {
+    telemetryModel.textContent = modelInput.value.trim() || "(default)";
+  }
+  if (telemetryPermission) {
+    telemetryPermission.textContent = permissionProfileSelect.value;
+  }
+  if (telemetryRetrieval) {
+    telemetryRetrieval.textContent = `${enableWebSearchCheckbox.checked ? "on" : "off"}/${enableRagCheckbox.checked ? "on" : "off"}`;
+  }
+  if (telemetryTurns) {
+    telemetryTurns.textContent = `${userTurns}/${assistantTurns}`;
+  }
+  if (telemetryLatency) {
+    telemetryLatency.textContent = Number.isFinite(lastLatencyMs) ? `${lastLatencyMs}ms` : "--";
+  }
+  if (telemetryWebUsed) {
+    telemetryWebUsed.textContent = String(webSearchHits);
+  }
+}
+
 function syncStreamingAvailability() {
   const isBladeRunner = engineSelect.value === "bladerunner";
   if (!isBladeRunner) {
@@ -49,6 +109,7 @@ function syncStreamingAvailability() {
     ? "Streaming (BladeRunner only)"
     : "Streaming unavailable for Google ADK";
   renderSessionFlags();
+  updateTelemetry();
 }
 
 function renderSessionFlags() {
@@ -74,6 +135,8 @@ function renderSessionFlags() {
     node.textContent = item.label;
     sessionFlags.appendChild(node);
   }
+
+  updateTelemetry();
 }
 
 function populateModelHints(models) {
@@ -113,10 +176,17 @@ function appendBubble(
   metaNode.className = "meta";
   let metaText = meta;
   const isSystemMeta = typeof meta === "string" && meta.startsWith("system");
+  if (role === "user") {
+    userTurns += 1;
+  } else if (role === "assistant" && !isSystemMeta) {
+    assistantTurns += 1;
+  }
+
   if (role === "assistant" && !isSystemMeta) {
     if (webSearchUsed) {
       metaText += " | Web: used";
       bubble.classList.add("web-search-used");
+      webSearchHits += 1;
     } else if (webSearchRequested) {
       metaText += " | Web: on (not used)";
       bubble.classList.add("web-search-requested");
@@ -166,6 +236,7 @@ function appendBubble(
 
   chatPanel.appendChild(bubble);
   chatPanel.scrollTop = chatPanel.scrollHeight;
+  updateTelemetry();
 }
 
 function getAuthHeaders(extra = {}) {
@@ -254,6 +325,8 @@ async function createSession() {
 
   const data = await res.json();
   sessionId = data.session_id;
+  updateSessionPill();
+  updateTelemetry();
   appendBubble("assistant", `Session ready: ${sessionId}`, "system");
 }
 
@@ -345,6 +418,7 @@ function interruptStream() {
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  const requestStartedAt = performance.now();
 
   const message = messageInput.value.trim();
   const user_id = userIdInput.value.trim();
@@ -431,6 +505,15 @@ form.addEventListener("submit", async (event) => {
       payload.applied_skill,
       payload.warnings || []
     );
+
+    lastLatencyMs = Math.round(performance.now() - requestStartedAt);
+    updateTelemetry();
+
+    if (payload.session_id && payload.session_id !== sessionId) {
+      sessionId = payload.session_id;
+      updateSessionPill();
+      updateTelemetry();
+    }
   } catch (error) {
     appendBubble("assistant", error.message, "system/error");
   } finally {
@@ -462,10 +545,59 @@ for (const input of [
 
 modelInput.addEventListener("input", renderSessionFlags);
 
+qaFocus?.addEventListener("click", () => {
+  const focused = !document.body.classList.contains("focus-mode");
+  setFocusMode(focused);
+});
+
+focusExitBtn?.addEventListener("click", () => {
+  setFocusMode(false);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && document.body.classList.contains("focus-mode")) {
+    setFocusMode(false);
+  }
+});
+
+qaClearChat?.addEventListener("click", () => {
+  chatPanel.innerHTML = "";
+  userTurns = 0;
+  assistantTurns = 0;
+  webSearchHits = 0;
+  lastLatencyMs = null;
+  updateTelemetry();
+});
+
+qaCopySession?.addEventListener("click", async () => {
+  if (!sessionId) {
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(sessionId);
+    sessionPill.textContent = "Session copied";
+    setTimeout(updateSessionPill, 900);
+  } catch (_) {
+    appendBubble("assistant", "Clipboard access denied by browser.", "system/error");
+  }
+});
+
+qaResearchMode?.addEventListener("click", () => {
+  enableWebSearchCheckbox.checked = true;
+  enableRagCheckbox.checked = true;
+  autoMatchSkillCheckbox.checked = true;
+  enablePlanningCheckbox.checked = true;
+  enableReflectionCheckbox.checked = true;
+  enableRetryCheckbox.checked = true;
+  renderSessionFlags();
+});
+
 checkHealth();
 loadMeta();
 syncStreamingAvailability();
 renderSessionFlags();
+updateSessionPill();
+updateTelemetry();
 appendBubble(
   "assistant",
   "Console initialized. Create a session and transmit your first query.",

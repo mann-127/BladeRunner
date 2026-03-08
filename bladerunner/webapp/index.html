@@ -11,104 +11,173 @@
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/assets/styles.css?v=20260308" />
+    <link rel="stylesheet" href="/assets/styles.css?v=20260308e" />
   </head>
   <body>
     <div class="backdrop"></div>
+    <button type="button" id="focus-exit" class="focus-exit" aria-label="Exit focus mode">Exit Focus</button>
     <main class="console-shell">
       <header class="console-header">
-        <div>
+        <div class="header-left">
           <p class="kicker">LAPD ARCHIVE NODE</p>
           <h1>BladeRunner Agent Console</h1>
+          <p class="subtitle">Operational interface for agent sessions, tool policy, and retrieval controls.</p>
         </div>
-        <div class="status-pill" id="health-pill">Checking core...</div>
+        <div class="header-status">
+          <div class="status-pill" id="health-pill">Checking core...</div>
+          <div class="status-pill session" id="session-pill">Session idle</div>
+        </div>
       </header>
 
+      <section class="telemetry-hud">
+        <div class="telemetry-grid">
+          <article class="telemetry-cell">
+            <span class="telemetry-label">Session</span>
+            <span class="telemetry-value" id="telemetry-session">idle</span>
+          </article>
+          <article class="telemetry-cell">
+            <span class="telemetry-label">Engine</span>
+            <span class="telemetry-value" id="telemetry-engine">bladerunner</span>
+          </article>
+          <article class="telemetry-cell">
+            <span class="telemetry-label">Model</span>
+            <span class="telemetry-value" id="telemetry-model">(default)</span>
+          </article>
+          <article class="telemetry-cell">
+            <span class="telemetry-label">Permission</span>
+            <span class="telemetry-value" id="telemetry-permission">none</span>
+          </article>
+          <article class="telemetry-cell">
+            <span class="telemetry-label">Web/RAG</span>
+            <span class="telemetry-value" id="telemetry-retrieval">off/off</span>
+          </article>
+          <article class="telemetry-cell">
+            <span class="telemetry-label">Turns</span>
+            <span class="telemetry-value" id="telemetry-turns">0/0</span>
+          </article>
+          <article class="telemetry-cell">
+            <span class="telemetry-label">Last RTT</span>
+            <span class="telemetry-value" id="telemetry-latency">--</span>
+          </article>
+          <article class="telemetry-cell">
+            <span class="telemetry-label">Web Hits</span>
+            <span class="telemetry-value" id="telemetry-web-used">0</span>
+          </article>
+        </div>
+
+        <div class="quick-actions">
+          <button type="button" class="quick-btn" id="qa-focus">Focus</button>
+          <button type="button" class="quick-btn" id="qa-clear-chat">Clear Feed</button>
+          <button type="button" class="quick-btn" id="qa-copy-session">Copy Session</button>
+          <button type="button" class="quick-btn" id="qa-research-mode">Research Mode</button>
+        </div>
+      </section>
+
       <section class="controls">
-        <label>
-          User ID
-          <input id="user-id" value="indie-runner" maxlength="128" />
-        </label>
+        <article class="control-card profile">
+          <h2>Session Profile</h2>
+          <div class="control-fields two-col">
+            <label>
+              User ID
+              <input id="user-id" value="indie-runner" maxlength="128" />
+            </label>
 
-        <label id="api-key-row">
-          API Key (optional)
-          <input id="api-key" type="password" placeholder="X-API-Key when auth is enabled" />
-        </label>
+            <label id="api-key-row">
+              API Key (optional)
+              <input id="api-key" type="password" placeholder="X-API-Key when auth is enabled" />
+            </label>
 
-        <label>
-          Engine
-          <select id="engine">
-            <option value="bladerunner">BladeRunner Agent</option>
-            <option value="google_adk">Google ADK/Gemini</option>
-          </select>
-        </label>
+            <label>
+              Engine
+              <select id="engine">
+                <option value="bladerunner">BladeRunner Agent</option>
+                <option value="google_adk">Google ADK/Gemini</option>
+              </select>
+            </label>
 
-        <label>
-          Model
-          <input id="model" placeholder="haiku, sonnet, groq-llama..." list="model-list" />
-          <datalist id="model-list"></datalist>
-        </label>
+            <label>
+              Model
+              <input id="model" placeholder="haiku, sonnet, groq-llama..." list="model-list" />
+              <datalist id="model-list"></datalist>
+            </label>
+          </div>
+        </article>
 
-        <label>
-          Permission Profile
-          <select id="permission-profile">
-            <option value="none">none (default)</option>
-            <option value="permissive">permissive</option>
-            <option value="standard">standard</option>
-            <option value="strict">strict</option>
-          </select>
-        </label>
+        <article class="control-card policy">
+          <h2>Policy & Skill</h2>
+          <div class="control-fields two-col">
+            <label>
+              Permission Profile
+              <select id="permission-profile">
+                <option value="none">none (default)</option>
+                <option value="permissive">permissive</option>
+                <option value="standard">standard</option>
+                <option value="strict">strict</option>
+              </select>
+            </label>
 
-        <label>
-          Skill (preset)
-          <select id="skill">
-            <option value="">none</option>
-          </select>
-          <small class="field-help">Optional preset instructions/tool scope. Use none for general chat.</small>
-        </label>
+            <label>
+              Skill (preset)
+              <select id="skill">
+                <option value="">none</option>
+              </select>
+              <small class="field-help">Optional preset instructions/tool scope. Use none for general chat.</small>
+            </label>
+          </div>
+        </article>
 
-        <label>
-          <input type="checkbox" id="enable-web-search" />
-          Web Search
-        </label>
+        <article class="control-card features">
+          <h2>Capabilities</h2>
+          <div class="toggle-grid">
+            <label>
+              <input type="checkbox" id="enable-web-search" />
+              Web Search
+            </label>
 
-        <label>
-          <input type="checkbox" id="enable-rag" />
-          RAG
-        </label>
+            <label>
+              <input type="checkbox" id="enable-rag" />
+              RAG
+            </label>
 
-        <label>
-          <input type="checkbox" id="auto-match-skill" />
-          Auto Skill Match
-        </label>
+            <label>
+              <input type="checkbox" id="auto-match-skill" />
+              Auto Skill Match
+            </label>
 
-        <label>
-          <input type="checkbox" id="google-search-grounding" checked />
-          Google Search Grounding
-        </label>
+            <label>
+              <input type="checkbox" id="google-search-grounding" checked />
+              Google Search Grounding
+            </label>
 
-        <label>
-          <input type="checkbox" id="enable-planning" checked />
-          Planning
-        </label>
+            <label>
+              <input type="checkbox" id="enable-planning" checked />
+              Planning
+            </label>
 
-        <label>
-          <input type="checkbox" id="enable-reflection" checked />
-          Reflection
-        </label>
+            <label>
+              <input type="checkbox" id="enable-reflection" checked />
+              Reflection
+            </label>
 
-        <label>
-          <input type="checkbox" id="enable-retry" checked />
-          Retry
-        </label>
+            <label>
+              <input type="checkbox" id="enable-retry" checked />
+              Retry
+            </label>
 
-        <label>
-          <input type="checkbox" id="enable-streaming" />
-          <span id="streaming-label-text">Streaming (BladeRunner only)</span>
-        </label>
+            <label>
+              <input type="checkbox" id="enable-streaming" />
+              <span id="streaming-label-text">Streaming (BladeRunner only)</span>
+            </label>
+          </div>
+        </article>
 
-        <button id="new-session" type="button">New Session</button>
-        <button id="interrupt-btn" type="button" style="display: none; background: #ff4444;">Stop</button>
+        <article class="control-card actions">
+          <h2>Session Actions</h2>
+          <div class="action-row">
+            <button id="new-session" type="button">New Session</button>
+            <button id="interrupt-btn" type="button" style="display: none; background: #ff4444;">Stop</button>
+          </div>
+        </article>
       </section>
 
       <section class="session-flags" id="session-flags" aria-live="polite"></section>
@@ -124,6 +193,6 @@
       </form>
     </main>
 
-    <script src="/assets/app.js?v=20260308" defer></script>
+    <script src="/assets/app.js?v=20260308d" defer></script>
   </body>
 </html>
