@@ -96,7 +96,7 @@ h1 {
 
 .controls {
   display: grid;
-  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 0.6rem;
   margin-top: 0.9rem;
 }
@@ -104,8 +104,15 @@ h1 {
 label {
   display: grid;
   gap: 0.28rem;
+  min-width: 0;
   color: var(--text-muted);
   font-size: 0.84rem;
+}
+
+.field-help {
+  color: color-mix(in srgb, var(--text-muted), white 8%);
+  font-size: 0.72rem;
+  line-height: 1.25;
 }
 
 label:has(input[type="checkbox"]) {
@@ -136,6 +143,13 @@ textarea {
   padding: 0.62rem 0.66rem;
 }
 
+input:not([type="checkbox"]),
+select,
+textarea {
+  width: 100%;
+  min-width: 0;
+}
+
 input[type="checkbox"] {
   width: 16px;
   height: 16px;
@@ -160,6 +174,31 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+}
+
+.session-flags {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(7, 10, 14, 0.55);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.session-flag {
+  border: 1px solid color-mix(in srgb, var(--line), white 12%);
+  border-radius: 999px;
+  padding: 0.22rem 0.55rem;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  background: rgba(18, 24, 33, 0.85);
+}
+
+.session-flag.enabled {
+  color: var(--accent-cyan);
+  border-color: color-mix(in srgb, var(--accent-cyan), transparent 55%);
 }
 
 .bubble {

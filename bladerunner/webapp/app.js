@@ -2,6 +2,7 @@ const chatPanel = document.getElementById("chat-panel");
 const form = document.getElementById("chat-form");
 const messageInput = document.getElementById("message");
 const userIdInput = document.getElementById("user-id");
+const apiKeyRow = document.getElementById("api-key-row");
 const apiKeyInput = document.getElementById("api-key");
 const engineSelect = document.getElementById("engine");
 const modelInput = document.getElementById("model");
@@ -16,13 +17,82 @@ const enablePlanningCheckbox = document.getElementById("enable-planning");
 const enableReflectionCheckbox = document.getElementById("enable-reflection");
 const enableRetryCheckbox = document.getElementById("enable-retry");
 const enableStreamingCheckbox = document.getElementById("enable-streaming");
+const streamingLabelText = document.getElementById("streaming-label-text");
 const imageFileInput = document.getElementById("image-file");
 const newSessionButton = document.getElementById("new-session");
 const interruptBtn = document.getElementById("interrupt-btn");
 const healthPill = document.getElementById("health-pill");
+const sessionFlags = document.getElementById("session-flags");
 
 let sessionId = null;
 let activeWebSocket = null;  // Track active WebSocket connection for interruption
+
+const FALLBACK_MODEL_HINTS = [
+  "haiku",
+  "sonnet",
+  "opus",
+  "llama",
+  "gemini",
+  "mistral",
+  "groq-llama",
+  "groq-mixtral",
+  "gemini-2.0-flash",
+];
+
+function syncStreamingAvailability() {
+  const isBladeRunner = engineSelect.value === "bladerunner";
+  if (!isBladeRunner) {
+    enableStreamingCheckbox.checked = false;
+  }
+  enableStreamingCheckbox.disabled = !isBladeRunner;
+  streamingLabelText.textContent = isBladeRunner
+    ? "Streaming (BladeRunner only)"
+    : "Streaming unavailable for Google ADK";
+  renderSessionFlags();
+}
+
+function renderSessionFlags() {
+  if (!sessionFlags) {
+    return;
+  }
+
+  const items = [
+    { label: `Engine: ${engineSelect.value}` },
+    { label: `Model: ${modelInput.value.trim() || "(default)"}` },
+    { label: `Web: ${enableWebSearchCheckbox.checked ? "on" : "off"}`, enabled: enableWebSearchCheckbox.checked },
+    { label: `RAG: ${enableRagCheckbox.checked ? "on" : "off"}`, enabled: enableRagCheckbox.checked },
+    { label: `Skill: ${skillSelect.value || "none"}`, enabled: Boolean(skillSelect.value) },
+    { label: `Auto Skill Match: ${autoMatchSkillCheckbox.checked ? "on" : "off"}`, enabled: autoMatchSkillCheckbox.checked },
+    { label: `Permission: ${permissionProfileSelect.value}` },
+    { label: `Streaming: ${enableStreamingCheckbox.checked ? "on" : "off"}`, enabled: enableStreamingCheckbox.checked },
+  ];
+
+  sessionFlags.innerHTML = "";
+  for (const item of items) {
+    const node = document.createElement("span");
+    node.className = item.enabled ? "session-flag enabled" : "session-flag";
+    node.textContent = item.label;
+    sessionFlags.appendChild(node);
+  }
+}
+
+function populateModelHints(models) {
+  const merged = new Set(models || []);
+
+  // If config exposes only one model, keep UX helpful with common aliases.
+  if (merged.size <= 1) {
+    for (const fallback of FALLBACK_MODEL_HINTS) {
+      merged.add(fallback);
+    }
+  }
+
+  modelList.innerHTML = "";
+  for (const model of merged) {
+    const option = document.createElement("option");
+    option.value = model;
+    modelList.appendChild(option);
+  }
+}
 
 function appendBubble(
   role,
@@ -42,7 +112,8 @@ function appendBubble(
   const metaNode = document.createElement("div");
   metaNode.className = "meta";
   let metaText = meta;
-  if (role === "assistant") {
+  const isSystemMeta = typeof meta === "string" && meta.startsWith("system");
+  if (role === "assistant" && !isSystemMeta) {
     if (webSearchUsed) {
       metaText += " | Web: used";
       bubble.classList.add("web-search-used");
@@ -140,12 +211,11 @@ async function loadMeta() {
     const payload = await res.json();
     const models = payload.models || [];
     const skills = payload.skills || [];
+    populateModelHints(models);
 
-    modelList.innerHTML = "";
-    for (const model of models) {
-      const option = document.createElement("option");
-      option.value = model;
-      modelList.appendChild(option);
+    // Keep API key field visible only when auth is enabled.
+    if (apiKeyRow) {
+      apiKeyRow.style.display = payload.auth_enabled ? "grid" : "none";
     }
 
     if (!modelInput.value && payload.default_model) {
@@ -190,6 +260,7 @@ async function createSession() {
 newSessionButton.addEventListener("click", async () => {
   try {
     await createSession();
+    renderSessionFlags();
   } catch (error) {
     appendBubble("assistant", error.message, "system/error");
   }
@@ -373,8 +444,28 @@ interruptBtn.addEventListener("click", () => {
   interruptStream();
 });
 
+engineSelect.addEventListener("change", () => {
+  syncStreamingAvailability();
+});
+
+for (const input of [
+  modelInput,
+  permissionProfileSelect,
+  skillSelect,
+  enableWebSearchCheckbox,
+  enableRagCheckbox,
+  autoMatchSkillCheckbox,
+  enableStreamingCheckbox,
+]) {
+  input.addEventListener("change", renderSessionFlags);
+}
+
+modelInput.addEventListener("input", renderSessionFlags);
+
 checkHealth();
 loadMeta();
+syncStreamingAvailability();
+renderSessionFlags();
 appendBubble(
   "assistant",
   "Console initialized. Create a session and transmit your first query.",
