@@ -1,11 +1,14 @@
 """Evaluation and metrics tracking for agent performance monitoring."""
 
 import json
+import logging
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 from dataclasses import dataclass, asdict
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -94,7 +97,7 @@ class AgentEvaluator:
                         )
                         self.executions_history.append(exec_obj)
             except Exception as e:
-                print(f"Warning: Could not load execution history: {e}")
+                logger.warning("Could not load execution history: %s", e)
 
     def start_task(self, prompt: str, model: Optional[str] = None) -> str:
         """Start tracking a new task execution."""
@@ -143,7 +146,7 @@ class AgentEvaluator:
             with open(self.executions_file, "a") as f:
                 f.write(json.dumps(self.current_execution.to_dict()) + "\n")
         except Exception as e:
-            print(f"Warning: Could not save execution: {e}")
+            logger.warning("Could not save execution: %s", e)
 
         # Update summary
         self._update_summary()
@@ -207,7 +210,7 @@ class AgentEvaluator:
             with open(self.summary_file, "w") as f:
                 json.dump(summary, f, indent=2)
         except Exception as e:
-            print(f"Warning: Could not save summary: {e}")
+            logger.warning("Could not save summary: %s", e)
 
     def get_summary(self) -> Dict[str, Any]:
         """Get evaluation summary statistics."""
@@ -254,39 +257,47 @@ class AgentEvaluator:
         """Print a formatted summary to console."""
         summary = self.get_summary()
         if not summary:
-            print("No evaluation data available yet.")
+            logger.info("No evaluation data available yet.")
             return
 
-        print("\n" + "=" * 60)
-        print("AGENT PERFORMANCE EVALUATION SUMMARY")
-        print("=" * 60)
-        print(f"\nLast Updated: {summary.get('last_updated', 'N/A')}")
-        print(f"\nTotal Tasks: {summary.get('total_tasks', 0)}")
-        print(f"  ✓ Successful: {summary.get('successful_tasks', 0)}")
-        print(f"  ✗ Failed: {summary.get('failed_tasks', 0)}")
-        print(f"  Success Rate: {summary.get('success_rate', 0):.1%}")
-        print(
-            f"\nAverage Iterations per Task: {summary.get('avg_iterations_per_task', 0):.1f}"
+        logger.info("\n%s", "=" * 60)
+        logger.info("AGENT PERFORMANCE EVALUATION SUMMARY")
+        logger.info("%s", "=" * 60)
+        logger.info("\nLast Updated: %s", summary.get("last_updated", "N/A"))
+        logger.info("\nTotal Tasks: %s", summary.get("total_tasks", 0))
+        logger.info("  Successful: %s", summary.get("successful_tasks", 0))
+        logger.info("  Failed: %s", summary.get("failed_tasks", 0))
+        logger.info("  Success Rate: %.1f%%", summary.get("success_rate", 0) * 100)
+        logger.info(
+            "\nAverage Iterations per Task: %.1f",
+            summary.get("avg_iterations_per_task", 0),
         )
-        print(f"Average Duration: {summary.get('avg_duration_seconds', 0):.2f}s")
-        print(f"\nTotal Tokens Used: {summary.get('total_tokens_used', 0):,}")
-        print(f"Average Tokens per Task: {summary.get('avg_tokens_per_task', 0):.0f}")
+        logger.info("Average Duration: %.2fs", summary.get("avg_duration_seconds", 0))
+        logger.info(
+            "\nTotal Tokens Used: %s", f"{summary.get('total_tokens_used', 0):,}"
+        )
+        logger.info(
+            "Average Tokens per Task: %.0f", summary.get("avg_tokens_per_task", 0)
+        )
 
         most_used = summary.get("most_used_tools", [])
         if most_used:
-            print("\nMost Used Tools:")
+            logger.info("\nMost Used Tools:")
             for tool, count in most_used[:5]:
-                print(f"  - {tool}: {count} times")
+                logger.info("  - %s: %s times", tool, count)
 
         model_perf = summary.get("model_performance", {})
         if model_perf:
-            print("\nModel Performance:")
+            logger.info("\nModel Performance:")
             for model, stats in model_perf.items():
                 success_rate = (
                     stats["successful"] / stats["total"] if stats["total"] > 0 else 0
                 )
-                print(
-                    f"  - {model}: {stats['total']} tasks ({success_rate:.1%} success)"
+                logger.info(
+                    "  - %s: %s tasks (%.1f%% success)",
+                    model,
+                    stats["total"],
+                    success_rate * 100,
                 )
 
-        print("\n" + "=" * 60 + "\n")
+        logger.info("\n%s\n", "=" * 60)

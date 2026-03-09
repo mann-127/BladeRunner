@@ -1,8 +1,150 @@
 """Configuration management for BladeRunner."""
 
+import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
+
 import yaml
+from pydantic import BaseModel, Field, ValidationError
+
+logger = logging.getLogger(__name__)
+
+
+# --- Pydantic Validation Models ---
+
+
+class ModelSettings(BaseModel):
+    full_name: str
+    temperature: float = 0.7
+    max_tokens: int = 2048
+
+
+class BackendSettings(BaseModel):
+    base_url: str
+    api_key_env: str
+
+
+class PermissionsSettings(BaseModel):
+    enabled: bool = True
+    profile: str = "standard"
+
+
+class SessionSettings(BaseModel):
+    enabled: bool = True
+    directory: str
+
+
+class WebSearchSettings(BaseModel):
+    enabled: bool = False
+    provider: str = "duckduckgo"
+    max_results: int = 5
+
+
+class GoogleADKSettings(BaseModel):
+    enabled: bool = False
+    model: str = "gemini-2.0-flash"
+    enable_search_grounding: bool = True
+
+
+class JWTAuthSettings(BaseModel):
+    enabled: bool = False
+    secret_key: str = ""
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 60
+    refresh_token_expire_days: int = 7
+
+
+class User(BaseModel):
+    username: str
+    password_hash: str
+    permissions: List[str] = Field(default_factory=list)
+
+
+class AuthSettings(BaseModel):
+    enabled: bool = False
+    keys: List[str] = Field(default_factory=list)
+    jwt: JWTAuthSettings = Field(default_factory=JWTAuthSettings)
+    users: List[User] = Field(default_factory=list)
+
+
+class UploadSettings(BaseModel):
+    max_size_mb: int = 10
+    allowed_types: List[str] = Field(
+        default_factory=lambda: ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    )
+    retention_days: int = 30
+    per_user_quota_mb: int = 100
+
+
+class APISettings(BaseModel):
+    host: str = "127.0.0.1"
+    port: int = 8000
+    database: str
+    uploads_dir: str
+    auth: AuthSettings = Field(default_factory=AuthSettings)
+    uploads: UploadSettings = Field(default_factory=UploadSettings)
+
+
+class LoggingSettings(BaseModel):
+    level: str = "INFO"
+    format: str = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
+    date_format: str = "%Y-%m-%dT%H:%M:%S%z"
+    uvicorn_access_log: bool = True
+
+
+class SkillsSettings(BaseModel):
+    enabled: bool = False
+    directory: str
+
+
+class LSPSettings(BaseModel):
+    enabled: bool = False
+
+
+class MCPSettings(BaseModel):
+    enabled: bool = False
+
+
+class InteractiveSettings(BaseModel):
+    streaming: bool = True
+
+
+class AgentSettings(BaseModel):
+    enable_planning: bool = True
+    enable_reflection: bool = True
+    enable_retry: bool = True
+    enable_streaming: bool = False
+    require_approval: bool = True
+    enable_tool_tracking: bool = True
+    enable_memory: bool = True
+    enable_agent_selection: bool = True
+    enable_adaptation: bool = True
+    adaptation_failure_threshold: int = 2
+    enable_trace: bool = True
+
+
+class Settings(BaseModel):
+    """Pydantic model for config.yml validation."""
+
+    backend: str = "openrouter"
+    model: str = "haiku"
+    debug: bool = False
+    models: Dict[str, ModelSettings]
+    backends: Dict[str, BackendSettings]
+    permissions: PermissionsSettings = Field(default_factory=PermissionsSettings)
+    sessions: SessionSettings
+    web_search: WebSearchSettings = Field(default_factory=WebSearchSettings)
+    google_adk: GoogleADKSettings = Field(default_factory=GoogleADKSettings)
+    api: APISettings
+    logging: LoggingSettings = Field(default_factory=LoggingSettings)
+    skills: SkillsSettings
+    lsp: LSPSettings = Field(default_factory=LSPSettings)
+    mcp: MCPSettings = Field(default_factory=MCPSettings)
+    interactive: InteractiveSettings = Field(default_factory=InteractiveSettings)
+    agent: AgentSettings = Field(default_factory=AgentSettings)
+
+
+# --- Config Manager ---
 
 
 class Config:
@@ -13,67 +155,76 @@ class Config:
         self.config_dir.mkdir(parents=True, exist_ok=True)
 
         self.config_path = config_path or self.config_dir / "config.yml"
-        self.config = self._load_config()
+        self.settings = self._load_config()
+        self.config = self.settings.model_dump()  # For legacy dict access
 
-    def _load_config(self) -> Dict[str, Any]:
-        """Load configuration from file."""
+    def _load_config(self) -> Settings:
+        """Load, validate, and return configuration."""
+        default_cfg = self._default_config_dict()
         if not self.config_path.exists():
-            return self._default_config()
+            logger.warning("No config file found, using default settings.")
+            user_cfg = {}
+        else:
+            try:
+                with open(self.config_path, "r") as f:
+                    user_cfg = yaml.safe_load(f) or {}
+            except Exception as e:
+                logger.error("Error reading config file: %s. Using defaults.", e)
+                user_cfg = {}
+
+        # Deep merge user config into default
+        merged_cfg = self._deep_merge(default_cfg, user_cfg)
 
         try:
-            with open(self.config_path, "r") as f:
-                return yaml.safe_load(f) or {}
-        except Exception:
-            return self._default_config()
+            settings = Settings(**merged_cfg)
+            return settings
+        except ValidationError as e:
+            logger.error(
+                "Configuration validation failed. Using default settings. Errors:\n%s", e
+            )
+            # Fallback to default on validation error
+            return Settings(**default_cfg)
 
-    def _default_config(self) -> Dict[str, Any]:
-        """Return default configuration."""
+    def _deep_merge(self, source, destination):
+        """Deeply merge two dictionaries."""
+        for key, value in source.items():
+            if isinstance(value, dict):
+                node = destination.setdefault(key, {})
+                self._deep_merge(value, node)
+            else:
+                destination.setdefault(key, value)
+        return destination
+
+    def _default_config_dict(self) -> Dict[str, Any]:
+        """Return default configuration as a dictionary."""
         return {
-            "backend": "openrouter",  # openrouter or groq
+            "backend": "openrouter",
             "model": "haiku",
             "debug": False,
             "models": {
                 "haiku": {
                     "full_name": "anthropic/claude-haiku-4.5",
-                    "temperature": 0.7,
-                    "max_tokens": 2048,
                 },
                 "sonnet": {
                     "full_name": "anthropic/claude-sonnet-4",
-                    "temperature": 0.7,
-                    "max_tokens": 2048,
                 },
                 "opus": {
                     "full_name": "anthropic/claude-opus-4",
-                    "temperature": 0.8,
-                    "max_tokens": 2048,
                 },
-                # Free alternatives
                 "llama": {
                     "full_name": "meta-llama/llama-3.1-8b-instruct:free",
-                    "temperature": 0.7,
-                    "max_tokens": 2048,
                 },
                 "gemini": {
                     "full_name": "google/gemini-flash-1.5:free",
-                    "temperature": 0.7,
-                    "max_tokens": 2048,
                 },
                 "mistral": {
                     "full_name": "mistralai/mistral-7b-instruct:free",
-                    "temperature": 0.7,
-                    "max_tokens": 2048,
                 },
-                # Groq models (when using Groq backend)
                 "groq-llama": {
                     "full_name": "llama-3.1-70b-versatile",
-                    "temperature": 0.7,
-                    "max_tokens": 2048,
                 },
                 "groq-mixtral": {
                     "full_name": "mixtral-8x7b-32768",
-                    "temperature": 0.7,
-                    "max_tokens": 2048,
                 },
             },
             "backends": {
@@ -95,52 +246,11 @@ class Config:
                 "enabled": True,
                 "directory": str(self.config_dir / "sessions"),
             },
-            "web_search": {"enabled": False, "provider": "duckduckgo", "max_results": 5},
-            "google_adk": {
-                "enabled": False,
-                "model": "gemini-2.0-flash",
-                "enable_search_grounding": True,
-            },
             "api": {
-                "host": "127.0.0.1",
-                "port": 8000,
                 "database": str(self.config_dir / "api.db"),
                 "uploads_dir": str(self.config_dir / "uploads"),
-                "auth": {
-                    "enabled": False,
-                    "keys": [],
-                    "jwt": {
-                        "enabled": False,
-                        "secret_key": "",  # Set via BLADERUNNER_JWT_SECRET
-                        "algorithm": "HS256",
-                        "access_token_expire_minutes": 60,
-                        "refresh_token_expire_days": 7,
-                    },
-                    "users": [],  # List of {username, password_hash, permissions}
-                },
-                "uploads": {
-                    "max_size_mb": 10,
-                    "allowed_types": ["image/jpeg", "image/png", "image/gif", "image/webp"],
-                    "retention_days": 30,
-                    "per_user_quota_mb": 100,
-                },
             },
             "skills": {"enabled": False, "directory": str(self.config_dir / "skills")},
-            "lsp": {"enabled": False},
-            "mcp": {"enabled": False},
-            "interactive": {"streaming": True},
-            "agent": {
-                # Tier 1: Agentic AI features
-                "enable_planning": True,
-                "enable_reflection": True,
-                "enable_retry": True,
-                "enable_streaming": False,
-                # Tier 2: Safety and learning features
-                "require_approval": True,  # Approve critical operations
-                "enable_tool_tracking": True,  # Track tool effectiveness
-                "enable_memory": True,  # Semantic memory learning
-                "enable_agent_selection": True,  # Multi-agent orchestration
-            },
         }
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -153,20 +263,3 @@ class Config:
             else:
                 return default
         return value if value is not None else default
-
-    def resolve_model(self, model_name: str) -> str:
-        """Resolve model alias to full name."""
-        # Check if it's an alias
-        model_config = self.get(f"models.{model_name}")
-        if model_config and "full_name" in model_config:
-            return model_config["full_name"]
-        # Return as-is (assume it's a full model name)
-        return model_name
-
-    def get_model_settings(self, model_name: str) -> dict:
-        """Get model settings (temperature, max_tokens, etc.)."""
-        model_config = self.get(f"models.{model_name}", {})
-        return {
-            "temperature": model_config.get("temperature", 0.7),
-            "max_tokens": model_config.get("max_tokens", 2048),
-        }

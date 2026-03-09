@@ -12,23 +12,21 @@ import os
 import queue
 import uuid
 from pathlib import Path
-from typing import Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 import jwt
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Header, HTTPException, Query, UploadFile, WebSocket
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .adk_bridge import GoogleADKBridge
 from .agent import Agent
 from .api_store import APISessionStore
 from .config import Config
+from .logging_config import configure_logging
 from .sessions import SessionManager
 from .skills import SkillManager
-
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +61,7 @@ class ChatRequest(BaseModel):
     skill: Optional[str] = None
     auto_match_skill: bool = False
     google_search_grounding: Optional[bool] = None
+    include_trace: bool = False
 
 
 class SourceItem(BaseModel):
@@ -82,6 +81,7 @@ class ChatResponse(BaseModel):
     rag_available: bool = False
     applied_skill: Optional[str] = None
     warnings: List[str] = Field(default_factory=list)
+    trace: Optional[Dict[str, Any]] = None
 
 
 class SessionMessagesResponse(BaseModel):
@@ -126,6 +126,7 @@ def create_app() -> FastAPI:
     """Build and configure FastAPI app."""
     load_dotenv()
     config = Config()
+    configure_logging(config, service_name="bladerunner.api")
 
     cleanup_task: Optional[asyncio.Task] = None
 
@@ -145,33 +146,40 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="BladeRunner API",
         version="0.1.0",
-        description="FastAPI backend for BladeRunner with optional Google ADK/Gemini mode.",
+        description="FastAPI API server for BladeRunner with optional Google ADK/Gemini mode.",
+        docs_url="/docs",
+        redoc_url="/redoc",
+        openapi_url="/openapi.json",
         lifespan=lifespan,
     )
 
-    static_dir = Path(__file__).parent / "webapp"
     store = APISessionStore(Path(config.get("api.database", "~/.bladerunner/api.db")))
-
-    if static_dir.exists():
-        app.mount("/assets", StaticFiles(directory=static_dir), name="assets")
 
     auth_enabled = bool(config.get("api.auth.enabled", False))
     configured_keys = config.get("api.auth.keys", []) or []
-    env_keys = [k.strip() for k in os.getenv("BLADERUNNER_API_KEYS", "").split(",") if k.strip()]
+    env_keys = [
+        k.strip() for k in os.getenv("BLADERUNNER_API_KEYS", "").split(",") if k.strip()
+    ]
     api_keys = set(configured_keys + env_keys)
 
     # JWT configuration
     jwt_enabled = bool(config.get("api.auth.jwt.enabled", False))
-    jwt_secret = os.getenv("BLADERUNNER_JWT_SECRET") or config.get("api.auth.jwt.secret_key", "")
+    jwt_secret = os.getenv("BLADERUNNER_JWT_SECRET") or config.get(
+        "api.auth.jwt.secret_key", ""
+    )
     jwt_algorithm = config.get("api.auth.jwt.algorithm", "HS256")
-    access_token_expire_minutes = config.get("api.auth.jwt.access_token_expire_minutes", 60)
+    access_token_expire_minutes = config.get(
+        "api.auth.jwt.access_token_expire_minutes", 60
+    )
     refresh_token_expire_days = config.get("api.auth.jwt.refresh_token_expire_days", 7)
     users = config.get("api.auth.users", []) or []
 
     def _ensure_jwt_runtime_ready() -> None:
         """Validate JWT runtime configuration before token operations."""
         if not jwt_enabled:
-            raise HTTPException(status_code=501, detail="JWT authentication not enabled")
+            raise HTTPException(
+                status_code=501, detail="JWT authentication not enabled"
+            )
         if not jwt_secret:
             raise HTTPException(status_code=500, detail="JWT secret not configured")
         if jwt_algorithm.upper().startswith("HS") and len(jwt_secret) < 32:
@@ -204,9 +212,14 @@ def create_app() -> FastAPI:
                 password_hash = user.get("password_hash", "")
                 # Use bcrypt directly to avoid passlib initialization issues
                 try:
-                    if bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8')):
+                    if bcrypt.checkpw(
+                        password.encode("utf-8"), password_hash.encode("utf-8")
+                    ):
                         return user
-                except Exception:
+                except Exception as exc:
+                    logger.exception(
+                        "Password verification failed for user '%s': %s", username, exc
+                    )
                     return None
         return None
 
@@ -240,7 +253,9 @@ def create_app() -> FastAPI:
 
         return None
 
-    def _config_with_toggles(base_config: Config, web_enabled: bool, rag_enabled: bool) -> Config:
+    def _config_with_toggles(
+        base_config: Config, web_enabled: bool, rag_enabled: bool
+    ) -> Config:
         """Clone config object with request-scoped feature toggles."""
         cfg = Config()
         cfg.config = copy.deepcopy(base_config.config)
@@ -260,10 +275,14 @@ def create_app() -> FastAPI:
             "Attached image paths:",
         ]
         lines.extend([f"- {p}" for p in image_paths])
-        lines.append("Use ReadImage on relevant paths before answering when visual context is needed.")
+        lines.append(
+            "Use ReadImage on relevant paths before answering when visual context is needed."
+        )
         return "\n".join(lines)
 
-    def _apply_skill(agent: Agent, prompt: str, explicit_skill: Optional[str], auto_match: bool) -> Optional[str]:
+    def _apply_skill(
+        agent: Agent, prompt: str, explicit_skill: Optional[str], auto_match: bool
+    ) -> Optional[str]:
         """Apply skill context and tool restrictions when available."""
         manager = SkillManager()
         skill = None
@@ -287,7 +306,9 @@ def create_app() -> FastAPI:
         if skill.allowed_tools:
             allowed = set(skill.allowed_tools)
             agent.registry.tools = {
-                name: tool for name, tool in agent.registry.tools.items() if name in allowed
+                name: tool
+                for name, tool in agent.registry.tools.items()
+                if name in allowed
             }
 
         if skill.model:
@@ -295,25 +316,69 @@ def create_app() -> FastAPI:
 
         return skill.name
 
-    @app.get("/")
-    def index() -> FileResponse:
-        if not static_dir.exists():
-            raise HTTPException(status_code=404, detail="Web UI not available")
-        return FileResponse(static_dir / "index.html")
+    def _create_agent_for_request(
+        payload: ChatRequest,
+        session: Dict[str, Any],
+        base_config: Config,
+        is_streaming: bool,
+    ) -> tuple[Agent, list[str]]:
+        """Configure and return a BladeRunner agent based on API request parameters."""
+        warnings: list[str] = []
+        web_config = _config_with_toggles(
+            base_config,
+            web_enabled=payload.enable_web_search,
+            rag_enabled=payload.enable_rag,
+        )
 
-    @app.get("/favicon.ico")
-    def favicon() -> FileResponse:
-        favicon_path = static_dir / "favicon.png"
-        if not favicon_path.exists():
-            raise HTTPException(status_code=404, detail="Favicon not found")
-        return FileResponse(favicon_path, media_type="image/png")
+        use_permissions = payload.permission_profile != "none"
+        permission_profile = (
+            payload.permission_profile if use_permissions else "permissive"
+        )
+
+        try:
+            agent = Agent(
+                config=web_config,
+                model=payload.model or base_config.get("model", "haiku"),
+                use_permissions=use_permissions,
+                permission_profile=permission_profile,
+                session_id=session["bladerunner_session_id"],
+            )
+        except RuntimeError as exc:
+            raise HTTPException(
+                status_code=500, detail=f"Configuration error: {exc}"
+            ) from exc
+
+        if agent.use_permissions and agent.permission_checker:
+            # API mode is non-interactive: treat ASK prompts as denied.
+            agent.permission_checker.prompt_user = lambda *_args, **_kwargs: False
+            if payload.permission_profile in {"standard", "strict"}:
+                warnings.append("Non-interactive mode auto-denies ASK permission prompts.")
+
+        if is_streaming and payload.enable_streaming is False:
+            warnings.append("Payload requested no streaming, but endpoint requires it.")
+        elif not is_streaming and payload.enable_streaming:
+            warnings.append("Streaming in HTTP response is not implemented yet.")
+
+        # Configure agent based on payload
+        if payload.enable_planning is not None:
+            agent.enable_planning = payload.enable_planning
+        if payload.enable_reflection is not None:
+            agent.enable_reflection = payload.enable_reflection
+        if payload.enable_retry is not None:
+            agent.enable_retry = payload.enable_retry
+        agent.enable_streaming = is_streaming
+
+        agent.load_session(session["bladerunner_session_id"])
+        return agent, warnings
 
     @app.get("/api/health")
-    def health(x_api_key: Optional[str] = Header(default=None, alias="X-API-Key")) -> dict:
+    def health(
+        x_api_key: Optional[str] = Header(default=None, alias="X-API-Key")
+    ) -> dict:
         _require_api_key(x_api_key)
         return {
             "ok": True,
-            "service": "bladerunner-console",
+            "service": "bladerunner-api",
             "google_adk_available": GoogleADKBridge.adk_available(),
             "auth_enabled": auth_enabled,
             "jwt_enabled": jwt_enabled and bool(jwt_secret),
@@ -374,7 +439,9 @@ def create_app() -> FastAPI:
         )
 
     @app.get("/api/auth/me")
-    def get_current_user(x_api_key: Optional[str] = Header(default=None, alias="X-API-Key")) -> UserInfo:
+    def get_current_user(
+        x_api_key: Optional[str] = Header(default=None, alias="X-API-Key")
+    ) -> UserInfo:
         """Get current user info from JWT token."""
         user = _require_api_key(x_api_key)
         if not user:
@@ -382,8 +449,10 @@ def create_app() -> FastAPI:
         return user
 
     @app.get("/api/meta")
-    def meta(x_api_key: Optional[str] = Header(default=None, alias="X-API-Key")) -> Dict[str, object]:
-        """Return UI metadata for forms and settings."""
+    def meta(
+        x_api_key: Optional[str] = Header(default=None, alias="X-API-Key")
+    ) -> Dict[str, object]:
+        """Return API metadata including models, engines, skills, and auth status."""
         _require_api_key(x_api_key)
         skills = SkillManager().list_skills()
         return {
@@ -396,14 +465,18 @@ def create_app() -> FastAPI:
         }
 
     @app.get("/api/skills")
-    def list_skills(x_api_key: Optional[str] = Header(default=None, alias="X-API-Key")) -> List[Dict[str, str]]:
-        """List configured skills for UI selection."""
+    def list_skills(
+        x_api_key: Optional[str] = Header(default=None, alias="X-API-Key")
+    ) -> List[Dict[str, str]]:
+        """List configured skills."""
         _require_api_key(x_api_key)
         return SkillManager().list_skills()
 
     def _get_user_upload_size(user_id: str) -> int:
         """Calculate total upload size for a user in bytes."""
-        base_upload_dir = Path(config.get("api.uploads_dir", "~/.bladerunner/uploads")).expanduser()
+        base_upload_dir = Path(
+            config.get("api.uploads_dir", "~/.bladerunner/uploads")
+        ).expanduser()
         user_dir = base_upload_dir / user_id
         if not user_dir.exists():
             return 0
@@ -455,12 +528,16 @@ def create_app() -> FastAPI:
 
         while True:
             try:
-                base_upload_dir = Path(config.get("api.uploads_dir", "~/.bladerunner/uploads")).expanduser()
+                base_upload_dir = Path(
+                    config.get("api.uploads_dir", "~/.bladerunner/uploads")
+                ).expanduser()
                 if not base_upload_dir.exists():
                     await asyncio.sleep(check_interval_hours * 3600)
                     continue
 
-                cutoff_time = datetime.now(timezone.utc) - timedelta(days=retention_days)
+                cutoff_time = datetime.now(timezone.utc) - timedelta(
+                    days=retention_days
+                )
                 deleted_count = 0
                 deleted_size = 0
 
@@ -474,7 +551,9 @@ def create_app() -> FastAPI:
                             continue
 
                         # Check file modification time
-                        file_mtime = datetime.fromtimestamp(file_path.stat().st_mtime, tz=timezone.utc)
+                        file_mtime = datetime.fromtimestamp(
+                            file_path.stat().st_mtime, tz=timezone.utc
+                        )
                         if file_mtime < cutoff_time:
                             file_size = file_path.stat().st_size
                             file_path.unlink()
@@ -512,7 +591,9 @@ def create_app() -> FastAPI:
         _check_upload_quota(user_id, len(content))
 
         # Save file
-        base_upload_dir = Path(config.get("api.uploads_dir", "~/.bladerunner/uploads")).expanduser()
+        base_upload_dir = Path(
+            config.get("api.uploads_dir", "~/.bladerunner/uploads")
+        ).expanduser()
         target_dir = base_upload_dir / user_id
         target_dir.mkdir(parents=True, exist_ok=True)
 
@@ -544,7 +625,9 @@ def create_app() -> FastAPI:
             "used_mb": round(current_mb, 2),
             "total_mb": max_quota_mb,
             "remaining_mb": round(max_quota_mb - current_mb, 2),
-            "usage_percent": round((current_mb / max_quota_mb) * 100, 1) if max_quota_mb > 0 else 0,
+            "usage_percent": (
+                round((current_mb / max_quota_mb) * 100, 1) if max_quota_mb > 0 else 0
+            ),
         }
 
     @app.post("/api/sessions", response_model=SessionResponse)
@@ -589,7 +672,9 @@ def create_app() -> FastAPI:
             for s in sessions
         ]
 
-    @app.get("/api/sessions/{session_id}/messages", response_model=SessionMessagesResponse)
+    @app.get(
+        "/api/sessions/{session_id}/messages", response_model=SessionMessagesResponse
+    )
     def list_messages(
         session_id: str,
         user_id: str = Query(..., min_length=1, max_length=128),
@@ -614,7 +699,9 @@ def create_app() -> FastAPI:
         warnings: List[str] = []
         session = None
         if payload.session_id:
-            session = store.get_session(user_id=payload.user_id, session_id=payload.session_id)
+            session = store.get_session(
+                user_id=payload.user_id, session_id=payload.session_id
+            )
             if not session:
                 raise HTTPException(status_code=404, detail="Session not found")
 
@@ -631,7 +718,8 @@ def create_app() -> FastAPI:
 
         if payload.engine == "google_adk":
             bridge = GoogleADKBridge(
-                model=payload.model or config.get("google_adk.model", "gemini-2.0-flash"),
+                model=payload.model
+                or config.get("google_adk.model", "gemini-2.0-flash"),
                 enable_search_grounding=(
                     payload.google_search_grounding
                     if payload.google_search_grounding is not None
@@ -647,9 +735,10 @@ def create_app() -> FastAPI:
                 raise HTTPException(status_code=400, detail=detail) from exc
             except Exception as exc:
                 # Unexpected errors
+                logger.exception("Unexpected Google ADK/Gemini error: %s", exc)
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Unexpected Google ADK/Gemini error: {type(exc).__name__}"
+                    detail=f"Unexpected Google ADK/Gemini error: {type(exc).__name__}",
                 ) from exc
 
             answer = result.answer
@@ -661,54 +750,19 @@ def create_app() -> FastAPI:
             rag_requested = False
             rag_available = False
             applied_skill = None
+            trace = None
             if payload.image_paths:
-                warnings.append("Image paths are currently processed only by 'bladerunner' engine.")
-        else:
-            web_config = _config_with_toggles(
-                config,
-                web_enabled=payload.enable_web_search,
-                rag_enabled=payload.enable_rag,
-            )
-
-            use_permissions = payload.permission_profile != "none"
-            permission_profile = (
-                payload.permission_profile if use_permissions else "permissive"
-            )
-
-            try:
-                agent = Agent(
-                    config=web_config,
-                    model=payload.model or config.get("model", "haiku"),
-                    use_permissions=use_permissions,
-                    permission_profile=permission_profile,
-                    session_id=session["bladerunner_session_id"],
+                warnings.append(
+                    "Image paths are currently processed only by 'bladerunner' engine."
                 )
-            except RuntimeError as exc:
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Configuration error: {exc}"
-                ) from exc
-
-            if agent.use_permissions and agent.permission_checker:
-                # API mode is non-interactive: treat ASK prompts as denied.
-                agent.permission_checker.prompt_user = lambda *_args, **_kwargs: False
-                if payload.permission_profile in {"standard", "strict"}:
-                    warnings.append(
-                        "Non-interactive mode auto-denies ASK permission prompts."
-                    )
-
-            if payload.enable_streaming:
-                warnings.append("Streaming in HTTP response is not implemented yet.")
-
-            if payload.enable_planning is not None:
-                agent.enable_planning = payload.enable_planning
-            if payload.enable_reflection is not None:
-                agent.enable_reflection = payload.enable_reflection
-            if payload.enable_retry is not None:
-                agent.enable_retry = payload.enable_retry
-            agent.enable_streaming = False
-            
-            agent.load_session(session["bladerunner_session_id"])
+            if payload.include_trace:
+                warnings.append(
+                    "Trace output is only available for the 'bladerunner' engine."
+                )
+        else:
+            agent, warnings = _create_agent_for_request(
+                payload, session, config, is_streaming=False
+            )
 
             applied_skill = _apply_skill(
                 agent,
@@ -720,7 +774,9 @@ def create_app() -> FastAPI:
             if payload.skill and not applied_skill:
                 warnings.append(f"Skill '{payload.skill}' was not found.")
 
-            prepared_prompt = _build_prompt_with_images(payload.message, payload.image_paths)
+            prepared_prompt = _build_prompt_with_images(
+                payload.message, payload.image_paths
+            )
             answer = agent.execute(prepared_prompt)
             sources = []
             engine = "bladerunner"
@@ -729,9 +785,12 @@ def create_app() -> FastAPI:
             web_search_used = agent.was_web_search_used()
             rag_requested = payload.enable_rag
             rag_available = agent.registry.get("rag_search") is not None
+            trace = agent.get_last_trace() if payload.include_trace else None
 
             if payload.enable_rag and not rag_available:
-                warnings.append("RAG requested but dependencies/config are not available.")
+                warnings.append(
+                    "RAG requested but dependencies/config are not available."
+                )
 
         store.add_message(session["id"], "assistant", answer)
         store.touch_session(session["id"])
@@ -748,6 +807,7 @@ def create_app() -> FastAPI:
             rag_available=rag_available,
             applied_skill=applied_skill,
             warnings=warnings,
+            trace=trace,
         )
 
     @app.websocket("/ws/chat")
@@ -786,41 +846,17 @@ def create_app() -> FastAPI:
 
             session = store.get_session(payload.user_id, payload.session_id)
             if not session:
-                await websocket.send_json({"type": "error", "message": "Session not found"})
+                await websocket.send_json(
+                    {"type": "error", "message": "Session not found"}
+                )
                 await websocket.close(code=1008)
                 return
 
             store.add_message(session["id"], "user", payload.message)
 
-            web_config = _config_with_toggles(
-                config,
-                web_enabled=payload.enable_web_search,
-                rag_enabled=payload.enable_rag,
+            agent, _ = _create_agent_for_request(
+                payload, session, config, is_streaming=True
             )
-
-            use_permissions = payload.permission_profile != "none"
-            permission_profile = payload.permission_profile if use_permissions else "permissive"
-
-            agent = Agent(
-                config=web_config,
-                model=payload.model or config.get("model", "haiku"),
-                use_permissions=use_permissions,
-                permission_profile=permission_profile,
-                session_id=session["bladerunner_session_id"],
-            )
-            agent.load_session(session["bladerunner_session_id"])
-
-            if agent.use_permissions and agent.permission_checker:
-                agent.permission_checker.prompt_user = lambda *_args, **_kwargs: False
-
-            if payload.enable_planning is not None:
-                agent.enable_planning = payload.enable_planning
-            if payload.enable_reflection is not None:
-                agent.enable_reflection = payload.enable_reflection
-            if payload.enable_retry is not None:
-                agent.enable_retry = payload.enable_retry
-            agent.enable_streaming = True
-
             applied_skill = _apply_skill(
                 agent,
                 prompt=payload.message,
@@ -834,19 +870,25 @@ def create_app() -> FastAPI:
                 chunk_queue.put(text)
 
             agent.stream_callback = on_chunk
-            prepared_prompt = _build_prompt_with_images(payload.message, payload.image_paths)
+            prepared_prompt = _build_prompt_with_images(
+                payload.message, payload.image_paths
+            )
 
             # Send status update
             await websocket.send_json({"type": "status", "status": "executing"})
 
             loop = asyncio.get_event_loop()
-            task = loop.run_in_executor(None, lambda: agent.execute(prepared_prompt, use_streaming=True))
+            task = loop.run_in_executor(
+                None, lambda: agent.execute(prepared_prompt, use_streaming=True)
+            )
 
             # Bidirectional communication loop
             while not task.done():
                 # Send any pending chunks
                 while not chunk_queue.empty():
-                    await websocket.send_json({"type": "chunk", "delta": chunk_queue.get()})
+                    await websocket.send_json(
+                        {"type": "chunk", "delta": chunk_queue.get()}
+                    )
 
                 # Check for control messages from client (non-blocking)
                 try:
@@ -857,7 +899,9 @@ def create_app() -> FastAPI:
                     if msg_type == "interrupt":
                         # Set interruption flag
                         agent.interrupted = True
-                        await websocket.send_json({"type": "status", "status": "interrupting"})
+                        await websocket.send_json(
+                            {"type": "status", "status": "interrupting"}
+                        )
                     elif msg_type == "ping":
                         # Heartbeat response
                         await websocket.send_json({"type": "pong"})
@@ -865,8 +909,9 @@ def create_app() -> FastAPI:
                 except asyncio.TimeoutError:
                     # No message received, continue
                     pass
-                except Exception:
+                except Exception as exc:
                     # Client disconnected or error
+                    logger.warning("WebSocket control channel error: %s", exc)
                     agent.interrupted = True
                     break
 
@@ -895,6 +940,7 @@ def create_app() -> FastAPI:
                     "applied_skill": applied_skill,
                     "warnings": [],
                     "interrupted": agent.interrupted,
+                    "trace": agent.get_last_trace() if payload.include_trace else None,
                 }
             )
             await websocket.close()
@@ -903,6 +949,7 @@ def create_app() -> FastAPI:
             await websocket.send_json({"type": "error", "message": exc.detail})
             await websocket.close(code=1008)
         except Exception as exc:
+            logger.exception("Unhandled websocket error: %s", exc)
             await websocket.send_json({"type": "error", "message": str(exc)})
             await websocket.close(code=1011)
 
@@ -916,6 +963,14 @@ def main() -> None:
     """Run API server via CLI entrypoint."""
     load_dotenv()
     config = Config()
+    configure_logging(config, service_name="bladerunner.api")
     host = config.get("api.host", "127.0.0.1")
     port = int(config.get("api.port", 8000))
-    uvicorn.run("bladerunner.api_server:app", host=host, port=port, reload=False)
+    uvicorn.run(
+        "bladerunner.api_server:app",
+        host=host,
+        port=port,
+        reload=False,
+        log_level=str(config.get("logging.level", "info")).lower(),
+        access_log=bool(config.get("logging.uvicorn_access_log", True)),
+    )

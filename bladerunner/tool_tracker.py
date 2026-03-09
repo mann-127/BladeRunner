@@ -1,9 +1,12 @@
 """Tool effectiveness tracking for learning agent behavior."""
 
 import json
+import logging
 from pathlib import Path
 from typing import Dict, Any, Optional
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 class ToolTracker:
@@ -138,8 +141,8 @@ class ToolTracker:
         if not self.session_stats:
             return
 
-        print("\n📊 Tool Execution Summary (This Session):")
-        print("-" * 50)
+        logger.info("\nTool Execution Summary (This Session):")
+        logger.info("%s", "-" * 50)
 
         total_calls = sum(s["calls"] for s in self.session_stats.values())
         total_successes = sum(s["successes"] for s in self.session_stats.values())
@@ -148,15 +151,18 @@ class ToolTracker:
             success_rate = (
                 (stats["successes"] / stats["calls"] * 100) if stats["calls"] > 0 else 0
             )
-            print(
-                f"  {tool}: {stats['calls']} calls, "
-                f"{stats['successes']} success, "
-                f"{stats['failures']} failed ({success_rate:.0f}%)"
+            logger.info(
+                "  %s: %s calls, %s success, %s failed (%.0f%%)",
+                tool,
+                stats["calls"],
+                stats["successes"],
+                stats["failures"],
+                success_rate,
             )
 
         overall_rate = (total_successes / total_calls * 100) if total_calls > 0 else 0
-        print("-" * 50)
-        print(f"  Total: {total_calls} calls, {overall_rate:.0f}% success rate")
+        logger.info("%s", "-" * 50)
+        logger.info("  Total: %s calls, %.0f%% success rate", total_calls, overall_rate)
 
     def print_tool_rankings(self) -> None:
         """Print tool reliability rankings."""
@@ -164,14 +170,17 @@ class ToolTracker:
         if not ranking:
             return
 
-        print("\n🏆 Tool Reliability Ranking (All Time):")
-        print("-" * 50)
+        logger.info("\nTool Reliability Ranking (All Time):")
+        logger.info("%s", "-" * 50)
 
         for i, tool in enumerate(ranking[:5], 1):
-            print(
-                f"  {i}. {tool['tool']}: "
-                f"{tool['success_rate']*100:.0f}% "
-                f"({tool['successful']}/{tool['total']} calls)"
+            logger.info(
+                "  %s. %s: %.0f%% (%s/%s calls)",
+                i,
+                tool["tool"],
+                tool["success_rate"] * 100,
+                tool["successful"],
+                tool["total"],
             )
 
     def _save_stats(self) -> None:

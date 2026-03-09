@@ -6,7 +6,7 @@ Complete reference for all agentic AI capabilities in BladeRunner.
 
 ## Overview
 
-BladeRunner implements 9 production-grade agentic AI features across two tiers:
+BladeRunner implements production-grade agentic AI features across strategic and safety layers:
 
 **Tier 1: Strategic Thinking & Resilience**
 - Planning & Decomposition
@@ -20,6 +20,9 @@ BladeRunner implements 9 production-grade agentic AI features across two tiers:
 - Semantic Memory
 - Multi-Agent Orchestration
 - Performance Evaluation & Metrics
+- Adaptive Strategy Guidance
+- Structured Execution Tracing
+- Capability Benchmark Runner
 
 All features are optional and configurable.
 
@@ -183,14 +186,13 @@ Set `debug: true` in config to see fallback events in stderr.
 
 ---
 
-### FastAPI API Backend + Web Console
+### FastAPI API Backend
 
-**What it does:** Exposes BladeRunner through HTTP endpoints and serves a themed browser UI.
+**What it does:** Exposes BladeRunner through HTTP and WebSocket API endpoints.
 
 **Endpoints:**
-- `GET /` - Web console UI
 - `GET /api/health` - Service health + ADK/auth availability
-- `GET /api/meta` - UI metadata (models, skills, profiles)
+- `GET /api/meta` - API metadata (models, skills, profiles)
 - `GET /api/skills` - List configured skills
 - `POST /api/auth/login` - JWT login (access + refresh tokens)
 - `POST /api/auth/refresh` - JWT access token refresh
@@ -205,7 +207,7 @@ Set `debug: true` in config to see fallback events in stderr.
 
 **Run:**
 ```bash
-uv run bladerunner-console
+uv run bladerunner-api
 ```
 
 **Configuration:**
@@ -611,6 +613,93 @@ for task in recent:
   ]
 }
 ```
+
+---
+
+### 10. Adaptive Strategy Guidance
+
+**What it does:** Tracks repeated tool failures and injects bounded guidance so the agent avoids repeating a failing approach.
+
+**When it triggers:** A tool exceeds a configurable consecutive-failure threshold.
+
+**Configuration:**
+```yaml
+agent:
+  enable_adaptation: true
+  adaptation_failure_threshold: 2
+```
+
+**Behavior details:**
+- Success resets consecutive failure count for that tool
+- Failure streaks generate adaptive guidance messages
+- Guidance is bounded and focused on strategy shift, not verbose replanning
+
+**Why this matters:**
+- Reduces retry loops that repeat the same failing arguments
+- Improves robustness in flaky tool/network/file scenarios
+
+---
+
+### 11. Structured Execution Tracing
+
+**What it does:** Records a structured event timeline for each execution (routing, planning, iterations, tool calls, completion/failure).
+
+**Configuration:**
+```yaml
+agent:
+  enable_trace: true
+```
+
+**Programmatic Access:**
+```python
+from bladerunner.agent import Agent
+from bladerunner.config import Config
+
+agent = Agent(Config())
+agent.execute("Summarize README.md")
+trace = agent.get_last_trace()
+print(trace.get("status"))
+print(len(trace.get("events", [])))
+```
+
+**API Access (`/api/chat` and `WS /ws/chat`):**
+- Request field: `include_trace: true`
+- Response field: `trace` (structured JSON trace payload)
+
+**Why this matters:**
+- Better post-mortem debugging for failed runs
+- More transparent behavior for demos, audits, and evaluations
+
+---
+
+### 12. Capability Benchmark Runner
+
+**What it does:** Runs declarative benchmark tasks and outputs category-level capability reports.
+
+**Task packs included:**
+- `software` (code understanding/execution)
+- `data` (structured extraction/counting tasks)
+- `research` (open-ended reasoning tasks with stronger checks)
+
+**Run commands:**
+```bash
+# Run all benchmark packs
+uv run bladerunner-eval --suite all
+
+# Run one pack
+uv run bladerunner-eval --suite software
+
+# Limit task count for quick iteration
+uv run bladerunner-eval --suite data --max-tasks 2
+```
+
+**Output:**
+- JSON report written to `benchmarks/results/`
+- Summary includes pass rate, per-category stats, median duration, and top failure reasons
+
+**Why this matters:**
+- Prevents regressions across releases
+- Gives measurable capability snapshots instead of anecdotal demos
 
 ---
 

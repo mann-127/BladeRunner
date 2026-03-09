@@ -35,6 +35,9 @@ agent:
   enable_memory: true          # Store solutions for future similar tasks
   enable_agent_selection: true # Route tasks to specialized agents
   enable_evaluation: true      # Track performance metrics (success rate, token usage)
+  enable_adaptation: true      # Inject strategy guidance after repeated tool failures
+  adaptation_failure_threshold: 2  # Consecutive failures before adaptive guidance
+  enable_trace: true           # Record structured execution trace for each run
 
 # Interactive mode settings
 interactive:
@@ -164,6 +167,13 @@ api:
       - image/webp
     retention_days: 30  # Automatically delete uploads older than this
     per_user_quota_mb: 100  # Maximum total storage per user
+
+# Logging settings (applies to API server and uvicorn)
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s %(levelname)s [%(name)s] %(message)s"
+  date_format: "%Y-%m-%dT%H:%M:%S%z"
+  uvicorn_access_log: true
 
 # RAG (Retrieval-Augmented Generation) settings
 # Requires: uv sync --extra rag

@@ -22,7 +22,7 @@ def test_health_endpoint() -> None:
     assert res.status_code == 200
     payload = res.json()
     assert payload["ok"] is True
-    assert payload["service"] == "bladerunner-console"
+    assert payload["service"] == "bladerunner-api"
 
 
 def test_google_adk_runtime_error_maps_to_400(monkeypatch) -> None:
@@ -87,6 +87,7 @@ def test_google_adk_success_returns_sources(monkeypatch) -> None:
             "user_id": "user-1",
             "message": "hello",
             "engine": "google_adk",
+            "include_trace": True,
         },
     )
 
@@ -95,6 +96,39 @@ def test_google_adk_success_returns_sources(monkeypatch) -> None:
     assert payload["answer"] == "Grounded response"
     assert payload["engine"] == "gemini_rest_grounded"
     assert payload["sources"][0]["url"] == "https://example.com"
+    assert payload["trace"] is None
+    assert any("Trace output" in warning for warning in payload.get("warnings", []))
+
+
+def test_bladerunner_chat_include_trace(monkeypatch) -> None:
+    """HTTP chat should include trace payload when requested."""
+    client = _build_client()
+
+    def _fake_execute(self, prompt, use_streaming=False):
+        _ = prompt, use_streaming
+        return "ok"
+
+    def _fake_trace(self):
+        return {"status": "success", "events": [{"event_type": "execution_started"}]}
+
+    monkeypatch.setattr(api_server.Agent, "execute", _fake_execute)
+    monkeypatch.setattr(api_server.Agent, "get_last_trace", _fake_trace)
+
+    res = client.post(
+        "/api/chat",
+        json={
+            "user_id": "trace-user",
+            "message": "hello",
+            "engine": "bladerunner",
+            "include_trace": True,
+            "permission_profile": "none",
+        },
+    )
+
+    assert res.status_code == 200
+    payload = res.json()
+    assert payload["trace"] is not None
+    assert payload["trace"]["status"] == "success"
 
 
 def test_auth_enforcement_when_enabled(monkeypatch) -> None:
@@ -139,7 +173,11 @@ def test_websocket_streaming_chat(monkeypatch) -> None:
             self.stream_callback("lo")
         return "hello"
 
+    def _fake_trace(self):
+        return {"status": "success", "events": [{"event_type": "execution_started"}]}
+
     monkeypatch.setattr(api_server.Agent, "execute", _fake_execute)
+    monkeypatch.setattr(api_server.Agent, "get_last_trace", _fake_trace)
 
     with client.websocket_connect("/ws/chat") as ws:
         ws.send_json(
@@ -148,6 +186,7 @@ def test_websocket_streaming_chat(monkeypatch) -> None:
                 "message": "hello",
                 "engine": "bladerunner",
                 "enable_streaming": True,
+                "include_trace": True,
                 "permission_profile": "none",
             }
         )
@@ -167,6 +206,8 @@ def test_websocket_streaming_chat(monkeypatch) -> None:
     assert second["type"] == "chunk"
     assert final["type"] == "final"
     assert final["answer"] == "hello"
+    assert final["trace"] is not None
+    assert final["trace"]["status"] == "success"
 
 
 def test_jwt_login_success(monkeypatch) -> None:

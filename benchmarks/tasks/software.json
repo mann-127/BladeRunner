@@ -1,0 +1,54 @@
+[
+  {
+    "id": "software-001",
+    "category": "software",
+    "prompt": "Read README.md and summarize the project purpose in 3 bullets.",
+    "checks": [
+      {"type": "non_empty"},
+      {"type": "regex", "value": "(?m)^\\s*(?:-|\\*|\\d+\\.)\\s+"},
+      {"type": "regex", "value": "(?i)bladerunner"},
+      {"type": "not_contains", "value": "I cannot"}
+    ],
+    "required_tools": ["Read"],
+    "max_duration_sec": 120
+  },
+  {
+    "id": "software-002",
+    "category": "software",
+    "prompt": "Inspect tests/test_cli.py and list two potential edge cases that should be covered.",
+    "checks": [
+      {"type": "non_empty"},
+      {"type": "regex", "value": "(?m)^\\s*(?:-|\\*|\\d+\\.)\\s+"},
+      {"type": "contains", "value": "edge"},
+      {"type": "not_contains", "value": "I cannot"}
+    ],
+    "required_tools": ["Read"],
+    "max_duration_sec": 120
+  },
+  {
+    "id": "software-003",
+    "category": "software",
+    "prompt": "Use Bash to count Python files in the bladerunner/ directory, then report the count.",
+    "checks": [
+      {"type": "non_empty"},
+      {"type": "regex", "value": "\\b\\d+\\b"},
+      {"type": "regex", "value": "(?i)bladerunner"},
+      {"type": "not_contains", "value": "I cannot"}
+    ],
+    "required_tools": ["Bash"],
+    "max_duration_sec": 120
+  },
+  {
+    "id": "software-004",
+    "category": "software",
+    "prompt": "Review bladerunner/tools/base.py and explain how tool registration works.",
+    "checks": [
+      {"type": "non_empty"},
+      {"type": "contains", "value": "registry"},
+      {"type": "regex", "value": "(?i)tool"},
+      {"type": "not_contains", "value": "I cannot"}
+    ],
+    "required_tools": ["Read"],
+    "max_duration_sec": 120
+  }
+]

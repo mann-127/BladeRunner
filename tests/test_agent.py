@@ -134,6 +134,8 @@ def test_agent_agentic_features_configurable(tmp_path: Path) -> None:
         assert isinstance(agent.enable_memory, bool)
         assert isinstance(agent.enable_agent_selection, bool)
         assert isinstance(agent.enable_evaluation, bool)
+        assert isinstance(agent.enable_adaptation, bool)
+        assert isinstance(agent.enable_trace, bool)
 
 
 def test_agent_initializes_tool_tracker(tmp_path: Path) -> None:
@@ -175,6 +177,17 @@ def test_agent_initializes_evaluator(tmp_path: Path) -> None:
         agent = Agent(config)
         
         assert agent.evaluator is not None
+
+
+def test_agent_exposes_last_trace_accessor(tmp_path: Path) -> None:
+    """Agent should expose a trace accessor even before first execution."""
+    config = Config(tmp_path / "config.yml")
+
+    with patch.object(Agent, "_get_api_key_for_backend", return_value="fake-key"):
+        agent = Agent(config)
+
+        trace = agent.get_last_trace()
+        assert isinstance(trace, dict)
 
 
 def test_agent_maintains_conversation_state(tmp_path: Path) -> None:
