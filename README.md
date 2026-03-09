@@ -44,7 +44,7 @@ BladeRunner transforms natural language prompts into executed code and system op
 
 ---
 
-## 🏗️ System Architecture
+## 📐 System Architecture
 
 ![Diagram](docs/ARCHITECTURE.png)
 
@@ -127,7 +127,7 @@ All features are configurable and optional. **For complete details, configuratio
 
 ---
 
-## ✨ Key Features
+## 💡 Key Features
 
 ### 🛠️ Core Tools
 - **Read/Write**: Intelligent file operations with encoding support
@@ -606,7 +606,7 @@ BladeRunner uses GitHub Actions for continuous integration:
 
 ---
 
-## 🎯 Use Cases
+## 🧑‍💻 Use Cases
 
 ### Development Automation
 ```bash
@@ -655,7 +655,7 @@ uv run bladerunner -p "Use rag_search to find information about deployment, then
 
 ---
 
-## ⚙️ Configuration
+## 🔧 Configuration
 
 ### Model Selection
 
@@ -785,7 +785,7 @@ web_search:
 
 ---
 
-## 💡 Why This Matters
+## 🌟 Why This Matters
 
 BladeRunner showcases:
 
