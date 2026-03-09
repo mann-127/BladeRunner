@@ -21,7 +21,7 @@ jobs:
         uses: astral-sh/setup-uv@v3
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --extra dev --extra rag
 
       - name: Check code style with black
         run: uv run black --check bladerunner tests
@@ -37,10 +37,3 @@ jobs:
 
       - name: Run tests with coverage
         run: uv run pytest -q --cov=bladerunner --cov-report=xml --cov-report=term
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        if: always()
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: false

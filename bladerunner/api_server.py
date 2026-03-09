@@ -807,7 +807,14 @@ def create_app() -> FastAPI:
             web_search_used = agent.was_web_search_used()
             rag_requested = payload.enable_rag
             rag_available = agent.registry.get("rag_search") is not None
-            trace = agent.get_last_trace() if payload.include_trace else None
+            trace = None
+            if payload.include_trace:
+                try:
+                    trace = agent.get_last_trace()
+                except Exception as exc:
+                    logger.exception("Failed to retrieve execution trace: %s", exc)
+                    trace = {"status": "error", "events": []}
+                    warnings.append("Trace retrieval failed; using fallback trace.")
 
             if payload.enable_rag and not rag_available:
                 warnings.append(
@@ -859,6 +866,10 @@ def create_app() -> FastAPI:
                 await websocket.close(code=1003)
                 return
 
+            # Send first status message before deeper initialization so clients
+            # receive a status frame even if setup later fails.
+            await websocket.send_json({"type": "status", "status": "initializing"})
+
             session_id = payload.session_id
             if not session_id:
                 br_session_id = _new_bladerunner_session_id()
@@ -907,9 +918,6 @@ def create_app() -> FastAPI:
             prepared_prompt = _build_prompt_with_images(
                 payload.message, payload.image_paths
             )
-
-            # Send status update
-            await websocket.send_json({"type": "status", "status": "executing"})
 
             loop = asyncio.get_event_loop()
             task = loop.run_in_executor(
@@ -960,6 +968,14 @@ def create_app() -> FastAPI:
             store.add_message(session_record["id"], "assistant", answer)
             store.touch_session(session_record["id"])
 
+            trace = None
+            if payload.include_trace:
+                try:
+                    trace = agent.get_last_trace()
+                except Exception as exc:
+                    logger.exception("Failed to retrieve execution trace: %s", exc)
+                    trace = {"status": "error", "events": []}
+
             await websocket.send_json(
                 {
                     "type": "final",
@@ -974,7 +990,7 @@ def create_app() -> FastAPI:
                     "applied_skill": applied_skill,
                     "warnings": [],
                     "interrupted": agent.interrupted,
-                    "trace": agent.get_last_trace() if payload.include_trace else None,
+                    "trace": trace,
                 }
             )
             await websocket.close()

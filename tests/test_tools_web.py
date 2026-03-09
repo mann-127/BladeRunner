@@ -18,7 +18,10 @@ def test_web_search_tool_definition() -> None:
     tool = WebSearchTool()
 
     assert tool.name == "WebSearch"
-    assert "search" in tool.description.lower() or "web" in tool.description.lower()
+    assert (
+        "search" in tool.description.lower()
+        or "web" in tool.description.lower()
+    )
     assert "query" in tool.parameters["properties"]
     assert tool.parameters["required"] == ["query"]
 
@@ -27,13 +30,15 @@ def test_web_search_tool_requires_api_key(monkeypatch) -> None:
     """WebSearchTool with brave provider should require BRAVE_API_KEY."""
     monkeypatch.delenv("BRAVE_API_KEY", raising=False)
 
-    # When set to brave provider without API key, it should fall back to DuckDuckGo.
+    # When set to brave provider without API key, it should fall back to
+    # DuckDuckGo.
     tool = WebSearchTool(provider="brave")
     result = tool.execute(query="test")
 
     # Should successfully use DuckDuckGo fallback or return Brave error
     assert isinstance(result, str)
-    # If Brave fails, output should still include either an error or fallback results.
+    # If Brave fails, output should still include either an error or fallback
+    # results.
     assert len(result) > 0
 
 
@@ -144,7 +149,10 @@ def test_fetch_webpage_tool_definition() -> None:
     tool = FetchWebpageTool()
 
     assert tool.name == "FetchWebpage"
-    assert "fetch" in tool.description.lower() or "webpage" in tool.description.lower()
+    assert (
+        "fetch" in tool.description.lower()
+        or "webpage" in tool.description.lower()
+    )
     assert "url" in tool.parameters["properties"]
     assert tool.parameters["required"] == ["url"]
 
