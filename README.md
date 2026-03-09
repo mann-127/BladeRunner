@@ -28,6 +28,18 @@ BladeRunner transforms natural language prompts into executed code and system op
 - **🎨 Flexible**: Modular tool system and skills framework
 - **⚡ Fast**: Support for multiple models (Claude, Llama, Gemini, Mistral, and more)
 
+## Table Of Contents
+
+- [Overview](#-overview)
+- [System Architecture](#-system-architecture)
+- [Agentic AI Features](#-agentic-ai-features)
+- [Key Features](#-key-features)
+- [Quick Start](#-quick-start)
+- [Development And Testing](#-development--testing)
+- [Use Cases](#-use-cases)
+- [Configuration](#-configuration)
+- [Why This Matters](#-why-this-matters)
+
 ---
 
 ## 🏗️ System Architecture
@@ -40,7 +52,7 @@ The diagram above represents the logical execution pipeline of `bladerunner/agen
 Editable source diagrams are versioned in `docs/ARCHITECTURE (light).drawio` and `docs/ARCHITECTURE (dark).drawio`.
 
 **The Execution Lifecycle (`execute()`):**
-1. **Ingestion:** User prompts enter through `cli.py`, `interactive.py`, or `api_server.py` (web UI).
+1. **Ingestion:** User prompts enter through `cli.py`, `interactive.py`, or `api_server.py` (HTTP/WebSocket API).
 2. **Context Compilation:** Before contacting the LLM, the `agent_orchestrator.py` selects an identity, `semantic_memory.py` injects similar successful past code, and `sessions.py` (or `api_store.py` for API mode) loads the ongoing conversation history.
 3. **Core Generation:** The strategic planner inside `agent.py` formats the compiled context. The `backend_manager.py` handles automatic fallback between OpenRouter and Groq, while `adk_bridge.py` provides an alternative path for Google ADK/Gemini with grounding.
 4. **Parsing & Guardrails:** The response is routed to the `parse_tool_calls` function. If a system tool is requested, the command is intercepted by `safety.py` to check for destructive operations, followed by `permissions.py` for user authorization.
@@ -78,17 +90,13 @@ bladerunner/
 │   ├── web.py            # Web search & fetching
 │   ├── image.py          # Image analysis
 │   └── rag.py            # RAG (vector search & retrieval)
-└── webapp/               # Web UI
-    ├── index.html        # Main web interface
-    ├── app.js            # Frontend logic
-    └── styles.css        # UI styling
 ```
 
 ---
 
 ## 🧠 Agentic AI Features
 
-BladeRunner implements **9 production-grade agentic AI features** for intelligent task execution across two tiers:
+BladeRunner implements production-grade agentic capabilities for intelligent task execution across strategic, safety, and evaluation layers:
 
 **Tier 1: Strategic Thinking & Resilience**
 - Planning & Decomposition
@@ -102,6 +110,9 @@ BladeRunner implements **9 production-grade agentic AI features** for intelligen
 - Semantic Memory
 - Multi-Agent Orchestration
 - Performance Evaluation & Metrics
+- Adaptive Strategy Guidance
+- Structured Execution Tracing
+- Capability Benchmark Runner
 
 All features are configurable and optional. **For complete details, configuration, CLI usage, and examples:** See [FEATURES.md](docs/FEATURES.md)
 
@@ -159,6 +170,21 @@ All features are configurable and optional. **For complete details, configuratio
 - **Tool effectiveness**: Measure which tools work best for which tasks
 - **Execution metrics**: Duration, iterations, and throughput analysis
 - **Export capabilities**: JSON export for external analysis
+
+### 🧭 Adaptive Strategy
+- **Failure-aware guidance**: Tracks repeated tool failures and injects bounded recovery guidance
+- **Configurable threshold**: `agent.adaptation_failure_threshold`
+- **Reset on success**: Guidance pressure clears after successful tool execution
+
+### 🧾 Execution Trace
+- **Structured event timeline**: Captures routing, planning, iteration, tool, and completion events
+- **Post-run access**: Exposed via `Agent.get_last_trace()` for debugging and analysis
+- **Toggleable**: `agent.enable_trace`
+
+### 🧪 Capability Benchmarks
+- **Unified eval harness**: JSON task specs with shared checks (`non_empty`, `contains`, `regex`, `not_contains`)
+- **Three starter packs**: `software`, `data`, `research`
+- **CLI entrypoint**: `uv run bladerunner-eval --suite all`
 
 ### 🎭 Interactive Mode
 - **Rich REPL**: Beautiful terminal interface with prompt_toolkit
@@ -297,23 +323,19 @@ bladerunner -p "Your prompt here"
 uv run python -m bladerunner -p "Your prompt here"
 ```
 
-**Option 4: API server + web console (FastAPI)**
+**Option 4: API server (FastAPI)**
 
 ```bash
-# Start backend API + film-themed web console
-uv run bladerunner-console
-
-# Open in browser
-# http://127.0.0.1:8000
+# Start BladeRunner API server
+uv run bladerunner-api
 ```
 
 **API Endpoints:**
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/` | Web UI (index.html) |
 | `GET` | `/api/health` | Health check and feature availability |
-| `GET` | `/api/meta` | UI metadata (models, skills, profiles) |
+| `GET` | `/api/meta` | API metadata (models, skills, profiles) |
 | `GET` | `/api/skills` | List configured skills |
 | `POST` | `/api/auth/login` | JWT authentication (login) |
 | `POST` | `/api/auth/refresh` | Refresh JWT access token |
@@ -325,6 +347,14 @@ uv run bladerunner-console
 | `GET` | `/api/uploads/quota/{user_id}` | Get user's upload quota usage |
 | `POST` | `/api/chat` | Send message (supports `bladerunner` and `google_adk` engines) |
 | `WS` | `/ws/chat` | Bidirectional streaming chat for `bladerunner` engine |
+| `GET` | `/docs` | Swagger UI (interactive API docs) |
+| `GET` | `/openapi.json` | OpenAPI schema |
+
+**Interactive API docs:**
+- Swagger UI: `http://localhost:8000/docs`
+- OpenAPI JSON: `http://localhost:8000/openapi.json`
+
+`/api/chat` and `WS /ws/chat` also support optional `include_trace: true` for returning structured execution traces from the `bladerunner` engine.
 
 **Chat Request Example:**
 ```json
@@ -341,7 +371,8 @@ uv run bladerunner-console
   "enable_planning": true,
   "enable_reflection": true,
   "enable_retry": true,
-  "enable_streaming": false
+  "enable_streaming": false,
+  "include_trace": true
 }
 ```
 
@@ -464,6 +495,24 @@ curl http://localhost:8000/api/uploads/quota/user123 \
   -H "X-API-Key: your-key-here"
 ```
 
+**Container Deployment (single service):**
+
+```bash
+# Build and run API with Docker Compose
+docker compose up -d --build
+
+# View logs
+docker compose logs -f bladerunner-api
+
+# Stop service
+docker compose down
+```
+
+Notes:
+- API is exposed on `http://localhost:8000`
+- Persistent runtime data is stored in `./data` (mounted to `/root/.bladerunner`)
+- Environment variables are loaded from `.env`
+
 **Option 5: System-wide install (optional)**
 
 ```bash
@@ -496,6 +545,9 @@ uv run python -m pytest --cov=bladerunner --cov-report=term-missing
 
 # Run with verbose output
 uv run python -m pytest tests/ -v
+
+# Run capability benchmarks (software/data/research)
+uv run bladerunner-eval --suite all
 ```
 
 ### Test Suite Coverage
@@ -521,6 +573,9 @@ make test       # Run tests (pytest)
 make format     # Format code (black)
 make lint       # Lint code (flake8)
 make type       # Type-check code (mypy)
+make up         # Build and start API container
+make logs       # Follow API container logs
+make down       # Stop and remove containers
 ```
 
 ### Examples
@@ -562,7 +617,7 @@ uv run bladerunner -p "Research OAuth2 PKCE flow and implement it"
 ### Multi-Session Projects
 ```bash
 # Day 1: Foundation
-uv run bladerunner --session webapp -p "Create Flask app structure"
+uv run bladerunner --session api-build -p "Create Flask app structure"
 
 # Day 2: Features
 uv run bladerunner --continue -p "Add user authentication"
@@ -664,6 +719,11 @@ web_search:
   enabled: true
   provider: duckduckgo  # or "brave" (requires BRAVE_API_KEY)
   max_results: 5
+
+# Logging (API + uvicorn)
+logging:
+  level: INFO
+  uvicorn_access_log: true
 
 # Skills
 skills:

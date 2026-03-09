@@ -1,4 +1,4 @@
-.PHONY: install test format lint type
+.PHONY: install test format lint type up down logs
 
 install:
 	uv sync
@@ -14,3 +14,12 @@ lint:
 
 type:
 	uv run mypy bladerunner
+
+up:
+	docker compose up -d --build
+
+down:
+	docker compose down
+
+logs:
+	docker compose logs -f bladerunner-api

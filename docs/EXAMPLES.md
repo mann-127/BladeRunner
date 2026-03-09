@@ -148,7 +148,7 @@ uv run bladerunner -p "Your task" --no-planning --no-reflection --no-retry
 
 ```bash
 # Day 1: Foundation
-uv run bladerunner --session webapp -p "Create Flask app structure"
+uv run bladerunner --session api-build -p "Create Flask app structure"
 
 # Day 2: Add features
 uv run bladerunner --continue -p "Add user authentication"
@@ -213,13 +213,12 @@ web_search:
 
 ---
 
-## API Server + Web Console
+## API Server
 
-Run BladeRunner as a local API and browser console:
+Run BladeRunner as a local API service:
 
 ```bash
-uv run bladerunner-console
-# open http://127.0.0.1:8000
+uv run bladerunner-api
 ```
 
 Optional: enable auth in `~/.bladerunner/config.yml` and set secrets in `.env`:

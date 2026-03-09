@@ -25,7 +25,7 @@
         <mxCell id="box_repl" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#334155;strokeColor=#475569;strokeWidth=1;fontFamily=Inter, sans-serif;arcSize=8;align=center;" value="&lt;b style=&#39;font-size:14px;color:#F8FAFC&#39;&gt;REPL Interface&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#94A3B8&#39;&gt;Interactive streaming session&lt;/span&gt;" vertex="1">
           <mxGeometry height="55" width="180" x="412" y="275" as="geometry" />
         </mxCell>
-        <mxCell id="box_api" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#334155;strokeColor=#475569;strokeWidth=1;fontFamily=Inter, sans-serif;arcSize=8;align=center;" value="&lt;b style=&#39;font-size:14px;color:#F8FAFC&#39;&gt;API Server &amp; Web UI&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#94A3B8&#39;&gt;(FastAPI + web console)&lt;/span&gt;" vertex="1">
+        <mxCell id="box_api" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#334155;strokeColor=#475569;strokeWidth=1;fontFamily=Inter, sans-serif;arcSize=8;align=center;" value="&lt;b style=&#39;font-size:14px;color:#F8FAFC&#39;&gt;API Server&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#94A3B8&#39;&gt;(FastAPI HTTP + WebSocket)&lt;/span&gt;" vertex="1">
           <mxGeometry height="55" width="180" x="608" y="275" as="geometry" />
         </mxCell>
         <mxCell id="box_skills" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#334155;strokeColor=#475569;strokeWidth=1;fontFamily=Inter, sans-serif;arcSize=8;align=center;" value="&lt;b style=&#39;font-size:14px;color:#F8FAFC&#39;&gt;Skill Configuration&lt;/b&gt;&lt;br&gt;&lt;span style=&#39;font-size:12px;color:#94A3B8&#39;&gt;Domain-specific profiles&lt;/span&gt;" vertex="1">

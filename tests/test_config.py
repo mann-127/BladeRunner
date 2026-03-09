@@ -109,6 +109,9 @@ def test_config_agentic_features_enabled() -> None:
     assert isinstance(config.get("agent.enable_tool_tracking"), bool)
     assert isinstance(config.get("agent.enable_memory"), bool)
     assert isinstance(config.get("agent.enable_agent_selection"), bool)
+    assert isinstance(config.get("agent.enable_adaptation"), bool)
+    assert isinstance(config.get("agent.adaptation_failure_threshold"), int)
+    assert isinstance(config.get("agent.enable_trace"), bool)
 
 
 def test_config_sessions_enabled_by_default() -> None:
@@ -136,3 +139,12 @@ def test_config_rag_settings() -> None:
     # Check that it's either a bool or None
     rag_enabled = config.get("rag.enabled")
     assert rag_enabled is None or isinstance(rag_enabled, bool)
+
+
+def test_config_logging_settings() -> None:
+    """Config should expose logging defaults."""
+    config = Config()
+
+    assert config.get("logging.level") == "INFO"
+    assert isinstance(config.get("logging.format"), str)
+    assert isinstance(config.get("logging.uvicorn_access_log"), bool)
