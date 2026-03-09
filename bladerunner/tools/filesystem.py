@@ -31,7 +31,7 @@ class ReadTool(Tool):
             },
         }
 
-    def execute(self, file_path: str) -> str:
+    def execute(self, file_path: str) -> str:  # type: ignore[override]
         """Read file with proper error handling and encoding."""
         try:
             path = Path(file_path)
@@ -72,7 +72,7 @@ class WriteTool(Tool):
             },
         }
 
-    def execute(self, file_path: str, content: str) -> str:
+    def execute(self, file_path: str, content: str) -> str:  # type: ignore[override]
         """Write file with proper error handling and encoding."""
         try:
             path = Path(file_path)

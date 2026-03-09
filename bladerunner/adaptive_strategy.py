@@ -41,8 +41,10 @@ class AdaptiveStrategyManager:
 
         if stats.consecutive_failures >= self.failure_threshold:
             guidance = (
-                f"Tool '{tool_name}' failed {stats.consecutive_failures} times in a row. "
-                f"Switch to an alternate approach or simplify the tool arguments before retrying."
+                f"Tool '{tool_name}' failed "
+                f"{stats.consecutive_failures} times in a row. "
+                "Switch to an alternate approach or simplify "
+                "the tool arguments before retrying."
             )
             if error_message:
                 guidance += f" Latest error: {error_message[:200]}"

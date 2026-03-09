@@ -85,7 +85,7 @@ class SemanticMemory:
         if not self.solutions:
             return []
 
-        similarities = []
+        similarities: List[Dict[str, Any]] = []
 
         for solution in self.solutions:
             similarity = self.similarity.token_overlap(
@@ -96,7 +96,10 @@ class SemanticMemory:
                 similarities.append({"solution": solution, "similarity": similarity})
 
         # Sort by similarity descending
-        similarities.sort(key=lambda x: x["similarity"], reverse=True)
+        similarities.sort(
+            key=lambda item: float(item.get("similarity", 0.0)),
+            reverse=True,
+        )
 
         return [item["solution"] for item in similarities[:limit]]
 

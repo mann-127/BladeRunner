@@ -68,12 +68,12 @@ class AuthSettings(BaseModel):
 
 
 class UploadSettings(BaseModel):
-    max_size_mb: int = 10
+    max_size_mb: float = 10
     allowed_types: List[str] = Field(
         default_factory=lambda: ["image/jpeg", "image/png", "image/gif", "image/webp"]
     )
     retention_days: int = 30
-    per_user_quota_mb: int = 100
+    per_user_quota_mb: float = 100
 
 
 class APISettings(BaseModel):
@@ -160,14 +160,15 @@ class Config:
 
     def _load_config(self) -> Settings:
         """Load, validate, and return configuration."""
-        default_cfg = self._default_config_dict()
+        default_cfg = self._default_config()
         if not self.config_path.exists():
             logger.warning("No config file found, using default settings.")
-            user_cfg = {}
+            user_cfg: Dict[str, Any] = {}
         else:
             try:
                 with open(self.config_path, "r") as f:
-                    user_cfg = yaml.safe_load(f) or {}
+                    loaded_cfg = yaml.safe_load(f) or {}
+                    user_cfg = loaded_cfg if isinstance(loaded_cfg, dict) else {}
             except Exception as e:
                 logger.error("Error reading config file: %s. Using defaults.", e)
                 user_cfg = {}
@@ -180,17 +181,23 @@ class Config:
             return settings
         except ValidationError as e:
             logger.error(
-                "Configuration validation failed. Using default settings. Errors:\n%s", e
+                "Configuration validation failed. Using default settings. Errors:\n%s",
+                e,
             )
             # Fallback to default on validation error
             return Settings(**default_cfg)
 
-    def _deep_merge(self, source, destination):
+    def _deep_merge(
+        self, source: Dict[str, Any], destination: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Deeply merge two dictionaries."""
         for key, value in source.items():
             if isinstance(value, dict):
                 node = destination.setdefault(key, {})
-                self._deep_merge(value, node)
+                if isinstance(node, dict):
+                    self._deep_merge(value, node)
+                else:
+                    destination[key] = value
             else:
                 destination.setdefault(key, value)
         return destination
@@ -249,14 +256,63 @@ class Config:
             "api": {
                 "database": str(self.config_dir / "api.db"),
                 "uploads_dir": str(self.config_dir / "uploads"),
+                "auth": {
+                    "enabled": False,
+                    "keys": [],
+                    "jwt": {
+                        "enabled": False,
+                        "secret_key": "",
+                        "algorithm": "HS256",
+                        "access_token_expire_minutes": 60,
+                        "refresh_token_expire_days": 7,
+                    },
+                    "users": [],
+                },
+                "uploads": {
+                    "max_size_mb": 10,
+                    "allowed_types": [
+                        "image/jpeg",
+                        "image/png",
+                        "image/gif",
+                        "image/webp",
+                    ],
+                    "retention_days": 30,
+                    "per_user_quota_mb": 100,
+                },
             },
             "skills": {"enabled": False, "directory": str(self.config_dir / "skills")},
         }
 
+    def _default_config(self) -> Dict[str, Any]:
+        """Backward-compatible default config hook for tests/integrations."""
+        return self._default_config_dict()
+
+    def resolve_model(self, model: str) -> str:
+        """Resolve model aliases; pass through full model names unchanged."""
+        models = self.get("models", {})
+        model_cfg = models.get(model)
+        if isinstance(model_cfg, dict):
+            full_name = model_cfg.get("full_name")
+            if isinstance(full_name, str) and full_name:
+                return full_name
+        return model
+
+    def get_model_settings(self, model: str) -> Dict[str, Any]:
+        """Return effective model settings for a model alias or full model name."""
+        models = self.get("models", {})
+        if isinstance(models, dict):
+            model_cfg = models.get(model)
+            if isinstance(model_cfg, dict):
+                return {
+                    "temperature": model_cfg.get("temperature", 0.7),
+                    "max_tokens": model_cfg.get("max_tokens", 2048),
+                }
+        return {"temperature": 0.7, "max_tokens": 2048}
+
     def get(self, key: str, default: Any = None) -> Any:
         """Get configuration value."""
         keys = key.split(".")
-        value = self.config
+        value: Any = self.config
         for k in keys:
             if isinstance(value, dict):
                 value = value.get(k)

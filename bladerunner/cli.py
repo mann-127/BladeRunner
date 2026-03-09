@@ -54,8 +54,12 @@ def main():
     )
 
     # Core arguments
-    core_group = parser.add_argument_group("Core", "Essential arguments for running BladeRunner.")
-    core_group.add_argument("-p", "--prompt", help="User prompt to execute non-interactively.")
+    core_group = parser.add_argument_group(
+        "Core", "Essential arguments for running BladeRunner."
+    )
+    core_group.add_argument(
+        "-p", "--prompt", help="User prompt to execute non-interactively."
+    )
     core_group.add_argument(
         "-i", "--interactive", action="store_true", help="Start interactive REPL mode."
     )
@@ -70,7 +74,9 @@ def main():
     )
 
     # Session management
-    session_group = parser.add_argument_group("Session Management", "Control conversation history and context.")
+    session_group = parser.add_argument_group(
+        "Session Management", "Control conversation history and context."
+    )
     session_group.add_argument("--session", help="Session name or ID to use.")
     session_group.add_argument(
         "--continue",
@@ -89,8 +95,12 @@ def main():
     )
 
     # Agentic features & skills
-    agentic_group = parser.add_argument_group("Agentic Features", "Customize the agent's behavior and capabilities.")
-    agentic_group.add_argument("--image", action="append", help="Attach one or more image files to the prompt.")
+    agentic_group = parser.add_argument_group(
+        "Agentic Features", "Customize the agent's behavior and capabilities."
+    )
+    agentic_group.add_argument(
+        "--image", action="append", help="Attach one or more image files to the prompt."
+    )
     agentic_group.add_argument("--skill", help="Apply a specific skill to the prompt.")
     agentic_group.add_argument(
         "--list-skills", action="store_true", help="List all available skills."
@@ -117,7 +127,9 @@ def main():
     )
 
     # Configuration & permissions
-    config_group = parser.add_argument_group("Configuration", "Fine-tune security, models, and system settings.")
+    config_group = parser.add_argument_group(
+        "Configuration", "Fine-tune security, models, and system settings."
+    )
     config_group.add_argument(
         "--permissions",
         choices=["strict", "standard", "permissive", "none"],
@@ -125,10 +137,14 @@ def main():
         help="Set the permission profile for tool execution.",
     )
     config_group.add_argument("--config", help="Path to a custom YAML config file.")
-    config_group.add_argument("--debug", action="store_true", help="Enable debug logging for detailed output.")
+    config_group.add_argument(
+        "--debug", action="store_true", help="Enable debug logging for detailed output."
+    )
 
     # Profiles (easter egg presets)
-    profile_group = parser.add_argument_group("Profiles", "Use one of the preset agent profiles.")
+    profile_group = parser.add_argument_group(
+        "Profiles", "Use one of the preset agent profiles."
+    )
     profile_group.add_argument(
         "--profile",
         choices=["officer-k", "constant-k", "agent-k"],

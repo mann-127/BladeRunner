@@ -8,13 +8,13 @@ Complete reference for all agentic AI capabilities in BladeRunner.
 
 BladeRunner implements production-grade agentic AI features across strategic and safety layers:
 
-**Tier 1: Strategic Thinking & Resilience**
+**Core Capability Set: Strategic Thinking & Resilience**
 - Planning & Decomposition
 - Reflection & Self-Correction
 - Error Recovery & Retry
 - Streaming Responses
 
-**Tier 2: Safety & Learning**
+**Advanced Capability Set: Safety & Learning**
 - Human-in-the-Loop Approvals
 - Tool Effectiveness Tracking
 - Semantic Memory
@@ -40,7 +40,7 @@ BladeRunner's agentic AI architecture is built on these core principles:
 
 ---
 
-## Tier 1: Strategic Thinking & Resilience
+## Core Capability Set: Strategic Thinking & Resilience
 
 ### 1. Planning & Decomposition
 
@@ -286,7 +286,7 @@ uv run bladerunner -i
 
 ---
 
-## Tier 2: Safety & Learning
+## Advanced Capability Set: Safety & Learning
 
 ### 5. Human-in-the-Loop Approvals
 
@@ -878,9 +878,9 @@ uv run bladerunner -p "task"  # All enabled by default
 
 ### Execution Time
 
-- **Fastest:** Disable Tier 1 + Tier 2
-- **Balanced:** Keep Tier 1 + Tool Tracking, disable others
-- **Safest:** All Tier 1 + All Tier 2
+- **Fastest:** Disable core + advanced capabilities
+- **Balanced:** Keep core capabilities + Tool Tracking, disable others
+- **Safest:** All core + all advanced capabilities
 
 ---
 
@@ -977,7 +977,7 @@ This implementation demonstrates:
 - `bladerunner/agent_orchestrator.py` - Task routing to specialized agents
 
 **Modified:**
-- `bladerunner/agent.py` - Integrated all Tier 1 + Tier 2 features
+- `bladerunner/agent.py` - Integrated all core + advanced features
 - `bladerunner/config.py` - Added feature configuration defaults
 
 **Data directories:**

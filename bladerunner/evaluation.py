@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from datetime import datetime
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass, field
 
 logger = logging.getLogger(__name__)
 
@@ -24,13 +24,9 @@ class TaskExecution:
     total_tokens: int = 0
     prompt_tokens: int = 0
     completion_tokens: int = 0
-    tools_used: List[str] = None
+    tools_used: List[str] = field(default_factory=list)
     error_message: Optional[str] = None
     model: Optional[str] = None
-
-    def __post_init__(self):
-        if self.tools_used is None:
-            self.tools_used = []
 
     @property
     def duration(self) -> Optional[float]:
@@ -173,7 +169,7 @@ class AgentEvaluator:
         for e in self.executions_history:
             all_tools.extend(e.tools_used)
 
-        tool_counts = {}
+        tool_counts: Dict[str, int] = {}
         for tool in all_tools:
             tool_counts[tool] = tool_counts.get(tool, 0) + 1
 

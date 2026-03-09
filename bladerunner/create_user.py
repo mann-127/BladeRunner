@@ -28,7 +28,9 @@ def main():
         sys.exit(1)
 
     # Generate bcrypt hash
-    password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode(
+        "utf-8"
+    )
 
     print()
     print("=" * 50)
@@ -37,7 +39,7 @@ def main():
     print(f"  - username: {username}")
     print(f"    password_hash: {password_hash}")
     print(f"    user_id: {username}")
-    print(f"    permissions: [\"read\", \"write\"]")
+    print('    permissions: ["read", "write"]')
     print()
     print("=" * 50)
 

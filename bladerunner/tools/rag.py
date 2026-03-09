@@ -6,9 +6,11 @@ from typing import Any, Dict, List, Optional
 from .base import Tool
 
 try:
-    import chromadb
-    from chromadb.config import Settings
-    from sentence_transformers import SentenceTransformer
+    import chromadb  # type: ignore[import-not-found]
+    from chromadb.config import Settings  # type: ignore[import-not-found]
+    from sentence_transformers import (  # type: ignore[import-not-found]
+        SentenceTransformer,
+    )
 
     RAG_AVAILABLE = True
 except ImportError:
@@ -83,11 +85,11 @@ class RAGStore:
             "embeddings": embeddings,
             "ids": ids,
         }
-        
+
         # Only add metadatas if provided (ChromaDB rejects empty dicts)
         if metadatas:
             add_params["metadatas"] = metadatas
-        
+
         self.collection.add(**add_params)
 
         return {
@@ -181,7 +183,8 @@ class RAGIngestTool(Tool):
         return (
             "Ingest documents into the RAG knowledge base for later retrieval. "
             "Accepts a list of documents (text strings) and optional metadata. "
-            "Documents are embedded and stored in a vector database for semantic search."
+            "Documents are embedded and stored in a vector database "
+            "for semantic search."
         )
 
     @property
@@ -197,18 +200,24 @@ class RAGIngestTool(Tool):
                 "metadatas": {
                     "type": "array",
                     "items": {"type": "object"},
-                    "description": "Optional list of metadata objects for each document (e.g., source, timestamp)",
+                    "description": (
+                        "Optional list of metadata objects for each "
+                        "document (e.g., source, timestamp)"
+                    ),
                 },
             },
             "required": ["documents"],
         }
 
-    def execute(
+    def execute(  # type: ignore[override]
         self, documents: List[str], metadatas: Optional[List[Dict]] = None
     ) -> str:
         """Execute document ingestion."""
         if not RAG_AVAILABLE:
-            return "Error: RAG dependencies not installed. Install with: uv sync --extra rag"
+            return (
+                "Error: RAG dependencies not installed. "
+                "Install with: uv sync --extra rag"
+            )
 
         try:
             result = self.rag_store.add_documents(documents, metadatas)
@@ -254,10 +263,13 @@ class RAGSearchTool(Tool):
             "required": ["query"],
         }
 
-    def execute(self, query: str, n_results: int = 5) -> str:
+    def execute(self, query: str, n_results: int = 5) -> str:  # type: ignore[override]
         """Execute semantic search."""
         if not RAG_AVAILABLE:
-            return "Error: RAG dependencies not installed. Install with: uv sync --extra rag"
+            return (
+                "Error: RAG dependencies not installed. "
+                "Install with: uv sync --extra rag"
+            )
 
         try:
             result = self.rag_store.search(query, n_results)

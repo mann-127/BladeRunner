@@ -21,8 +21,6 @@ def rag_store(tmp_path: Path):
 
 def test_add_and_search_documents(rag_store) -> None:
     """Test basic document ingestion and retrieval."""
-    from bladerunner.tools.rag import RAGStore
-
     documents = [
         "Python is a high-level programming language",
         "JavaScript is used for web development",

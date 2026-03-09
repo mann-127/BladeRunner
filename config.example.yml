@@ -23,13 +23,13 @@ debug: false
 
 # === Agentic AI Features ===
 agent:
-  # Tier 1: Strategic thinking and error recovery
+  # Core capabilities: strategic thinking and error recovery
   enable_planning: true       # Create multi-step plans before execution
   enable_reflection: true     # Analyze tool output and self-correct errors
   enable_retry: true          # Automatic retries with exponential backoff
   enable_streaming: false     # Stream tokens in real-time (CLI default: off)
   
-  # Tier 2: Safety and learning
+  # Advanced capabilities: safety and learning
   require_approval: true       # Approve critical operations (rm, dd, etc.)
   enable_tool_tracking: true   # Track tool success rates over time
   enable_memory: true          # Store solutions for future similar tasks

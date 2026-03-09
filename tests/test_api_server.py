@@ -147,7 +147,10 @@ def test_auth_enforcement_when_enabled(monkeypatch) -> None:
     client = _build_client()
 
     assert client.get("/api/health").status_code == 401
-    assert client.get("/api/health", headers={"X-API-Key": "secret-key"}).status_code == 200
+    assert (
+        client.get("/api/health", headers={"X-API-Key": "secret-key"}).status_code
+        == 200
+    )
 
 
 def test_image_upload_endpoint() -> None:
@@ -194,11 +197,11 @@ def test_websocket_streaming_chat(monkeypatch) -> None:
         # First message should be status
         status = ws.receive_json()
         assert status["type"] == "status"
-        
+
         # Then chunks
         first = ws.receive_json()
         second = ws.receive_json()
-        
+
         # Then final
         final = ws.receive_json()
 
@@ -215,7 +218,7 @@ def test_jwt_login_success(monkeypatch) -> None:
     import bcrypt
 
     # Pre-hash password to avoid passlib initialization issues
-    password_hash = bcrypt.hashpw(b"testpass123", bcrypt.gensalt()).decode('utf-8')
+    password_hash = bcrypt.hashpw(b"testpass123", bcrypt.gensalt()).decode("utf-8")
 
     original_default = api_server.Config._default_config
 
@@ -261,7 +264,7 @@ def test_jwt_login_invalid_credentials(monkeypatch) -> None:
     """JWT login should reject invalid credentials."""
     import bcrypt
 
-    password_hash = bcrypt.hashpw(b"correctpass", bcrypt.gensalt()).decode('utf-8')
+    password_hash = bcrypt.hashpw(b"correctpass", bcrypt.gensalt()).decode("utf-8")
 
     original_default = api_server.Config._default_config
 
@@ -301,7 +304,7 @@ def test_jwt_token_authentication(monkeypatch) -> None:
     import jwt as pyjwt
     import bcrypt
 
-    password_hash = bcrypt.hashpw(b"testpass", bcrypt.gensalt()).decode('utf-8')
+    password_hash = bcrypt.hashpw(b"testpass", bcrypt.gensalt()).decode("utf-8")
     secret = "test-jwt-secret-with-minimum-32chars"
 
     original_default = api_server.Config._default_config
@@ -468,7 +471,10 @@ def test_websocket_interruption(monkeypatch) -> None:
 
         # Should receive interrupting status
         interrupt_status = ws.receive_json()
-        assert interrupt_status.get("type") == "status" or interrupt_status.get("type") == "chunk"
+        assert (
+            interrupt_status.get("type") == "status"
+            or interrupt_status.get("type") == "chunk"
+        )
 
         # Collect remaining messages until final
         final = None
@@ -480,4 +486,3 @@ def test_websocket_interruption(monkeypatch) -> None:
 
     assert final is not None
     assert final.get("interrupted") is True or "interrupt" in final["answer"].lower()
-

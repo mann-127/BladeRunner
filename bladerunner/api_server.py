@@ -12,7 +12,7 @@ import os
 import queue
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Callable, Dict, List, Literal, Optional, cast
 
 import jwt
 import uvicorn
@@ -146,7 +146,10 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="BladeRunner API",
         version="0.1.0",
-        description="FastAPI API server for BladeRunner with optional Google ADK/Gemini mode.",
+        description=(
+            "FastAPI API server for BladeRunner with optional "
+            "Google ADK/Gemini mode."
+        ),
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
@@ -185,7 +188,9 @@ def create_app() -> FastAPI:
         if jwt_algorithm.upper().startswith("HS") and len(jwt_secret) < 32:
             raise HTTPException(
                 status_code=500,
-                detail="JWT secret too short (minimum 32 characters for HS algorithms)",
+                detail=(
+                    "JWT secret too short " "(minimum 32 characters for HS algorithms)"
+                ),
             )
 
     def _create_jwt_token(data: dict, expires_delta: timedelta) -> str:
@@ -235,7 +240,7 @@ def create_app() -> FastAPI:
         )
 
     def _require_api_key(key: Optional[str]) -> Optional[UserInfo]:
-        """Validate API key or JWT token when auth is enabled. Returns user info from JWT if available."""
+        """Validate API key/JWT token and return JWT user info when present."""
         if not auth_enabled:
             return None
 
@@ -276,12 +281,16 @@ def create_app() -> FastAPI:
         ]
         lines.extend([f"- {p}" for p in image_paths])
         lines.append(
-            "Use ReadImage on relevant paths before answering when visual context is needed."
+            "Use ReadImage on relevant paths before answering "
+            "when visual context is needed."
         )
         return "\n".join(lines)
 
     def _apply_skill(
-        agent: Agent, prompt: str, explicit_skill: Optional[str], auto_match: bool
+        agent: Agent,
+        prompt: str,
+        explicit_skill: Optional[str],
+        auto_match: bool,
     ) -> Optional[str]:
         """Apply skill context and tool restrictions when available."""
         manager = SkillManager()
@@ -322,7 +331,7 @@ def create_app() -> FastAPI:
         base_config: Config,
         is_streaming: bool,
     ) -> tuple[Agent, list[str]]:
-        """Configure and return a BladeRunner agent based on API request parameters."""
+        """Configure and return an agent for API request parameters."""
         warnings: list[str] = []
         web_config = _config_with_toggles(
             base_config,
@@ -350,9 +359,14 @@ def create_app() -> FastAPI:
 
         if agent.use_permissions and agent.permission_checker:
             # API mode is non-interactive: treat ASK prompts as denied.
-            agent.permission_checker.prompt_user = lambda *_args, **_kwargs: False
+            checker = cast(Any, agent.permission_checker)
+            checker.prompt_user = cast(
+                Callable[..., bool], lambda *_args, **_kwargs: False
+            )
             if payload.permission_profile in {"standard", "strict"}:
-                warnings.append("Non-interactive mode auto-denies ASK permission prompts.")
+                warnings.append(
+                    "Non-interactive mode auto-denies ASK permission prompts."
+                )
 
         if is_streaming and payload.enable_streaming is False:
             warnings.append("Payload requested no streaming, but endpoint requires it.")
@@ -497,7 +511,10 @@ def create_app() -> FastAPI:
             used_mb = current_size / (1024 * 1024)
             raise HTTPException(
                 status_code=413,
-                detail=f"Upload quota exceeded. Used: {used_mb:.2f}MB / {max_quota_mb}MB",
+                detail=(
+                    "Upload quota exceeded. "
+                    f"Used: {used_mb:.2f}MB / {max_quota_mb}MB"
+                ),
             )
 
     def _validate_upload_file(file: UploadFile, content: bytes) -> None:
@@ -518,11 +535,14 @@ def create_app() -> FastAPI:
         if file.content_type not in allowed_types:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported file type: {file.content_type}. Allowed: {', '.join(allowed_types)}",
+                detail=(
+                    f"Unsupported file type: {file.content_type}. "
+                    f"Allowed: {', '.join(allowed_types)}"
+                ),
             )
 
     async def _cleanup_old_uploads() -> None:
-        """Background task to periodically clean up old uploads based on retention policy."""
+        """Periodically clean old uploads based on retention policy."""
         retention_days = config.get("api.uploads.retention_days", 30)
         check_interval_hours = 6  # Check every 6 hours
 
@@ -562,8 +582,10 @@ def create_app() -> FastAPI:
 
                 if deleted_count > 0:
                     logger.info(
-                        f"Upload cleanup: deleted {deleted_count} files ({deleted_size / (1024*1024):.2f}MB) "
-                        f"older than {retention_days} days"
+                        "Upload cleanup: deleted %s files (%.2fMB) older than %s days",
+                        deleted_count,
+                        deleted_size / (1024 * 1024),
+                        retention_days,
                     )
 
             except Exception as e:
@@ -812,7 +834,7 @@ def create_app() -> FastAPI:
 
     @app.websocket("/ws/chat")
     async def ws_chat(websocket: WebSocket):
-        """WebSocket streaming endpoint for BladeRunner engine with bidirectional control."""
+        """WebSocket endpoint for BladeRunner with bidirectional control."""
         await websocket.accept()
 
         try:
@@ -828,34 +850,46 @@ def create_app() -> FastAPI:
                 await websocket.send_json(
                     {
                         "type": "error",
-                        "message": "WebSocket streaming currently supports only 'bladerunner' engine.",
+                        "message": (
+                            "WebSocket streaming currently supports only "
+                            "'bladerunner' engine."
+                        ),
                     }
                 )
                 await websocket.close(code=1003)
                 return
 
-            if not payload.session_id:
+            session_id = payload.session_id
+            if not session_id:
                 br_session_id = _new_bladerunner_session_id()
                 SessionManager().create_session(br_session_id)
-                session = store.create_session(
+                created_session = store.create_session(
                     user_id=payload.user_id,
                     title="Live Session",
                     bladerunner_session_id=br_session_id,
                 )
-                payload.session_id = session["id"]
+                session_id = created_session["id"]
 
-            session = store.get_session(payload.user_id, payload.session_id)
-            if not session:
+            if not session_id:
+                await websocket.send_json(
+                    {"type": "error", "message": "Session initialization failed"}
+                )
+                await websocket.close(code=1011)
+                return
+
+            payload.session_id = session_id
+            session_record = store.get_session(payload.user_id, session_id)
+            if not session_record:
                 await websocket.send_json(
                     {"type": "error", "message": "Session not found"}
                 )
                 await websocket.close(code=1008)
                 return
 
-            store.add_message(session["id"], "user", payload.message)
+            store.add_message(session_record["id"], "user", payload.message)
 
             agent, _ = _create_agent_for_request(
-                payload, session, config, is_streaming=True
+                payload, session_record, config, is_streaming=True
             )
             applied_skill = _apply_skill(
                 agent,
@@ -923,13 +957,13 @@ def create_app() -> FastAPI:
             while not chunk_queue.empty():
                 await websocket.send_json({"type": "chunk", "delta": chunk_queue.get()})
 
-            store.add_message(session["id"], "assistant", answer)
-            store.touch_session(session["id"])
+            store.add_message(session_record["id"], "assistant", answer)
+            store.touch_session(session_record["id"])
 
             await websocket.send_json(
                 {
                     "type": "final",
-                    "session_id": session["id"],
+                    "session_id": session_record["id"],
                     "answer": answer,
                     "engine": "bladerunner",
                     "model": agent.model,

@@ -80,7 +80,9 @@ def test_runner_success_case() -> None:
         }
     ]
 
-    factory = lambda: _FakeAgent("ok result", tools_used=["Read"], iterations=2)
+    def factory() -> _FakeAgent:
+        return _FakeAgent("ok result", tools_used=["Read"], iterations=2)
+
     runner = CapabilityBenchmarkRunner(config=_FakeConfig(), agent_factory=factory)
     report = runner.run(tasks)
 
@@ -101,7 +103,9 @@ def test_runner_required_tool_failure() -> None:
         }
     ]
 
-    factory = lambda: _FakeAgent("response", tools_used=["Read"], iterations=1)
+    def factory() -> _FakeAgent:
+        return _FakeAgent("response", tools_used=["Read"], iterations=1)
+
     runner = CapabilityBenchmarkRunner(config=_FakeConfig(), agent_factory=factory)
     report = runner.run(tasks)
 

@@ -84,7 +84,10 @@ class BackendManager:
 
         # Add other available backends
         for backend_name in self.backends:
-            if backend_name != self.primary_backend and self.backends[backend_name].available:
+            if (
+                backend_name != self.primary_backend
+                and self.backends[backend_name].available
+            ):
                 priority.append(backend_name)
 
         return priority
@@ -110,7 +113,9 @@ class BackendManager:
 
         return None
 
-    def record_request_failure(self, backend_name: str, error_code: Optional[int] = None):
+    def record_request_failure(
+        self, backend_name: str, error_code: Optional[int] = None
+    ):
         """Record a failed request.
 
         Args:
@@ -142,7 +147,9 @@ class BackendManager:
         if backend_name in self.backends:
             self.backends[backend_name].record_success()
 
-    def should_attempt_fallback(self, backend_name: str, error_code: Optional[int] = None) -> bool:
+    def should_attempt_fallback(
+        self, backend_name: str, error_code: Optional[int] = None
+    ) -> bool:
         """Determine if we should try a fallback backend.
 
         Args:

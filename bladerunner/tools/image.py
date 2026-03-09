@@ -83,7 +83,7 @@ class ReadImageTool(Tool):
             },
         }
 
-    def execute(self, image_path: str) -> str:
+    def execute(self, image_path: str) -> str:  # type: ignore[override]
         """Read image file."""
         if not IMAGE_AVAILABLE:
             return "Error: Image support requires 'Pillow' package"

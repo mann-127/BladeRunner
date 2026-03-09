@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, cast
 from openai import OpenAI
 
 from .config import Config
@@ -109,6 +109,7 @@ class Agent:
         self.use_permissions = use_permissions and config.get(
             "permissions.enabled", True
         )
+        self.permission_checker: Optional[PermissionChecker]
         if self.use_permissions:
             self.permission_checker = PermissionChecker(profile=permission_profile)
         else:
@@ -134,21 +135,21 @@ class Agent:
 
         # Track execution state for reflection
         self.last_tool_output = ""
-        self.execution_history = []
+        self.execution_history: List[Dict[str, Any]] = []
 
-        # Tier 2: Safety and approval system
+        # Advanced capability: Safety and approval system
         self.critical_checker = CriticalOperation()
         self.require_approval = config.get("agent.require_approval", True)
 
-        # Tier 2: Tool effectiveness tracking
+        # Advanced capability: Tool effectiveness tracking
         self.tool_tracker = ToolTracker()
         self.enable_tool_tracking = config.get("agent.enable_tool_tracking", True)
 
-        # Tier 2: Semantic memory (learning from past solutions)
+        # Advanced capability: Semantic memory (learning from past solutions)
         self.semantic_memory = SemanticMemory()
         self.enable_memory = config.get("agent.enable_memory", True)
 
-        # Tier 2: Multi-agent orchestration
+        # Advanced capability: Multi-agent orchestration
         self.orchestrator = AgentOrchestrator()
         self.agent_role = AgentRole.GENERAL
         self.enable_agent_selection = config.get("agent.enable_agent_selection", True)
@@ -156,7 +157,7 @@ class Agent:
         # Track execution path for memory storage
         self.current_execution_path: List[str] = []
 
-        # Tier 2: Evaluation and metrics tracking
+        # Advanced capability: Evaluation and metrics tracking
         self.evaluator = AgentEvaluator()
         self.enable_evaluation = config.get("agent.enable_evaluation", True)
         self.current_task_id: Optional[str] = None
@@ -195,7 +196,8 @@ class Agent:
         if not api_key:
             raise RuntimeError(
                 f"{env_var} environment variable not set for {backend_name} backend. "
-                f"Please set the environment variable or add 'api_key' to your config file."
+                "Please set the environment variable or add "
+                "'api_key' to your config file."
             )
         return api_key
 
@@ -231,7 +233,7 @@ class Agent:
             Chat completion response
         """
         attempted_backends: List[str] = []
-        last_error = None
+        last_error: Optional[Exception] = None
 
         # Try all configured backends at most once per request.
         max_attempts = max(1, len(self.backend_manager.backends))
@@ -282,13 +284,19 @@ class Agent:
                         if self.config.get("debug"):
                             logger.exception("Backend switch failed: %s", switch_error)
                         # Can't switch, raise original error
-                        raise last_error
+                        if last_error is not None:
+                            raise last_error
+                        raise RuntimeError("Backend switch failed with unknown error")
                 else:
                     # No more backends to try
-                    raise last_error
+                    if last_error is not None:
+                        raise last_error
+                    raise RuntimeError("No available backend could serve the request")
 
         # If we get here, all backends failed
-        raise last_error
+        if last_error is not None:
+            raise last_error
+        raise RuntimeError("All backends failed with unknown error")
 
     def _register_core_tools(self):
         """Register core tools."""
@@ -422,11 +430,12 @@ Be concise and actionable."""
             return self._execute_tool_with_permissions(tool_call)
 
         # Get retry config for this tool
-        retry_config = RETRY_CONFIG.get(
-            function_name, {"max_retries": 1, "backoff_factor": 1}
+        retry_config = cast(
+            Dict[str, float],
+            RETRY_CONFIG.get(function_name, {"max_retries": 1, "backoff_factor": 1}),
         )
-        max_retries = retry_config["max_retries"]
-        backoff_factor = retry_config["backoff_factor"]
+        max_retries = int(retry_config["max_retries"])
+        backoff_factor = float(retry_config["backoff_factor"])
 
         last_error = None
 
@@ -512,14 +521,14 @@ Be concise and actionable."""
 
     def execute(self, prompt: str, use_streaming: bool = False) -> str:
         """Execute agent with a prompt."""
-        # Tier 2: Start evaluation tracking
+        # Advanced capability: Start evaluation tracking
         if self.enable_evaluation:
             self.current_task_id = self.evaluator.start_task(prompt, self.model)
         if self.enable_trace:
             self.trace_recorder.start(prompt=prompt, model=self.model)
             self.trace_recorder.log("execution_started")
 
-        # Tier 2: Agent role selection
+        # Advanced capability: Agent role selection
         if self.enable_agent_selection:
             route = self.orchestrator.route_task(prompt)
             self.agent_role = route["role"]
@@ -531,7 +540,7 @@ Be concise and actionable."""
                     role=self.agent_role.value,
                 )
 
-        # Tier 2: Get semantic memory context
+        # Advanced capability: Get semantic memory context
         memory_context = ""
         if self.enable_memory:
             memory_context = self.semantic_memory.get_memory_context(prompt)
@@ -672,7 +681,7 @@ Be concise and actionable."""
                     # No tool calls - return final response
                     final_response = message.content or ""
 
-                    # Tier 2: Store successful solution in semantic memory
+                    # Advanced capability: Store successful solution in semantic memory
                     if self.enable_memory and self.current_execution_path:
                         self.semantic_memory.store_solution(
                             prompt,
@@ -680,7 +689,7 @@ Be concise and actionable."""
                             success=True,
                         )
 
-                    # Tier 2: End evaluation tracking (success)
+                    # Advanced capability: End evaluation tracking (success)
                     if self.enable_evaluation:
                         self.evaluator.end_task(success=True)
 
@@ -787,7 +796,7 @@ Be concise and actionable."""
 
         logger.debug("Executing tool '%s' with args: %s", function_name, arguments)
 
-        # Tier 2: Check for critical operations requiring approval
+        # Advanced capability: Check for critical operations requiring approval
         if self.require_approval:
             if function_name == "Bash":
                 command = arguments.get("command", "")
@@ -795,7 +804,7 @@ Be concise and actionable."""
                 if is_critical:
                     approved = self.critical_checker.prompt_approval(
                         "Execute bash command",
-                        reason,
+                        reason or "Potentially destructive bash command",
                         command,
                     )
                     if not approved:
@@ -809,7 +818,7 @@ Be concise and actionable."""
                 if is_critical:
                     approved = self.critical_checker.prompt_approval(
                         "Write to critical file",
-                        reason,
+                        reason or "Write to sensitive file path",
                         file_path,
                     )
                     if not approved:
@@ -871,14 +880,14 @@ Be concise and actionable."""
                     success=not result.startswith("Error:"),
                 )
 
-            # Tier 2: Track tool success
+            # Advanced capability: Track tool success
             if self.enable_tool_tracking:
                 success = not result.startswith("Error:")
                 self.tool_tracker.record_execution(
                     function_name, success, result if not success else None
                 )
 
-            # Tier 2: Track tool usage in evaluator
+            # Advanced capability: Track tool usage in evaluator
             if self.enable_evaluation:
                 self.evaluator.record_tool_use(function_name)
 
@@ -926,21 +935,21 @@ Be concise and actionable."""
         self.model = model
 
     def print_execution_summary(self) -> None:
-        """Print summary of execution including Tier 2 stats."""
+        """Print summary of execution including advanced capability stats."""
         logger.info("\n%s", "=" * 60)
         logger.info("EXECUTION SUMMARY")
         logger.info("%s", "=" * 60)
 
-        # Tier 2: Evaluation metrics
+        # Advanced capability: Evaluation metrics
         if self.enable_evaluation:
             self.evaluator.print_summary()
 
-        # Tier 2: Tool tracking stats
+        # Advanced capability: Tool tracking stats
         if self.enable_tool_tracking:
             self.tool_tracker.print_session_summary()
             self.tool_tracker.print_tool_rankings()
 
-        # Tier 2: Semantic memory stats
+        # Advanced capability: Semantic memory stats
         if self.enable_memory:
             self.semantic_memory.print_memory_stats()
 

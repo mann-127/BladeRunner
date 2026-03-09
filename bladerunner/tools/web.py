@@ -19,7 +19,7 @@ class WebSearchTool(Tool):
 
     def __init__(self, provider: str = "duckduckgo", max_results: int = 5):
         """Initialize web search tool with provider.
-        
+
         Args:
             provider: Search provider ("duckduckgo" or "brave")
             max_results: Maximum number of results to return
@@ -58,42 +58,43 @@ class WebSearchTool(Tool):
                 "https://html.duckduckgo.com/html/",
                 params={"q": query},
                 headers={
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                    "User-Agent": (
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36"
+                    )
                 },
                 timeout=10,
             )
             response.raise_for_status()
-            
+
             soup = BeautifulSoup(response.text, "html.parser")
             results = []
-            
+
             # Parse search results
             for result_div in soup.select(".result")[:num_results]:
                 title_elem = result_div.select_one(".result__a")
                 snippet_elem = result_div.select_one(".result__snippet")
-                
+
                 if title_elem:
                     title = title_elem.get_text(strip=True)
-                    url = title_elem.get("href", "")
-                    
+                    href_value = title_elem.get("href", "")
+                    url = href_value if isinstance(href_value, str) else ""
+
                     # DuckDuckGo wraps URLs in redirect - extract actual URL
                     if url.startswith("/"):
                         url_match = re.search(r"uddg=([^&]+)", url)
                         if url_match:
                             from urllib.parse import unquote
+
                             url = unquote(url_match.group(1))
-                    
+
                     snippet = snippet_elem.get_text(strip=True) if snippet_elem else ""
-                    
-                    results.append({
-                        "title": title,
-                        "url": url,
-                        "description": snippet
-                    })
-            
+
+                    results.append({"title": title, "url": url, "description": snippet})
+
             if not results:
                 return "No results found"
-            
+
             # Format results
             formatted = []
             for i, result in enumerate(results, 1):
@@ -102,9 +103,9 @@ class WebSearchTool(Tool):
                     f"   URL: {result['url']}\n"
                     f"   {result['description']}\n"
                 )
-            
+
             return "\n".join(formatted)
-        
+
         except Exception as e:
             return f"Error performing DuckDuckGo search: {str(e)}"
 
@@ -115,10 +116,11 @@ class WebSearchTool(Tool):
             return "Error: BRAVE_API_KEY environment variable not set"
 
         try:
+            params: Dict[str, str | int] = {"q": query, "count": num_results}
             response = requests.get(
                 "https://api.search.brave.com/res/v1/web/search",
                 headers={"X-Subscription-Token": api_key},
-                params={"q": query, "count": num_results},
+                params=params,
                 timeout=10,
             )
             response.raise_for_status()
@@ -137,7 +139,9 @@ class WebSearchTool(Tool):
         except Exception as e:
             return f"Error performing Brave search: {str(e)}"
 
-    def execute(self, query: str, num_results: int = 5) -> str:
+    def execute(  # type: ignore[override]
+        self, query: str, num_results: int = 5
+    ) -> str:
         """Search web using configured provider (with fallback)."""
         if not WEB_AVAILABLE:
             return "Error: Web search requires 'requests' and 'beautifulsoup4' packages"
@@ -181,7 +185,7 @@ class FetchWebpageTool(Tool):
             },
         }
 
-    def execute(self, url: str) -> str:
+    def execute(self, url: str) -> str:  # type: ignore[override]
         """Fetch and extract text content from URL."""
         if not WEB_AVAILABLE:
             return (

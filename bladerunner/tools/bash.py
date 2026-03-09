@@ -29,7 +29,7 @@ class BashTool(Tool):
             },
         }
 
-    def execute(self, command: str) -> str:
+    def execute(self, command: str) -> str:  # type: ignore[override]
         """Execute bash command with security and timeout considerations."""
         try:
             result = subprocess.run(

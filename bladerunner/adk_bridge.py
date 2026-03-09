@@ -28,7 +28,9 @@ class GoogleADKBridge:
       to Gemini's public REST API with optional Google Search grounding.
     """
 
-    def __init__(self, model: str = "gemini-2.0-flash", enable_search_grounding: bool = True):
+    def __init__(
+        self, model: str = "gemini-2.0-flash", enable_search_grounding: bool = True
+    ):
         self.model = model
         self.enable_search_grounding = enable_search_grounding
         self.api_key = os.getenv("GOOGLE_API_KEY")
@@ -71,7 +73,8 @@ class GoogleADKBridge:
     def _generate_via_rest(self, prompt: str) -> GroundedResponse:
         """Use Gemini REST API with optional Search grounding."""
         endpoint = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{self.model}:generateContent"
         )
 
         payload: Dict[str, Any] = {
@@ -87,11 +90,12 @@ class GoogleADKBridge:
             json=payload,
             timeout=25,
         )
-        
+
         # Handle errors with sanitized messages (don't expose API key in URL)
         if response.status_code == 429:
             raise RuntimeError(
-                "Google Gemini rate limit exceeded. Please wait a few minutes and try again, "
+                "Google Gemini rate limit exceeded. "
+                "Please wait a few minutes and try again, "
                 "or switch to 'bladerunner' engine (OpenRouter backend)."
             )
         elif not response.ok:
@@ -99,7 +103,7 @@ class GoogleADKBridge:
                 f"Google Gemini API error: {response.status_code} {response.reason}. "
                 f"Check your GOOGLE_API_KEY and try again."
             )
-        
+
         body = response.json()
 
         answer = self._extract_answer_text(body)
@@ -108,7 +112,11 @@ class GoogleADKBridge:
         return GroundedResponse(
             answer=answer or "No answer returned by Gemini.",
             sources=sources,
-            provider="gemini_rest_grounded" if self.enable_search_grounding else "gemini_rest",
+            provider=(
+                "gemini_rest_grounded"
+                if self.enable_search_grounding
+                else "gemini_rest"
+            ),
         )
 
     def _extract_answer_text(self, body: Dict[str, Any]) -> str:

@@ -45,6 +45,8 @@ dev = [
     "black>=23.0.0",
     "flake8>=6.0.0",
     "mypy>=1.0.0",
+    "types-requests>=2.32.0.20250306",
+    "types-PyYAML>=6.0.12.20250915",
 ]
 
 lsp = [

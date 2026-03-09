@@ -19,7 +19,6 @@ from typing import Any, Callable, Dict, List, Optional
 from .agent import Agent
 from .config import Config
 
-
 TaskRecord = Dict[str, Any]
 
 
@@ -109,12 +108,15 @@ class CapabilityBenchmarkRunner:
         max_duration = task.get("max_duration_sec")
         if isinstance(max_duration, (int, float)) and duration_sec > max_duration:
             failures.append(
-                f"Exceeded max_duration_sec ({duration_sec:.2f}s > {float(max_duration):.2f}s)"
+                "Exceeded max_duration_sec "
+                f"({duration_sec:.2f}s > {float(max_duration):.2f}s)"
             )
 
         tools_used: List[str] = []
         iterations = 0
-        if getattr(agent, "enable_evaluation", False) and getattr(agent, "evaluator", None):
+        if getattr(agent, "enable_evaluation", False) and getattr(
+            agent, "evaluator", None
+        ):
             history = getattr(agent.evaluator, "executions_history", [])
             if history:
                 latest = history[-1]
@@ -193,11 +195,17 @@ def load_tasks(
             with file_path.open("r", encoding="utf-8") as handle:
                 payload = json.load(handle)
             if not isinstance(payload, list):
-                raise ValueError(f"Task file {file_path.name} must contain a JSON array")
+                raise ValueError(
+                    f"Task file {file_path.name} must contain a JSON array"
+                )
             raw_tasks.extend(payload)
 
     # Normalize and filter by suite/category.
-    tasks = [task for task in raw_tasks if isinstance(task, dict) and "id" in task and "prompt" in task]
+    tasks = [
+        task
+        for task in raw_tasks
+        if isinstance(task, dict) and "id" in task and "prompt" in task
+    ]
     if suite != "all":
         tasks = [task for task in tasks if task.get("category") == suite]
 
@@ -259,7 +267,9 @@ def _summarize_results(results: List[TaskResult]) -> Dict[str, Any]:
 
     for stats in categories.values():
         total_for_category = stats["total"]
-        stats["pass_rate"] = stats["passed"] / total_for_category if total_for_category else 0.0
+        stats["pass_rate"] = (
+            stats["passed"] / total_for_category if total_for_category else 0.0
+        )
 
     return {
         "total": total,
@@ -276,7 +286,9 @@ def _summarize_results(results: List[TaskResult]) -> Dict[str, Any]:
 
 def build_parser() -> argparse.ArgumentParser:
     """Create CLI parser for capability benchmark command."""
-    parser = argparse.ArgumentParser(description="Run BladeRunner capability benchmarks")
+    parser = argparse.ArgumentParser(
+        description="Run BladeRunner capability benchmarks"
+    )
     parser.add_argument(
         "--suite",
         choices=["all", "software", "data", "research"],

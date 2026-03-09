@@ -7,26 +7,12 @@
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-green.svg)](...)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](...)
-[![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue.svg)](https://mypy-lang.org/)
+[![Mypy checks](https://img.shields.io/badge/mypy-non--blocking-blue.svg)](https://mypy-lang.org/)
 [![CI](https://github.com/mann-127/BladeRunner/actions/workflows/ci.yml/badge.svg)](https://github.com/mann-127/BladeRunner/actions)
 [![Permissions: Standard](https://img.shields.io/badge/permissions-standard-orange.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
-
-## 🎯 Overview
-
-BladeRunner transforms natural language prompts into executed code and system operations through an intelligent agent architecture. Whether you're prototyping, debugging, or automating development workflows, BladeRunner provides the tools and safety guardrails you need.
-
-### Why BladeRunner?
-
-- **🏗️ Production-Ready**: Modular architecture designed for real-world use
-- **🔒 Secure**: Three-tier permission system with command filtering
-- **💾 Persistent**: Session management for multi-turn conversations
-- **🌐 Connected**: Web search for real-time information
-- **👁️ Multimodal**: Vision capabilities for image analysis
-- **🎨 Flexible**: Modular tool system and skills framework
-- **⚡ Fast**: Support for multiple models (Claude, Llama, Gemini, Mistral, and more)
 
 ## Table Of Contents
 
@@ -39,6 +25,22 @@ BladeRunner transforms natural language prompts into executed code and system op
 - [Use Cases](#-use-cases)
 - [Configuration](#-configuration)
 - [Why This Matters](#-why-this-matters)
+
+---
+
+## 🎯 Overview
+
+BladeRunner transforms natural language prompts into executed code and system operations through an intelligent agent architecture. Whether you're prototyping, debugging, or automating development workflows, BladeRunner provides the tools and safety guardrails you need.
+
+### Why BladeRunner?
+
+- **🏗️ Production-Ready**: Modular architecture designed for real-world use
+- **🔒 Secure**: Three-profile permission system with command filtering
+- **💾 Persistent**: Session management for multi-turn conversations
+- **🌐 Connected**: Web search for real-time information
+- **👁️ Multimodal**: Vision capabilities for image analysis
+- **🎨 Flexible**: Modular tool system and skills framework
+- **⚡ Fast**: Support for multiple models (Claude, Llama, Gemini, Mistral, and more)
 
 ---
 
@@ -66,30 +68,37 @@ Editable source diagrams are versioned in `docs/ARCHITECTURE (light).drawio` and
 
 ```
 bladerunner/
-├── cli.py                # Command-line interface
+├── __init__.py           # Package exports
+├── __main__.py           # Module entrypoint
+├── adaptive_strategy.py  # Adaptive guidance from repeated tool failures
+├── adk_bridge.py         # Google ADK/Gemini integration
 ├── agent.py              # Core agent orchestration
-├── config.py             # Configuration management
-├── backend_manager.py    # Backend fallback (OpenRouter ↔ Groq)
-├── interactive.py        # REPL interface
-├── permissions.py        # Security & access control
-├── sessions.py           # Session persistence
-├── skills.py             # Specialized capabilities
-├── safety.py             # Critical operation detection
-├── tool_tracker.py       # Tool effectiveness tracking
-├── semantic_memory.py    # Solution memory and retrieval
 ├── agent_orchestrator.py # Multi-agent task routing
-├── evaluation.py         # Performance metrics and analytics
 ├── api_server.py         # FastAPI backend server
 ├── api_store.py          # API session management
+├── backend_manager.py    # Backend fallback (OpenRouter ↔ Groq)
+├── capability_eval.py    # Capability benchmark runner
+├── cli.py                # Command-line interface
+├── config.py             # Configuration management
 ├── create_user.py        # JWT user/password hash generator utility
-├── adk_bridge.py         # Google ADK/Gemini integration
+├── evaluation.py         # Performance metrics and analytics
+├── execution_trace.py    # Structured execution trace recorder
+├── interactive.py        # REPL interface
+├── logging_config.py     # Logging setup and formatting
+├── permissions.py        # Security & access control
+├── py.typed              # PEP 561 typing marker
+├── safety.py             # Critical operation detection
+├── semantic_memory.py    # Solution memory and retrieval
+├── sessions.py           # Session persistence
+├── skills.py             # Specialized capabilities
+├── tool_tracker.py       # Tool effectiveness tracking
 ├── tools/                # Tool implementations
 │   ├── base.py           # Tool base class & registry
-│   ├── filesystem.py     # Read/Write operations
 │   ├── bash.py           # Shell command execution
-│   ├── web.py            # Web search & fetching
+│   ├── filesystem.py     # Read/Write operations
 │   ├── image.py          # Image analysis
-│   └── rag.py            # RAG (vector search & retrieval)
+│   ├── rag.py            # RAG (vector search & retrieval)
+│   └── web.py            # Web search & fetching
 ```
 
 ---
@@ -98,13 +107,13 @@ bladerunner/
 
 BladeRunner implements production-grade agentic capabilities for intelligent task execution across strategic, safety, and evaluation layers:
 
-**Tier 1: Strategic Thinking & Resilience**
+**Core Capability Set: Strategic Thinking & Resilience**
 - Planning & Decomposition
 - Reflection & Self-Correction
 - Error Recovery & Retry
 - Streaming Responses
 
-**Tier 2: Safety & Learning**
+**Advanced Capability Set: Safety & Learning**
 - Human-in-the-Loop Approvals
 - Tool Effectiveness Tracking
 - Semantic Memory
@@ -129,7 +138,7 @@ All features are configurable and optional. **For complete details, configuratio
 - **RAG Tools**: Document ingestion (`rag_ingest`) and semantic search (`rag_search`)
 
 ### 🔐 Security & Permissions
-- **Three-tier system**: Strict, Standard, Permissive profiles
+- **Three-profile system**: Strict, Standard, Permissive profiles
 - **Command filtering**: Block dangerous operations (`rm -rf`, `sudo`, etc.)
 - **User confirmation**: Interactive prompts for sensitive actions
 - **Glob patterns**: Fine-grained file access control
@@ -572,7 +581,7 @@ make install    # Install dependencies (uv sync)
 make test       # Run tests (pytest)
 make format     # Format code (black)
 make lint       # Lint code (flake8)
-make type       # Type-check code (mypy)
+make type       # Type-check code (mypy, incremental)
 make up         # Build and start API container
 make logs       # Follow API container logs
 make down       # Stop and remove containers
@@ -591,7 +600,7 @@ See [EXAMPLES.md](docs/EXAMPLES.md) for copy-paste prompt examples covering:
 BladeRunner uses GitHub Actions for continuous integration:
 - **Automated testing**: Runs on every push and pull request
 - **Python 3.13**: Tests against stable Python version
-- **Code quality**: Black, Flake8, mypy linting
+- **Code quality**: Black, Flake8, and non-blocking mypy checks
 - **Coverage tracking**: pytest with cov reporting
 - **Fast feedback**: Tests complete in ~30 seconds
 
@@ -782,7 +791,7 @@ BladeRunner showcases:
 
 1. **Agent Architecture**: Proper tool orchestration and state management
 2. **Production Patterns**: Modular design, error handling, configuration
-3. **Security**: Multi-tier permission system for autonomous agents
+3. **Security**: Multi-profile permission system for autonomous agents
 4. **Multimodal AI**: Integration of text and vision capabilities
 5. **Real-world Features**: Session persistence, web search, interactive mode
 6. **Code Quality**: Type hints, documentation, modular design

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 
 @dataclass
@@ -19,7 +19,7 @@ class TraceEvent:
 class ExecutionTraceRecorder:
     """Record structured events for each agent execution."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.active_trace: Dict[str, Any] = {}
 
     def start(self, prompt: str, model: str) -> None:
@@ -49,7 +49,9 @@ class ExecutionTraceRecorder:
             }
         )
 
-    def finish(self, status: str, final_answer: str = "", error: str = "") -> Dict[str, Any]:
+    def finish(
+        self, status: str, final_answer: str = "", error: str = ""
+    ) -> Dict[str, Any]:
         """Finalize and return the current trace."""
         if not self.active_trace:
             return {}

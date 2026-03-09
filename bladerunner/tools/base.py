@@ -26,7 +26,7 @@ class Tool(ABC):
         pass
 
     @abstractmethod
-    def execute(self, **kwargs) -> str:
+    def execute(self, **kwargs: Any) -> str:
         """Execute the tool."""
         pass
 
@@ -45,10 +45,10 @@ class Tool(ABC):
 class ToolRegistry:
     """Registry for managing tools."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.tools: Dict[str, Tool] = {}
 
-    def register(self, tool: Tool):
+    def register(self, tool: Tool) -> None:
         """Register a tool."""
         self.tools[tool.name] = tool
 
@@ -60,7 +60,7 @@ class ToolRegistry:
         """Get all tool definitions."""
         return [tool.to_definition() for tool in self.tools.values()]
 
-    def execute(self, name: str, **kwargs) -> str:
+    def execute(self, name: str, **kwargs: Any) -> str:
         """Execute a tool by name."""
         tool = self.get(name)
         if tool is None:

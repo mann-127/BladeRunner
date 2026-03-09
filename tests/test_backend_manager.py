@@ -12,10 +12,13 @@ from bladerunner.backend_manager import BackendManager, BackendStatus
 @pytest.fixture
 def mock_env():
     """Mock environment with API keys for testing."""
-    with patch.dict(os.environ, {
-        "OPENROUTER_API_KEY": "test_openrouter_key",
-        "GROQ_API_KEY": "test_groq_key",
-    }):
+    with patch.dict(
+        os.environ,
+        {
+            "OPENROUTER_API_KEY": "test_openrouter_key",
+            "GROQ_API_KEY": "test_groq_key",
+        },
+    ):
         yield
 
 

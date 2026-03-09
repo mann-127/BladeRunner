@@ -136,7 +136,7 @@ uv run bladerunner -p "Explain machine learning" --stream
 # Error Recovery: Agent self-corrects when tools fail
 uv run bladerunner -p "Find and update config.json"
 
-# Disable Tier 1 features for speed
+# Disable core planning and retry features for speed
 uv run bladerunner -p "Your task" --no-planning --no-reflection --no-retry
 ```
 

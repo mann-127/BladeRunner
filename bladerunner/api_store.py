@@ -24,16 +24,13 @@ class APISessionStore:
 
     def _init_db(self) -> None:
         with self._connect() as conn:
-            conn.execute(
-                """
+            conn.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                     id TEXT PRIMARY KEY,
                     created_at TEXT NOT NULL
                 )
-                """
-            )
-            conn.execute(
-                """
+                """)
+            conn.execute("""
                 CREATE TABLE IF NOT EXISTS sessions (
                     id TEXT PRIMARY KEY,
                     user_id TEXT NOT NULL,
@@ -43,10 +40,8 @@ class APISessionStore:
                     updated_at TEXT NOT NULL,
                     FOREIGN KEY(user_id) REFERENCES users(id)
                 )
-                """
-            )
-            conn.execute(
-                """
+                """)
+            conn.execute("""
                 CREATE TABLE IF NOT EXISTS messages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     session_id TEXT NOT NULL,
@@ -55,8 +50,7 @@ class APISessionStore:
                     created_at TEXT NOT NULL,
                     FOREIGN KEY(session_id) REFERENCES sessions(id)
                 )
-                """
-            )
+                """)
 
     def _now(self) -> str:
         return datetime.now(timezone.utc).isoformat()
@@ -69,7 +63,9 @@ class APISessionStore:
                 (user_id, now),
             )
 
-    def create_session(self, user_id: str, title: str, bladerunner_session_id: str) -> Dict[str, str]:
+    def create_session(
+        self, user_id: str, title: str, bladerunner_session_id: str
+    ) -> Dict[str, str]:
         self.ensure_user(user_id)
         now = self._now()
         session_id = str(uuid.uuid4())
