@@ -281,6 +281,28 @@ class Config:
                 },
             },
             "skills": {"enabled": False, "directory": str(self.config_dir / "skills")},
+            "lsp": {"enabled": False},
+            "mcp": {"enabled": False},
+            "interactive": {"streaming": True},
+            "agent": {
+                "enable_planning": True,
+                "enable_reflection": True,
+                "enable_retry": True,
+                "enable_streaming": False,
+                "require_approval": True,
+                "enable_tool_tracking": True,
+                "enable_memory": True,
+                "enable_agent_selection": True,
+                "enable_adaptation": True,
+                "adaptation_failure_threshold": 2,
+                "enable_trace": True,
+            },
+            "logging": {
+                "level": "INFO",
+                "format": "%(asctime)s %(levelname)s [%(name)s] %(message)s",
+                "date_format": "%Y-%m-%dT%H:%M:%S%z",
+                "uvicorn_access_log": True,
+            },
         }
 
     def _default_config(self) -> Dict[str, Any]:

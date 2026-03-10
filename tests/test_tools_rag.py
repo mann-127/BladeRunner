@@ -130,7 +130,10 @@ def test_persistence_across_sessions(tmp_path: Path) -> None:
 
     # First session: add documents
     store1 = RAGStore(persist_directory=persist_dir)
-    documents = ["Persistent storage is important", "Vector databases save embeddings"]
+    documents = [
+        "Persistent storage is important",
+        "Vector databases save embeddings",
+    ]
     store1.add_documents(documents)
 
     # Second session: load from disk and search

@@ -42,7 +42,11 @@ def test_image_handler_encode_image_creates_base64(mock_open, tmp_path: Path) ->
     mock_img = Mock()
     mock_img.size = (800, 600)
     mock_img.format = "PNG"
-    mock_img.save = Mock(side_effect=lambda buf, format: buf.write(b"fake-image-data"))
+
+    def _save_side_effect(buf, format):
+        buf.write(b"fake-image-data")
+
+    mock_img.save = Mock(side_effect=_save_side_effect)
     mock_open.return_value = mock_img
 
     test_image = tmp_path / "test.png"
@@ -117,6 +121,7 @@ def test_image_handler_handles_format_detection(mock_open, tmp_path: Path) -> No
         test_image.write_bytes(b"dummy")
 
         result = ImageHandler.encode_image(test_image)
+        assert result is not None
         assert result["source"]["media_type"] == expected_media
 
 
