@@ -83,7 +83,9 @@ def test_image_handler_resizes_large_images(mock_open, tmp_path: Path) -> None:
 
 
 @patch("bladerunner.tools.image.Image.open")
-def test_image_handler_preserves_small_images(mock_open, tmp_path: Path) -> None:
+def test_image_handler_preserves_small_images(
+    mock_open, tmp_path: Path
+) -> None:
     """ImageHandler should not resize images under max size."""
     mock_img = Mock()
     mock_img.size = (800, 600)  # Smaller than 1568px
@@ -102,7 +104,9 @@ def test_image_handler_preserves_small_images(mock_open, tmp_path: Path) -> None
 
 
 @patch("bladerunner.tools.image.Image.open")
-def test_image_handler_handles_format_detection(mock_open, tmp_path: Path) -> None:
+def test_image_handler_handles_format_detection(
+    mock_open, tmp_path: Path
+) -> None:
     """ImageHandler should detect image format correctly."""
     test_formats = [
         ("image.jpg", "JPEG", "image/jpeg"),

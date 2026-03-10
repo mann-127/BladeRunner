@@ -18,7 +18,9 @@ def test_web_search_tool_definition() -> None:
     tool = WebSearchTool()
 
     assert tool.name == "WebSearch"
-    assert "search" in tool.description.lower() or "web" in tool.description.lower()
+    assert (
+        "search" in tool.description.lower() or "web" in tool.description.lower()
+    )
     assert "query" in tool.parameters["properties"]
     assert tool.parameters["required"] == ["query"]
 
@@ -146,7 +148,10 @@ def test_fetch_webpage_tool_definition() -> None:
     tool = FetchWebpageTool()
 
     assert tool.name == "FetchWebpage"
-    assert "fetch" in tool.description.lower() or "webpage" in tool.description.lower()
+    assert (
+        "fetch" in tool.description.lower()
+        or "webpage" in tool.description.lower()
+    )
     assert "url" in tool.parameters["properties"]
     assert tool.parameters["required"] == ["url"]
 
