@@ -33,8 +33,8 @@ def test_tool_imports() -> None:
     assert ToolRegistry is not None
 
 
-def test_tier2_imports() -> None:
-    """Test that tier 2 agentic features can be imported."""
+def test_advanced_feature_imports() -> None:
+    """Test that advanced agentic features can be imported."""
     from bladerunner.safety import CriticalOperation
     from bladerunner.tool_tracker import ToolTracker
     from bladerunner.semantic_memory import SemanticMemory

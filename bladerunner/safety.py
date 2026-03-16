@@ -7,7 +7,7 @@ from typing import Tuple, Optional, Set
 class CriticalOperation:
     """Detects and manages approval for dangerous operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize critical operation patterns."""
         # Destructive bash patterns
         self.rm_patterns = [

@@ -15,8 +15,8 @@ from bladerunner.tools.bash import BashTool
 from bladerunner.tools.filesystem import ReadTool, WriteTool
 
 
-def test_tier2_features_integration(tmp_path: Path) -> None:
-    """Test that tier 2 features work together."""
+def test_advanced_features_integration(tmp_path: Path) -> None:
+    """Test that advanced features work together."""
     safety = CriticalOperation()
     tracker = ToolTracker(tmp_path / "metrics")
     orchestrator = AgentOrchestrator()
@@ -42,26 +42,26 @@ def test_tier2_features_integration(tmp_path: Path) -> None:
 def test_tool_registry_integration(tmp_path: Path) -> None:
     """Test that tool registry works with actual tools."""
     registry = ToolRegistry()
-    
+
     # Register multiple tools
     registry.register(BashTool())
     registry.register(ReadTool())
     registry.register(WriteTool())
-    
+
     # Verify registration
     assert registry.get("Bash") is not None
     assert registry.get("Read") is not None
     assert registry.get("Write") is not None
-    
+
     # Get definitions for all
     definitions = registry.get_definitions()
     assert len(definitions) == 3
-    
+
     # Test file operations through registry
     test_file = tmp_path / "test.txt"
     write_result = registry.execute("Write", file_path=str(test_file), content="Hello")
     assert "Success" in write_result
-    
+
     read_result = registry.execute("Read", file_path=str(test_file))
     assert read_result == "Hello"
 
@@ -70,24 +70,24 @@ def test_semantic_memory_with_tool_tracker(tmp_path: Path) -> None:
     """Test that semantic memory and tool tracker work together."""
     memory = SemanticMemory(tmp_path / "memory")
     tracker = ToolTracker(tmp_path / "metrics")
-    
+
     # Store solution with tool usage
     tools_used = ["Read", "Write", "Bash"]
     memory.store_solution(
         task_description="Create config file",
         execution_path=["read template", "modify", "write"],
-        success=True
+        success=True,
     )
-    
+
     # Track tool usage
     for tool in tools_used:
         tracker.record_execution(tool, success=True, error=None)
-    
+
     # Verify integration with similar query
     # Use lower threshold to account for word overlap
     similar = memory.find_similar_solutions("Create a config file", threshold=0.2)
     assert len(similar) > 0
-    
+
     # All tools should have 100% success
     for tool in tools_used:
         assert tracker.get_success_rate(tool) == 1.0

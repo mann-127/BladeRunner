@@ -7,10 +7,24 @@
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-green.svg)](...)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](...)
-[![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue.svg)](https://mypy-lang.org/)
+[![Mypy checks](https://img.shields.io/badge/mypy-non--blocking-blue.svg)](https://mypy-lang.org/)
 [![CI](https://github.com/mann-127/BladeRunner/actions/workflows/ci.yml/badge.svg)](https://github.com/mann-127/BladeRunner/actions)
 [![Permissions: Standard](https://img.shields.io/badge/permissions-standard-orange.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+---
+
+## Table Of Contents
+
+- [Overview](#-overview)
+- [System Architecture](#-system-architecture)
+- [Agentic AI Features](#-agentic-ai-features)
+- [Key Features](#-key-features)
+- [Quick Start](#-quick-start)
+- [Development And Testing](#-development--testing)
+- [Use Cases](#-use-cases)
+- [Configuration](#-configuration)
+- [Why This Matters](#-why-this-matters)
 
 ---
 
@@ -21,7 +35,7 @@ BladeRunner transforms natural language prompts into executed code and system op
 ### Why BladeRunner?
 
 - **🏗️ Production-Ready**: Modular architecture designed for real-world use
-- **🔒 Secure**: Three-tier permission system with command filtering
+- **🔒 Secure**: Three-profile permission system with command filtering
 - **💾 Persistent**: Session management for multi-turn conversations
 - **🌐 Connected**: Web search for real-time information
 - **👁️ Multimodal**: Vision capabilities for image analysis
@@ -30,20 +44,22 @@ BladeRunner transforms natural language prompts into executed code and system op
 
 ---
 
-## 🏗️ System Architecture
+## 📐 System Architecture
 
-![BladeRunner Architecture](docs/ARCHITECTURE.png)
+![Diagram](docs/ARCHITECTURE.png)
 
 **Architecture Overview:**
 The diagram above represents the logical execution pipeline of `bladerunner/agent.py`. The broad, gray background lines represent the macro-stages of the request, while the thin colored lines represent the granular data hand-offs between the components.
 
+Editable source diagrams are versioned in `docs/ARCHITECTURE (light).drawio` and `docs/ARCHITECTURE (dark).drawio`.
+
 **The Execution Lifecycle (`execute()`):**
-1. **Ingestion:** User prompts enter through `cli.py` or `interactive.py`.
-2. **Context Compilation:** Before contacting the LLM, the `agent_orchestrator.py` selects an identity, `semantic_memory.py` injects similar successful past code, and `sessions.py` loads the ongoing conversation history.
-3. **Core Generation:** The strategic planner inside `agent.py` formats the compiled context and streams the LLM completion.
+1. **Ingestion:** User prompts enter through `cli.py`, `interactive.py`, or `api_server.py` (HTTP/WebSocket API).
+2. **Context Compilation:** Before contacting the LLM, the `agent_orchestrator.py` selects an identity, `semantic_memory.py` injects similar successful past code, and `sessions.py` (or `api_store.py` for API mode) loads the ongoing conversation history.
+3. **Core Generation:** The strategic planner inside `agent.py` formats the compiled context. The `backend_manager.py` handles automatic fallback between OpenRouter and Groq, while `adk_bridge.py` provides an alternative path for Google ADK/Gemini with grounding.
 4. **Parsing & Guardrails:** The response is routed to the `parse_tool_calls` function. If a system tool is requested, the command is intercepted by `safety.py` to check for destructive operations, followed by `permissions.py` for user authorization.
-5. **Execution:** The validated command is dispatched to the physical tool registry (`tools/bash.py`, `tools/filesystem.py`, etc.).
-6. **Analytics & Recovery:** - **Success:** The `tool_tracker.py` logs a successful execution, updating system reliability metrics and committing the context to memory.
+5. **Execution:** The validated command is dispatched to the physical tool registry (`tools/bash.py`, `tools/filesystem.py`, `tools/web.py`, `tools/image.py`, `tools/rag.py`).
+6. **Analytics & Recovery:** - **Success:** The `tool_tracker.py` logs a successful execution, updating system reliability metrics and committing the context to memory via `evaluation.py`.
    - **Failure:** The output drops into the error handler, triggering an automated reflection loop that injects the error traceback back into the LLM Provider API to dynamically self-correct the code.
 
 ---
@@ -52,62 +68,77 @@ The diagram above represents the logical execution pipeline of `bladerunner/agen
 
 ```
 bladerunner/
-├── cli.py                # Command-line interface
+├── __init__.py           # Package exports
+├── __main__.py           # Module entrypoint
+├── adaptive_strategy.py  # Adaptive guidance from repeated tool failures
+├── adk_bridge.py         # Google ADK/Gemini integration
 ├── agent.py              # Core agent orchestration
+├── agent_orchestrator.py # Multi-agent task routing
+├── api_server.py         # FastAPI backend server
+├── api_store.py          # API session management
+├── backend_manager.py    # Backend fallback (OpenRouter ↔ Groq)
+├── capability_eval.py    # Capability benchmark runner
+├── cli.py                # Command-line interface
 ├── config.py             # Configuration management
+├── create_user.py        # JWT user/password hash generator utility
+├── evaluation.py         # Performance metrics and analytics
+├── execution_trace.py    # Structured execution trace recorder
 ├── interactive.py        # REPL interface
+├── logging_config.py     # Logging setup and formatting
 ├── permissions.py        # Security & access control
+├── py.typed              # PEP 561 typing marker
+├── safety.py             # Critical operation detection
+├── semantic_memory.py    # Solution memory and retrieval
 ├── sessions.py           # Session persistence
 ├── skills.py             # Specialized capabilities
-├── safety.py             # Critical operation detection
 ├── tool_tracker.py       # Tool effectiveness tracking
-├── semantic_memory.py    # Solution memory and retrieval
-├── agent_orchestrator.py # Multi-agent task routing
-├── evaluation.py         # Performance metrics and analytics
 ├── tools/                # Tool implementations
 │   ├── base.py           # Tool base class & registry
-│   ├── filesystem.py     # Read/Write operations
 │   ├── bash.py           # Shell command execution
-│   ├── web.py            # Web search & fetching
+│   ├── filesystem.py     # Read/Write operations
 │   ├── image.py          # Image analysis
-│   └── rag.py            # RAG (vector search & retrieval)
+│   ├── rag.py            # RAG (vector search & retrieval)
+│   └── web.py            # Web search & fetching
 ```
 
 ---
 
 ## 🧠 Agentic AI Features
 
-BladeRunner implements **9 production-grade agentic AI features** for intelligent task execution across two tiers:
+BladeRunner implements production-grade agentic capabilities for intelligent task execution across strategic, safety, and evaluation layers:
 
-**Tier 1: Strategic Thinking & Resilience**
+**Core Capability Set: Strategic Thinking & Resilience**
 - Planning & Decomposition
 - Reflection & Self-Correction
 - Error Recovery & Retry
 - Streaming Responses
 
-**Tier 2: Safety & Learning**
+**Advanced Capability Set: Safety & Learning**
 - Human-in-the-Loop Approvals
 - Tool Effectiveness Tracking
 - Semantic Memory
 - Multi-Agent Orchestration
 - Performance Evaluation & Metrics
+- Adaptive Strategy Guidance
+- Structured Execution Tracing
+- Capability Benchmark Runner
 
 All features are configurable and optional. **For complete details, configuration, CLI usage, and examples:** See [FEATURES.md](docs/FEATURES.md)
 
 ---
 
-## ✨ Key Features
+## 💡 Key Features
 
 ### 🛠️ Core Tools
 - **Read/Write**: Intelligent file operations with encoding support
 - **Bash**: Safe command execution with timeouts
-- **WebSearch**: Real-time information via Brave Search API
+- **WebSearch**: Real-time information via DuckDuckGo (free) or Brave Search API
 - **FetchWebpage**: Extract and parse web content
 - **ReadImage**: Vision-based image analysis
 - **RAG Tools**: Document ingestion (`rag_ingest`) and semantic search (`rag_search`)
 
 ### 🔐 Security & Permissions
-- **Three-tier system**: Strict, Standard, Permissive profiles
+- **Three-profile system**: Strict, Standard, Permissive profiles
 - **Command filtering**: Block dangerous operations (`rm -rf`, `sudo`, etc.)
 - **User confirmation**: Interactive prompts for sensitive actions
 - **Glob patterns**: Fine-grained file access control
@@ -149,6 +180,21 @@ All features are configurable and optional. **For complete details, configuratio
 - **Execution metrics**: Duration, iterations, and throughput analysis
 - **Export capabilities**: JSON export for external analysis
 
+### 🧭 Adaptive Strategy
+- **Failure-aware guidance**: Tracks repeated tool failures and injects bounded recovery guidance
+- **Configurable threshold**: `agent.adaptation_failure_threshold`
+- **Reset on success**: Guidance pressure clears after successful tool execution
+
+### 🧾 Execution Trace
+- **Structured event timeline**: Captures routing, planning, iteration, tool, and completion events
+- **Post-run access**: Exposed via `Agent.get_last_trace()` for debugging and analysis
+- **Toggleable**: `agent.enable_trace`
+
+### 🧪 Capability Benchmarks
+- **Unified eval harness**: JSON task specs with shared checks (`non_empty`, `contains`, `regex`, `not_contains`)
+- **Three starter packs**: `software`, `data`, `research`
+- **CLI entrypoint**: `uv run bladerunner-eval --suite all`
+
 ### 🎭 Interactive Mode
 - **Rich REPL**: Beautiful terminal interface with prompt_toolkit
 - **Streaming**: See responses as they arrive (enabled by default)
@@ -170,31 +216,45 @@ cd BladeRunner
 # Install dependencies
 uv sync
 
+# Optional: Install dev dependencies (pytest, lint, mypy)
+uv sync --extra dev
+
 # Optional: Install RAG support
 uv sync --extra rag
+
+# Optional: Install Google ADK support
+uv sync --extra google
 ```
 
 **Optional Dependencies:**
+- **Dev tooling**: `uv sync --extra dev`
+  - Installs `pytest`, `flake8`, `black`, `mypy` for local validation
 - **RAG (Retrieval-Augmented Generation)**: `uv sync --extra rag`
   - Enables vector storage and semantic document search
   - Required for `rag_ingest` and `rag_search` tools
+- **Google ADK**: `uv sync --extra google`
+  - Enables ADK runtime detection for API grounding workflows
 
 ### API Keys
 
-BladeRunner supports two backends: **OpenRouter** (default) or **Groq** (faster, free).
+BladeRunner supports two OpenAI-compatible backends: **OpenRouter** (default) and **Groq** (faster, free).
+
+If both keys are configured, BladeRunner can automatically fall back when the current backend hits limits:
+- `429` rate-limit errors
+- `402` credit/payment errors
 
 **OpenRouter Setup (default):**
 
 ```bash
 export OPENROUTER_API_KEY="your-key-here"
-export BRAVE_API_KEY="your-brave-key"  # Optional: web search
+# Web search uses free DuckDuckGo by default (no API key needed)
 ```
 
 **Groq Setup (alternative, faster & free):**
 
 ```bash
 export GROQ_API_KEY="your-groq-key"
-export BRAVE_API_KEY="your-brave-key"  # Optional: web search
+# Web search uses free DuckDuckGo by default (no API key needed)
 ```
 
 Then set `backend: groq` in your config file (`~/.bladerunner/config.yml`).
@@ -203,29 +263,38 @@ Then set `backend: groq` in your config file (`~/.bladerunner/config.yml`).
 
 ```bash
 cat > .env << EOF
-# Choose one backend:
+# Recommended: set both for automatic fallback
 OPENROUTER_API_KEY=your-key-here
-# OR
 GROQ_API_KEY=your-groq-key
 
-# Optional:
+# Optional Google ADK/Gemini engine (API server)
+GOOGLE_API_KEY=your-google-key
+
+# Optional: For enhanced search quality (DuckDuckGo is used by default)
 BRAVE_API_KEY=your-brave-key
 EOF
 ```
 
 BladeRunner auto-loads `.env` files on startup.
 
+You can also copy the template:
+
+```bash
+cp .env.example .env
+```
+
 **Getting API Keys:**
 - **OpenRouter**: Sign up at [openrouter.ai](https://openrouter.ai) for access to Claude, GPT, Llama, and more
-- **Groq** (recommended for free usage): Sign up at [console.groq.com](https://console.groq.com) - 14,400 free requests/day, extremely fast
-- **Brave Search** (optional): Get a free API key at [brave.com/search/api](https://brave.com/search/api) for web search (2,000 queries/month free)
-  - See [Web Search Alternatives](#web-search-alternatives) for other options like Tavily or Serper
+- **Groq** (recommended for free usage): Sign up at [console.groq.com](https://console.groq.com) for free access. Check their current free tier details, extremely fast
+- **Web Search** (built-in): Uses DuckDuckGo by default - no API key required!
+  - Optional: Get Brave API key at [brave.com/search/api](https://brave.com/search/api) for higher quality results (2,000 queries/month free)
+  - See [Web Search Providers](#web-search-providers) for configuration options
 
 ### Backend Comparison
 
 | Backend | Speed | Cost | Free Tier | Models | Vision |
 |---------|-------|------|-----------|--------|--------|
-| **Groq** | ⚡⚡⚡ Fastest | Free | 14.4K req/day | Llama, Mixtral | ❌ |
+| **Groq** | ⚡⚡⚡ Fastest | Free | See console.groq.com | Llama, Mixtral | ❌ |
 | **OpenRouter** | ⚡⚡ Standard | Pay-per-use | $0/mo | All (Claude, GPT, etc.) | ✅ |
 
 **Recommendation:**
@@ -263,7 +332,200 @@ bladerunner -p "Your prompt here"
 uv run python -m bladerunner -p "Your prompt here"
 ```
 
-**Option 4: System-wide install (optional)**
+**Option 4: API server (FastAPI)**
+
+```bash
+# Start BladeRunner API server
+uv run bladerunner-api
+```
+
+**API Endpoints:**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/health` | Health check and feature availability |
+| `GET` | `/api/meta` | API metadata (models, skills, profiles) |
+| `GET` | `/api/skills` | List configured skills |
+| `POST` | `/api/auth/login` | JWT authentication (login) |
+| `POST` | `/api/auth/refresh` | Refresh JWT access token |
+| `GET` | `/api/auth/me` | Get current user info from JWT |
+| `POST` | `/api/sessions` | Create new session |
+| `GET` | `/api/sessions?user_id={id}` | List user sessions |
+| `GET` | `/api/sessions/{id}/messages?user_id={id}` | Get session messages |
+| `POST` | `/api/uploads/image?user_id={id}` | Upload image for visual tasks |
+| `GET` | `/api/uploads/quota/{user_id}` | Get user's upload quota usage |
+| `POST` | `/api/chat` | Send message (supports `bladerunner` and `google_adk` engines) |
+| `WS` | `/ws/chat` | Bidirectional streaming chat for `bladerunner` engine |
+| `GET` | `/docs` | Swagger UI (interactive API docs) |
+| `GET` | `/openapi.json` | OpenAPI schema |
+
+**Interactive API docs:**
+- Swagger UI: `http://localhost:8000/docs`
+- OpenAPI JSON: `http://localhost:8000/openapi.json`
+
+`/api/chat` and `WS /ws/chat` also support optional `include_trace: true` for returning structured execution traces from the `bladerunner` engine.
+
+**Chat Request Example:**
+```json
+{
+  "user_id": "user123",
+  "message": "Analyze this codebase",
+  "session_id": "session_abc",
+  "model": "haiku",
+  "engine": "bladerunner",
+  "image_paths": [],
+  "auto_match_skill": false,
+  "google_search_grounding": null,
+  "enable_web_search": false,
+  "enable_rag": false,
+  "permission_profile": "standard",
+  "skill": "coding",
+  "enable_planning": true,
+  "enable_reflection": true,
+  "enable_retry": true,
+  "enable_streaming": false,
+  "include_trace": true
+}
+```
+
+The API supports two engines in `/api/chat`:
+- `bladerunner` (existing tool-calling agent)
+- `google_adk` (Google ADK integration path with Gemini grounding fallback)
+
+**WebSocket Protocol (Bidirectional):**
+
+The WebSocket endpoint (`/ws/chat`) supports bidirectional communication:
+
+**Client → Server (control messages):**
+```json
+{"type": "interrupt"}  // Stop agent execution gracefully
+{"type": "ping"}       // Heartbeat check
+```
+
+**Server → Client (streaming messages):**
+```json
+{"type": "status", "status": "executing"}           // Execution started
+{"type": "chunk", "delta": "token text"}            // Streaming token
+{"type": "final", "answer": "...", "interrupted": false}  // Complete response
+{"type": "pong"}                                    // Heartbeat response
+{"type": "error", "message": "error details"}      // Error occurred
+```
+
+**API Authentication (Production Mode):**
+
+BladeRunner supports two authentication methods:
+
+**1. Static API Keys (simple, for development):**
+
+Set in `config.yml`:
+```yaml
+api:
+  auth:
+    enabled: true
+    keys: ["replace-with-strong-key"]
+```
+
+Or via environment variable:
+```bash
+export BLADERUNNER_API_KEYS=key1,key2
+```
+
+Then send header: `X-API-Key: your-key-here`
+
+**2. JWT Authentication (recommended for production):**
+
+Configure in `config.yml`:
+```yaml
+api:
+  auth:
+    enabled: true
+    jwt:
+      enabled: true
+      secret_key: ""  # Set via BLADERUNNER_JWT_SECRET env var (32+ chars)
+      access_token_expire_minutes: 60
+      refresh_token_expire_days: 7
+    users:
+      - username: admin
+        password_hash: $2b$12$...  # Generate with bladerunner-create-user
+        user_id: admin-001
+        permissions: ["read", "write", "admin"]
+```
+
+Generate JWT secret:
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+export BLADERUNNER_JWT_SECRET=your_secure_random_secret
+```
+
+Create user credentials:
+```bash
+uv run bladerunner-create-user
+# Follow prompts, then copy output to config.yml
+```
+
+Login flow:
+```bash
+# 1. Login to get tokens
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "your_password"}'
+
+# Response:
+# {"access_token": "eyJ...", "refresh_token": "eyJ...", "expires_in": 3600}
+
+# 2. Use access token for API calls
+curl http://localhost:8000/api/chat \
+  -H "X-API-Key: eyJ..."  \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "admin", "message": "Hello"}'
+
+# 3. Refresh expired token
+curl -X POST http://localhost:8000/api/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token": "eyJ..."}'
+```
+
+**Upload Restrictions:**
+
+Configure upload limits in `config.yml`:
+```yaml
+api:
+  uploads:
+    max_size_mb: 10               # Max file size per upload
+    per_user_quota_mb: 100        # Total storage per user
+    retention_days: 30            # Auto-delete after N days
+    allowed_types:                # Allowed MIME types
+      - image/jpeg
+      - image/png
+      - image/gif
+      - image/webp
+```
+
+Check quota usage:
+```bash
+curl http://localhost:8000/api/uploads/quota/user123 \
+  -H "X-API-Key: your-key-here"
+```
+
+**Container Deployment (single service):**
+
+```bash
+# Build and run API with Docker Compose
+docker compose up -d --build
+
+# View logs
+docker compose logs -f bladerunner-api
+
+# Stop service
+docker compose down
+```
+
+Notes:
+- API is exposed on `http://localhost:8000`
+- Persistent runtime data is stored in `./data` (mounted to `/root/.bladerunner`)
+- Environment variables are loaded from `.env`
+
+**Option 5: System-wide install (optional)**
 
 ```bash
 # Using pipx (recommended for global CLI tools)
@@ -281,38 +543,37 @@ bladerunner -p "Your prompt here"
 ### Running Tests
 
 ```bash
+# Install test tooling first
+uv sync --extra dev
+
 # Run all tests
 make test
 
 # Or use pytest directly
-uv run pytest tests/
+uv run python -m pytest tests/
 
 # Run with coverage report
-uv run pytest --cov=bladerunner --cov-report=term-missing
+uv run python -m pytest --cov=bladerunner --cov-report=term-missing
 
 # Run with verbose output
-uv run pytest tests/ -v
+uv run python -m pytest tests/ -v
+
+# Run capability benchmarks (software/data/research)
+uv run bladerunner-eval --suite all
 ```
 
 ### Test Suite Coverage
 
-BladeRunner includes **177 comprehensive tests** across **20 test files** covering:
-- **Core imports & initialization** (framework startup, smoke tests)
-- **CLI behavior** (version, verbose output, arguments)
-- **Agent core functionality** (initialization, model selection, feature configuration, 25 tests)
-- **Safety detection** (critical operations, file paths, 4 tests)
-- **Tool implementations** (Bash, Filesystem, Web, Image tools, 50 tests)
-- **Tool tracking** (success rates, reliability ranking, 3 tests)
-- **Semantic memory** (solution storage, similarity matching, 3 tests)
-- **Agent orchestration** (routing, specialization, 3 tests)
-- **Config management** (defaults, path resolution, 14 tests)
-- **Sessions** (persistence, history, 9 tests)
-- **Skills** (loading, parsing, matching, 10 tests)
-- **Evaluation & metrics** (task tracking, token analytics, performance summaries, 9 tests)
-- **RAG functionality** (document ingestion, semantic search, persistence, 6 tests)
-- **Interactive mode** (commands, history, model switching, 13 tests)
-- **Permissions** (profiles, path patterns, glob matching, 7 tests)
-- **Integration tests** (cross-module functionality, tool registry, semantic memory tracking, 3 tests)
+Current suite status:
+- **220 collected tests**
+- **27 test modules** under `tests/`
+- Coverage includes CLI, API server/websocket auth flows, agent orchestration, tools, sessions, permissions, memory, evaluation, and integration behavior
+
+To verify current status locally:
+
+```bash
+uv run python -m pytest tests/ -q
+```
 
 ### Development Setup
 
@@ -323,7 +584,10 @@ make install    # Install dependencies (uv sync)
 make test       # Run tests (pytest)
 make format     # Format code (black)
 make lint       # Lint code (flake8)
-make type       # Type-check code (mypy)
+make type       # Type-check code (mypy, incremental)
+make up         # Build and start API container
+make logs       # Follow API container logs
+make down       # Stop and remove containers
 ```
 
 ### Examples
@@ -339,13 +603,13 @@ See [EXAMPLES.md](docs/EXAMPLES.md) for copy-paste prompt examples covering:
 BladeRunner uses GitHub Actions for continuous integration:
 - **Automated testing**: Runs on every push and pull request
 - **Python 3.13**: Tests against stable Python version
-- **Code quality**: Black, Flake8, mypy linting
+- **Code quality**: Black, Flake8, and non-blocking mypy checks
 - **Coverage tracking**: pytest with cov reporting
 - **Fast feedback**: Tests complete in ~30 seconds
 
 ---
 
-## 🎯 Use Cases
+## 🧑‍💻 Use Cases
 
 ### Development Automation
 ```bash
@@ -365,7 +629,7 @@ uv run bladerunner -p "Research OAuth2 PKCE flow and implement it"
 ### Multi-Session Projects
 ```bash
 # Day 1: Foundation
-uv run bladerunner --session webapp -p "Create Flask app structure"
+uv run bladerunner --session api-build -p "Create Flask app structure"
 
 # Day 2: Features
 uv run bladerunner --continue -p "Add user authentication"
@@ -394,7 +658,7 @@ uv run bladerunner -p "Use rag_search to find information about deployment, then
 
 ---
 
-## ⚙️ Configuration
+## 🔧 Configuration
 
 ### Model Selection
 
@@ -462,11 +726,16 @@ permissions:
 sessions:
   enabled: true
 
-# Web search (requires BRAVE_API_KEY)
+# Web search (DuckDuckGo by default - no API key needed)
 web_search:
   enabled: true
-  provider: brave
+  provider: duckduckgo  # or "brave" (requires BRAVE_API_KEY)
   max_results: 5
+
+# Logging (API + uvicorn)
+logging:
+  level: INFO
+  uvicorn_access_log: true
 
 # Skills
 skills:
@@ -474,37 +743,52 @@ skills:
   directory: ~/.bladerunner/skills
 ```
 
-### Web Search Alternatives
+### Web Search Providers
 
-BladeRunner currently uses **Brave Search API** (2,000 free queries/month). Here are alternative providers:
+BladeRunner supports multiple web search providers with **DuckDuckGo as the default** (no API key required!).
 
-| Provider | Best For | Cost | Setup Complexity |
-|----------|----------|------|------------------|
-| **Brave Search** | Portfolio, demos, privacy | Free tier (2K/mo) | ⭐ Easy |
-| **Tavily AI** | AI agents, production | ~$0.002/search | ⭐⭐ Moderate |
-| **Serper** | Budget-conscious, clean API | ~$0.001/search | ⭐ Easy |
-| **Google Custom Search** | Accuracy, established projects | 100 free/day | ⭐⭐⭐ Complex |
-| **SerpAPI** | Rapid prototyping | $$$ (starts at $50/mo) | ⭐ Easy |
+**Built-in Providers:**
 
-**Why Brave for this project?**
-- Free tier is generous for demos and learning
-- Privacy-focused (good portfolio story)
-- Simple authentication (just an API key)
-- No complex OAuth or cloud provider setup
+| Provider | API Key Required | Free Tier | Quality | Setup |
+|----------|-----------------|-----------|---------|-------|
+| **DuckDuckGo** (default) | ❌ No | Unlimited | Good | ⭐ None needed |
+| **Brave Search** | ✅ Yes | 2,000/month | Better | ⭐ Easy |
 
-**For production agents:** Consider [Tavily AI](https://tavily.com) or [Serper](https://serper.dev) - they're optimized for LLM consumption and return cleaner, more structured results.
+**Configuration:**
 
-**To switch providers:** Modify `bladerunner/tools/web.py` to use your preferred API. The tool interface remains the same.
+```yaml
+web_search:
+  enabled: true
+  provider: duckduckgo  # or "brave"
+  max_results: 5
+```
+
+**Automatic Fallback:**
+- If Brave is set but API key is missing → Falls back to DuckDuckGo
+- If DuckDuckGo fails and Brave key is available → Falls back to Brave
+
+**Why DuckDuckGo as default?**
+- Zero friction: Works out of the box
+- Privacy-focused: No tracking
+- No rate limits for reasonable usage
+- Perfect for learning, demos, and personal projects
+
+**When to use Brave:**
+- Need higher quality search results
+- Building portfolio/production projects
+- Want structured API responses
+
+**To add custom providers:** Extend the `WebSearchTool` class in `bladerunner/tools/web.py` to support additional providers like Tavily, Serper, or Google Custom Search.
 
 ---
 
-## 💡 Why This Matters
+## 🌟 Why This Matters
 
 BladeRunner showcases:
 
 1. **Agent Architecture**: Proper tool orchestration and state management
 2. **Production Patterns**: Modular design, error handling, configuration
-3. **Security**: Multi-tier permission system for autonomous agents
+3. **Security**: Multi-profile permission system for autonomous agents
 4. **Multimodal AI**: Integration of text and vision capabilities
 5. **Real-world Features**: Session persistence, web search, interactive mode
 6. **Code Quality**: Type hints, documentation, modular design

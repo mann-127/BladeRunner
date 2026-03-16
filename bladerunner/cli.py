@@ -54,114 +54,146 @@ def main():
     )
 
     # Core arguments
-    parser.add_argument("-p", "--prompt", help="User prompt")
-    parser.add_argument(
+    core_group = parser.add_argument_group(
+        "Core", "Essential arguments for running BladeRunner."
+    )
+    core_group.add_argument(
+        "-p", "--prompt", help="User prompt to execute non-interactively."
+    )
+    core_group.add_argument(
+        "-i", "--interactive", action="store_true", help="Start interactive REPL mode."
+    )
+    core_group.add_argument(
         "--model",
         help=(
             "Model to use (haiku, sonnet, opus | "
             "llama, gemini, mistral [free] | "
             "groq-llama, groq-mixtral [free + fast] | "
-            "or full model name)"
+            "or full model name)."
         ),
     )
 
     # Session management
-    parser.add_argument("--session", help="Session name or ID")
-    parser.add_argument(
+    session_group = parser.add_argument_group(
+        "Session Management", "Control conversation history and context."
+    )
+    session_group.add_argument("--session", help="Session name or ID to use.")
+    session_group.add_argument(
         "--continue",
         dest="continue_session",
         action="store_true",
-        help="Continue last session",
+        help="Continue the last session.",
     )
-    parser.add_argument("--resume", help="Resume specific session by ID")
-    parser.add_argument(
-        "--list-sessions", action="store_true", help="List all sessions"
+    session_group.add_argument("--resume", help="Resume a specific session by ID.")
+    session_group.add_argument(
+        "--list-sessions", action="store_true", help="List all available sessions."
     )
-    parser.add_argument(
+    session_group.add_argument(
         "--new-session",
         action="store_true",
-        help="Force create new session (don't resume)",
+        help="Force the creation of a new session.",
     )
 
-    # Permissions
-    parser.add_argument(
+    # Agentic features & skills
+    agentic_group = parser.add_argument_group(
+        "Agentic Features", "Customize the agent's behavior and capabilities."
+    )
+    agentic_group.add_argument(
+        "--image", action="append", help="Attach one or more image files to the prompt."
+    )
+    agentic_group.add_argument("--skill", help="Apply a specific skill to the prompt.")
+    agentic_group.add_argument(
+        "--list-skills", action="store_true", help="List all available skills."
+    )
+    agentic_group.add_argument(
+        "--stream",
+        action="store_true",
+        help="Stream response tokens for real-time output.",
+    )
+    agentic_group.add_argument(
+        "--no-planning",
+        action="store_true",
+        help="Disable planning before execution.",
+    )
+    agentic_group.add_argument(
+        "--no-reflection",
+        action="store_true",
+        help="Disable reflection on tool output.",
+    )
+    agentic_group.add_argument(
+        "--no-retry",
+        action="store_true",
+        help="Disable automatic retries on tool errors.",
+    )
+
+    # Configuration & permissions
+    config_group = parser.add_argument_group(
+        "Configuration", "Fine-tune security, models, and system settings."
+    )
+    config_group.add_argument(
         "--permissions",
         choices=["strict", "standard", "permissive", "none"],
         default="standard",
-        help="Permission profile",
+        help="Set the permission profile for tool execution.",
+    )
+    config_group.add_argument("--config", help="Path to a custom YAML config file.")
+    config_group.add_argument(
+        "--debug", action="store_true", help="Enable debug logging for detailed output."
     )
 
-    # Interactive mode
-    parser.add_argument(
-        "-i", "--interactive", action="store_true", help="Start interactive REPL mode"
+    # Profiles (easter egg presets)
+    profile_group = parser.add_argument_group(
+        "Profiles", "Use one of the preset agent profiles."
     )
-
-    # Agentic AI features
-    parser.add_argument(
-        "--no-planning",
-        action="store_true",
-        help="Disable planning before execution",
-    )
-    parser.add_argument(
-        "--no-reflection",
-        action="store_true",
-        help="Disable reflection on tool output",
-    )
-    parser.add_argument(
-        "--no-retry",
-        action="store_true",
-        help="Disable automatic retries on errors",
-    )
-    parser.add_argument(
-        "--stream",
-        action="store_true",
-        help="Stream response tokens (real-time output)",
-    )
-
-    # Image support
-    parser.add_argument("--image", action="append", help="Attach image file(s)")
-
-    # Skills
-    parser.add_argument("--skill", help="Use specific skill")
-    parser.add_argument(
-        "--list-skills", action="store_true", help="List available skills"
-    )
-
-    # Profile (easter egg presets)
-    parser.add_argument(
+    profile_group.add_argument(
         "--profile",
         choices=["officer-k", "constant-k", "agent-k"],
-        help="Use preset profile",
+        help="Use a preset profile for the agent.",
     )
-
-    # Easter egg commands (hidden)
-    parser.add_argument(
-        "--officer-k",
-        dest="easteregg",
-        action="store_const",
-        const="officer-k",
-        help=argparse.SUPPRESS,
+    # Hidden aliases for profiles (Officer K, Constant K, Agent K)
+    profile_group.add_argument(
+        "--officer-k", action="store_true", help=argparse.SUPPRESS
     )
-    parser.add_argument(
-        "--constant-k",
-        dest="easteregg",
-        action="store_const",
-        const="constant-k",
-        help=argparse.SUPPRESS,
+    profile_group.add_argument(
+        "--constant-k", action="store_true", help=argparse.SUPPRESS
     )
-    parser.add_argument(
-        "--agent-k",
-        dest="easteregg",
-        action="store_const",
-        const="agent-k",
-        help=argparse.SUPPRESS,
+    profile_group.add_argument(
+        "--agent-k", action="store_true", help=argparse.SUPPRESS
     )
-
-    # Config
-    parser.add_argument("--config", help="Path to config file")
-    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
 
     args = parser.parse_args()
+
+    # Handle hidden profile aliases
+    if args.officer_k:
+        args.profile = "officer-k"
+    elif args.constant_k:
+        args.profile = "constant-k"
+    elif args.agent_k:
+        args.profile = "agent-k"
+
+    # Apply profile preset if specified
+    if args.profile:
+        profile_settings = {
+            "officer-k": {
+                "permissions": "strict",
+                "no_planning": False,
+                "no_reflection": False,
+            },
+            "constant-k": {
+                "permissions": "standard",
+                "no_planning": False,
+                "no_reflection": True,
+            },
+            "agent-k": {
+                "permissions": "permissive",
+                "no_planning": True,
+                "no_reflection": True,
+            },
+        }
+        preset = profile_settings[args.profile]
+        args.permissions = preset["permissions"]
+        args.no_planning = preset["no_planning"]
+        args.no_reflection = preset["no_reflection"]
 
     # Load configuration
     config_path = Path(args.config) if args.config else None

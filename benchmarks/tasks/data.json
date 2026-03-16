@@ -1,0 +1,54 @@
+[
+  {
+    "id": "data-001",
+    "category": "data",
+    "prompt": "Extract all top-level headings from README.md and return them as a numbered list.",
+    "checks": [
+      {"type": "non_empty"},
+      {"type": "regex", "value": "(?m)^\\s*\\d+\\.\\s+"},
+      {"type": "contains", "value": "Overview"},
+      {"type": "not_contains", "value": "I cannot"}
+    ],
+    "required_tools": ["Read"],
+    "max_duration_sec": 120
+  },
+  {
+    "id": "data-002",
+    "category": "data",
+    "prompt": "Find all files in tests/ that contain websocket-related tests and list their paths.",
+    "checks": [
+      {"type": "non_empty"},
+      {"type": "contains", "value": "test_api_server.py"},
+      {"type": "regex", "value": "(?i)websocket"},
+      {"type": "not_contains", "value": "I cannot"}
+    ],
+    "required_tools": ["Read"],
+    "max_duration_sec": 120
+  },
+  {
+    "id": "data-003",
+    "category": "data",
+    "prompt": "Use Bash to print the number of tests in this project and briefly explain your method.",
+    "checks": [
+      {"type": "non_empty"},
+      {"type": "regex", "value": "\\b\\d+\\b"},
+      {"type": "regex", "value": "(?i)(method|used|count|find)"},
+      {"type": "not_contains", "value": "I cannot"}
+    ],
+    "required_tools": ["Bash"],
+    "max_duration_sec": 120
+  },
+  {
+    "id": "data-004",
+    "category": "data",
+    "prompt": "Read docs/FEATURES.md and extract the sections that discuss safety and permissions.",
+    "checks": [
+      {"type": "non_empty"},
+      {"type": "contains", "value": "Safety"},
+      {"type": "contains", "value": "Permissions"},
+      {"type": "not_contains", "value": "I cannot"}
+    ],
+    "required_tools": ["Read"],
+    "max_duration_sec": 120
+  }
+]

@@ -1,9 +1,12 @@
 """Semantic memory for storing and retrieving past solutions."""
 
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 class SimpleTextSimilarity:
@@ -82,7 +85,7 @@ class SemanticMemory:
         if not self.solutions:
             return []
 
-        similarities = []
+        similarities: List[Dict[str, Any]] = []
 
         for solution in self.solutions:
             similarity = self.similarity.token_overlap(
@@ -93,7 +96,10 @@ class SemanticMemory:
                 similarities.append({"solution": solution, "similarity": similarity})
 
         # Sort by similarity descending
-        similarities.sort(key=lambda x: x["similarity"], reverse=True)
+        similarities.sort(
+            key=lambda item: float(item.get("similarity", 0.0)),
+            reverse=True,
+        )
 
         return [item["solution"] for item in similarities[:limit]]
 
@@ -142,12 +148,12 @@ class SemanticMemory:
     def print_memory_stats(self) -> None:
         """Print memory statistics."""
         if not self.solutions:
-            print("No solutions stored in semantic memory yet.")
+            logger.info("No solutions stored in semantic memory yet.")
             return
 
-        print("\n💾 Semantic Memory Statistics:")
-        print("-" * 50)
-        print(f"  Total solutions: {len(self.solutions)}")
+        logger.info("\nSemantic Memory Statistics:")
+        logger.info("%s", "-" * 50)
+        logger.info("  Total solutions: %s", len(self.solutions))
 
         # Group by tools used
         tool_counts: Dict[str, int] = {}
@@ -156,7 +162,7 @@ class SemanticMemory:
                 tool_counts[tool] = tool_counts.get(tool, 0) + 1
 
         if tool_counts:
-            print("  Tools in memory:")
+            logger.info("  Tools in memory:")
             sorted_tools = sorted(tool_counts.items(), key=lambda x: x[1], reverse=True)
             for tool, count in sorted_tools:
-                print(f"    - {tool}: {count} solutions")
+                logger.info("    - %s: %s solutions", tool, count)

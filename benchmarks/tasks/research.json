@@ -1,0 +1,50 @@
+[
+  {
+    "id": "research-001",
+    "category": "research",
+    "prompt": "Research what 'agentic AI' typically means in modern tooling, then map that definition to BladeRunner's capabilities.",
+    "checks": [
+      {"type": "non_empty"},
+      {"type": "regex", "value": "(?i)agentic"},
+      {"type": "regex", "value": "(?i)bladerunner"},
+      {"type": "not_contains", "value": "I cannot"}
+    ],
+    "max_duration_sec": 180
+  },
+  {
+    "id": "research-002",
+    "category": "research",
+    "prompt": "Compare at least two risk areas for autonomous coding agents and explain how BladeRunner addresses them.",
+    "checks": [
+      {"type": "non_empty"},
+      {"type": "regex", "value": "(?i)(risk|failure|safety)"},
+      {"type": "regex", "value": "(?i)bladerunner"},
+      {"type": "not_contains", "value": "I cannot"}
+    ],
+    "max_duration_sec": 180
+  },
+  {
+    "id": "research-003",
+    "category": "research",
+    "prompt": "Look up current discussions about LLM tool-use reliability and summarize 3 practical takeaways for this codebase.",
+    "checks": [
+      {"type": "non_empty"},
+      {"type": "regex", "value": "(?i)(takeaway|recommend|improve)"},
+      {"type": "regex", "value": "(?i)(tool|reliability)"},
+      {"type": "not_contains", "value": "I cannot"}
+    ],
+    "max_duration_sec": 180
+  },
+  {
+    "id": "research-004",
+    "category": "research",
+    "prompt": "Propose an experiment design to evaluate planning vs no-planning for this agent on 10 tasks.",
+    "checks": [
+      {"type": "non_empty"},
+      {"type": "regex", "value": "(?i)(experiment|control|metric|evaluation)"},
+      {"type": "regex", "value": "(?i)(planning|no-planning)"},
+      {"type": "not_contains", "value": "I cannot"}
+    ],
+    "max_duration_sec": 180
+  }
+]

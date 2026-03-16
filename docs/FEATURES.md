@@ -6,20 +6,23 @@ Complete reference for all agentic AI capabilities in BladeRunner.
 
 ## Overview
 
-BladeRunner implements 9 production-grade agentic AI features across two tiers:
+BladeRunner implements production-grade agentic AI features across strategic and safety layers:
 
-**Tier 1: Strategic Thinking & Resilience**
+**Core Capability Set: Strategic Thinking & Resilience**
 - Planning & Decomposition
 - Reflection & Self-Correction
 - Error Recovery & Retry
 - Streaming Responses
 
-**Tier 2: Safety & Learning**
+**Advanced Capability Set: Safety & Learning**
 - Human-in-the-Loop Approvals
 - Tool Effectiveness Tracking
 - Semantic Memory
 - Multi-Agent Orchestration
 - Performance Evaluation & Metrics
+- Adaptive Strategy Guidance
+- Structured Execution Tracing
+- Capability Benchmark Runner
 
 All features are optional and configurable.
 
@@ -37,7 +40,7 @@ BladeRunner's agentic AI architecture is built on these core principles:
 
 ---
 
-## Tier 1: Strategic Thinking & Resilience
+## Core Capability Set: Strategic Thinking & Resilience
 
 ### 1. Planning & Decomposition
 
@@ -156,6 +159,100 @@ Bash command failed
 ↓ Return error (all retries exhausted)
 ```
 
+### Backend Fallback (OpenRouter <-> Groq)
+
+**What it does:** When both backend API keys are configured, BladeRunner automatically switches to the next available backend on hard provider failures.
+
+**Fallback triggers:**
+- `429` rate limit errors
+- `402` credit/payment errors
+- repeated transient failures
+
+**Cooldown behavior:**
+- `429`: 120s cooldown
+- `402`: 300s cooldown
+- other errors: 60s cooldown
+
+After cooldown, backends are retried automatically.
+
+**Setup:**
+```bash
+OPENROUTER_API_KEY=your-openrouter-key
+GROQ_API_KEY=your-groq-key
+```
+
+**Debug output:**
+Set `debug: true` in config to see fallback events in stderr.
+
+---
+
+### FastAPI API Backend
+
+**What it does:** Exposes BladeRunner through HTTP and WebSocket API endpoints.
+
+**Endpoints:**
+- `GET /api/health` - Service health + ADK/auth availability
+- `GET /api/meta` - API metadata (models, skills, profiles)
+- `GET /api/skills` - List configured skills
+- `POST /api/auth/login` - JWT login (access + refresh tokens)
+- `POST /api/auth/refresh` - JWT access token refresh
+- `GET /api/auth/me` - Resolve current JWT identity
+- `POST /api/sessions` - Create user session
+- `GET /api/sessions` - List sessions by `user_id`
+- `GET /api/sessions/{id}/messages` - Retrieve session messages
+- `POST /api/uploads/image` - Upload image with per-user quota/type/size checks
+- `GET /api/uploads/quota/{user_id}` - Inspect upload usage and remaining quota
+- `POST /api/chat` - Chat completion (`bladerunner` or `google_adk` engine)
+- `WS /ws/chat` - Bidirectional streaming (`chunk`, `status`, `final`, `interrupt`, `ping/pong`)
+
+**Run:**
+```bash
+uv run bladerunner-api
+```
+
+**Configuration:**
+```yaml
+api:
+  host: 127.0.0.1
+  port: 8000
+  database: ~/.bladerunner/api.db
+  auth:
+    enabled: false
+    jwt:
+      enabled: false
+      secret_key: ""  # Set via BLADERUNNER_JWT_SECRET
+  uploads:
+    max_size_mb: 10
+    per_user_quota_mb: 100
+    retention_days: 30
+```
+
+---
+
+### Google ADK / Gemini Grounding Engine
+
+**What it does:** Adds a Google-first answer path for web-grounded responses in API mode.
+
+**Behavior:**
+- Checks for `google-adk` availability
+- Uses Gemini grounded generation path
+- Extracts source links from grounding metadata
+- Returns answer + sources to API clients
+
+**Setup:**
+```bash
+uv sync --extra google
+export GOOGLE_API_KEY="your-key"
+```
+
+**Configuration:**
+```yaml
+google_adk:
+  enabled: false
+  model: gemini-2.0-flash
+  enable_search_grounding: true
+```
+
 ---
 
 ### 4. Streaming Responses
@@ -189,7 +286,7 @@ uv run bladerunner -i
 
 ---
 
-## Tier 2: Safety & Learning
+## Advanced Capability Set: Safety & Learning
 
 ### 5. Human-in-the-Loop Approvals
 
@@ -519,6 +616,93 @@ for task in recent:
 
 ---
 
+### 10. Adaptive Strategy Guidance
+
+**What it does:** Tracks repeated tool failures and injects bounded guidance so the agent avoids repeating a failing approach.
+
+**When it triggers:** A tool exceeds a configurable consecutive-failure threshold.
+
+**Configuration:**
+```yaml
+agent:
+  enable_adaptation: true
+  adaptation_failure_threshold: 2
+```
+
+**Behavior details:**
+- Success resets consecutive failure count for that tool
+- Failure streaks generate adaptive guidance messages
+- Guidance is bounded and focused on strategy shift, not verbose replanning
+
+**Why this matters:**
+- Reduces retry loops that repeat the same failing arguments
+- Improves robustness in flaky tool/network/file scenarios
+
+---
+
+### 11. Structured Execution Tracing
+
+**What it does:** Records a structured event timeline for each execution (routing, planning, iterations, tool calls, completion/failure).
+
+**Configuration:**
+```yaml
+agent:
+  enable_trace: true
+```
+
+**Programmatic Access:**
+```python
+from bladerunner.agent import Agent
+from bladerunner.config import Config
+
+agent = Agent(Config())
+agent.execute("Summarize README.md")
+trace = agent.get_last_trace()
+print(trace.get("status"))
+print(len(trace.get("events", [])))
+```
+
+**API Access (`/api/chat` and `WS /ws/chat`):**
+- Request field: `include_trace: true`
+- Response field: `trace` (structured JSON trace payload)
+
+**Why this matters:**
+- Better post-mortem debugging for failed runs
+- More transparent behavior for demos, audits, and evaluations
+
+---
+
+### 12. Capability Benchmark Runner
+
+**What it does:** Runs declarative benchmark tasks and outputs category-level capability reports.
+
+**Task packs included:**
+- `software` (code understanding/execution)
+- `data` (structured extraction/counting tasks)
+- `research` (open-ended reasoning tasks with stronger checks)
+
+**Run commands:**
+```bash
+# Run all benchmark packs
+uv run bladerunner-eval --suite all
+
+# Run one pack
+uv run bladerunner-eval --suite software
+
+# Limit task count for quick iteration
+uv run bladerunner-eval --suite data --max-tasks 2
+```
+
+**Output:**
+- JSON report written to `benchmarks/results/`
+- Summary includes pass rate, per-category stats, median duration, and top failure reasons
+
+**Why this matters:**
+- Prevents regressions across releases
+- Gives measurable capability snapshots instead of anecdotal demos
+
+---
+
 ## RAG (Retrieval-Augmented Generation)
 
 BladeRunner includes optional RAG capabilities for building and querying vector-based knowledge bases.
@@ -653,10 +837,10 @@ uv run bladerunner -p "task" --no-reflection
 uv run bladerunner -p "task" --no-retry
 
 # Stream response tokens
-uv run bladeRuner -p "task" --stream
+uv run bladerunner -p "task" --stream
 
 # Combine flags
-uv run bladeRuner -p "task" --stream --no-planning --no-reflection
+uv run bladerunner -p "task" --stream --no-planning --no-reflection
 ```
 
 ### Feature Combinations
@@ -694,9 +878,9 @@ uv run bladerunner -p "task"  # All enabled by default
 
 ### Execution Time
 
-- **Fastest:** Disable Tier 1 + Tier 2
-- **Balanced:** Keep Tier 1 + Tool Tracking, disable others
-- **Safest:** All Tier 1 + All Tier 2
+- **Fastest:** Disable core + advanced capabilities
+- **Balanced:** Keep core capabilities + Tool Tracking, disable others
+- **Safest:** All core + all advanced capabilities
 
 ---
 
@@ -793,7 +977,7 @@ This implementation demonstrates:
 - `bladerunner/agent_orchestrator.py` - Task routing to specialized agents
 
 **Modified:**
-- `bladerunner/agent.py` - Integrated all Tier 1 + Tier 2 features
+- `bladerunner/agent.py` - Integrated all core + advanced features
 - `bladerunner/config.py` - Added feature configuration defaults
 
 **Data directories:**

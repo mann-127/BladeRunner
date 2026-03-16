@@ -1,10 +1,10 @@
 """Main agent implementation."""
 
 import json
+import logging
 import os
-import sys
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, cast
 from openai import OpenAI
 
 from .config import Config
@@ -13,6 +13,9 @@ from .tool_tracker import ToolTracker
 from .semantic_memory import SemanticMemory
 from .agent_orchestrator import AgentOrchestrator, AgentRole
 from .evaluation import AgentEvaluator
+from .backend_manager import BackendManager
+from .adaptive_strategy import AdaptiveStrategyManager
+from .execution_trace import ExecutionTraceRecorder
 from .tools.base import ToolRegistry
 from .tools.filesystem import ReadTool, WriteTool
 from .tools.bash import BashTool
@@ -43,6 +46,7 @@ except ImportError:
 
 
 MAX_ITERATIONS = 50
+logger = logging.getLogger(__name__)
 
 # Reflection thresholds
 REFLECTION_KEYWORDS = [
@@ -79,6 +83,9 @@ class Agent:
         self.model = model or config.get("model", "haiku")
         self.backend = config.get("backend", "openrouter")
 
+        # Initialize backend manager for automatic fallback
+        self.backend_manager = BackendManager(config.config, self.backend)
+
         # Initialize API client with backend-specific settings
         api_key = config.get("api_key") or self._get_api_key_for_backend()
         base_url = self._get_base_url()
@@ -102,6 +109,7 @@ class Agent:
         self.use_permissions = use_permissions and config.get(
             "permissions.enabled", True
         )
+        self.permission_checker: Optional[PermissionChecker]
         if self.use_permissions:
             self.permission_checker = PermissionChecker(profile=permission_profile)
         else:
@@ -127,21 +135,21 @@ class Agent:
 
         # Track execution state for reflection
         self.last_tool_output = ""
-        self.execution_history = []
+        self.execution_history: List[Dict[str, Any]] = []
 
-        # Tier 2: Safety and approval system
+        # Advanced capability: Safety and approval system
         self.critical_checker = CriticalOperation()
         self.require_approval = config.get("agent.require_approval", True)
 
-        # Tier 2: Tool effectiveness tracking
+        # Advanced capability: Tool effectiveness tracking
         self.tool_tracker = ToolTracker()
         self.enable_tool_tracking = config.get("agent.enable_tool_tracking", True)
 
-        # Tier 2: Semantic memory (learning from past solutions)
+        # Advanced capability: Semantic memory (learning from past solutions)
         self.semantic_memory = SemanticMemory()
         self.enable_memory = config.get("agent.enable_memory", True)
 
-        # Tier 2: Multi-agent orchestration
+        # Advanced capability: Multi-agent orchestration
         self.orchestrator = AgentOrchestrator()
         self.agent_role = AgentRole.GENERAL
         self.enable_agent_selection = config.get("agent.enable_agent_selection", True)
@@ -149,10 +157,23 @@ class Agent:
         # Track execution path for memory storage
         self.current_execution_path: List[str] = []
 
-        # Tier 2: Evaluation and metrics tracking
+        # Advanced capability: Evaluation and metrics tracking
         self.evaluator = AgentEvaluator()
         self.enable_evaluation = config.get("agent.enable_evaluation", True)
         self.current_task_id: Optional[str] = None
+        self.enable_adaptation = config.get("agent.enable_adaptation", True)
+        self.adaptive_strategy = AdaptiveStrategyManager(
+            failure_threshold=config.get("agent.adaptation_failure_threshold", 2)
+        )
+        self.enable_trace = config.get("agent.enable_trace", True)
+        self.trace_recorder = ExecutionTraceRecorder()
+        self.last_trace: Dict[str, Any] = {}
+
+        # Optional callback for external token streaming consumers.
+        self.stream_callback: Optional[Callable[[str], None]] = None
+
+        # Interruption flag for graceful termination
+        self.interrupted = False
 
     def _get_base_url(self) -> str:
         """Get base URL for the selected backend."""
@@ -160,18 +181,122 @@ class Agent:
         backend_config = backends.get(self.backend, {})
         return backend_config.get("base_url", "https://openrouter.ai/api/v1")
 
-    def _get_api_key_for_backend(self) -> str:
-        """Get API key from environment based on backend."""
+    def _get_api_key_for_backend(self, backend_name: Optional[str] = None) -> str:
+        """Get API key from environment based on backend.
+
+        Args:
+            backend_name: Backend to get key for (defaults to self.backend)
+        """
+        backend_name = backend_name or self.backend
         backends = self.config.get("backends", {})
-        backend_config = backends.get(self.backend, {})
+        backend_config = backends.get(backend_name, {})
         env_var = backend_config.get("api_key_env", "OPENROUTER_API_KEY")
 
         api_key = os.getenv(env_var)
         if not api_key:
             raise RuntimeError(
-                f"{env_var} environment variable not set for {self.backend} backend"
+                f"{env_var} environment variable not set for {backend_name} backend. "
+                "Please set the environment variable or add "
+                "'api_key' to your config file."
             )
         return api_key
+
+    def _switch_backend(self, new_backend: str):
+        """Switch to a different backend.
+
+        Args:
+            new_backend: Name of the backend to switch to
+        """
+        try:
+            api_key = self._get_api_key_for_backend(new_backend)
+            backends = self.config.get("backends", {})
+            backend_config = backends.get(new_backend, {})
+            base_url = backend_config.get("base_url", "https://openrouter.ai/api/v1")
+
+            self.backend = new_backend
+            self.client = OpenAI(api_key=api_key, base_url=base_url)
+
+            if self.config.get("debug"):
+                logger.debug("Switched to backend '%s'", new_backend)
+        except Exception as e:
+            if self.config.get("debug"):
+                logger.exception("Failed to switch to backend '%s': %s", new_backend, e)
+            raise
+
+    def _chat_completion_with_fallback(self, **kwargs) -> Any:
+        """Make a chat completion request with automatic backend fallback.
+
+        Args:
+            **kwargs: Arguments to pass to client.chat.completions.create()
+
+        Returns:
+            Chat completion response
+        """
+        attempted_backends: List[str] = []
+        last_error: Optional[Exception] = None
+
+        # Try all configured backends at most once per request.
+        max_attempts = max(1, len(self.backend_manager.backends))
+        for _ in range(max_attempts):
+            try:
+                attempted_backends.append(self.backend)
+                response = self.client.chat.completions.create(**kwargs)
+
+                # Success! Record it and return
+                self.backend_manager.record_request_success(self.backend)
+                return response
+
+            except Exception as e:
+                last_error = e
+                error_code = None
+
+                # Extract error code if available
+                if hasattr(e, "status_code"):
+                    error_code = e.status_code
+                elif hasattr(e, "response") and hasattr(e.response, "status_code"):
+                    error_code = e.response.status_code
+
+                # Record the failure
+                self.backend_manager.record_request_failure(self.backend, error_code)
+
+                if self.config.get("debug"):
+                    logger.warning("Backend '%s' request failed: %s", self.backend, e)
+
+                # Check if we should attempt fallback
+                if not self.backend_manager.should_attempt_fallback(
+                    self.backend, error_code
+                ):
+                    raise
+
+                # Try to get next available backend
+                next_backend = self.backend_manager.get_next_backend(
+                    exclude=attempted_backends
+                )
+
+                if next_backend:
+                    if self.config.get("debug"):
+                        logger.info("Attempting backend fallback to '%s'", next_backend)
+
+                    try:
+                        self._switch_backend(next_backend)
+                        continue  # Try again with new backend
+                    except Exception as switch_error:
+                        if self.config.get("debug"):
+                            logger.exception("Backend switch failed: %s", switch_error)
+                        # Can't switch, raise original error
+                        if last_error is not None:
+                            raise last_error
+                        raise RuntimeError("Backend switch failed with unknown error")
+                else:
+                    # No more backends to try
+                    if last_error is not None:
+                        raise last_error
+                    raise RuntimeError("No available backend could serve the request")
+
+        # If we get here, all backends failed
+        if last_error is not None:
+            raise last_error
+        raise RuntimeError("All backends failed with unknown error")
 
     def _register_core_tools(self):
         """Register core tools."""
@@ -181,7 +306,11 @@ class Agent:
 
     def _register_web_tools(self):
         """Register web-related tools."""
-        self.registry.register(WebSearchTool())
+        provider = self.config.get("web_search.provider", "duckduckgo")
+        max_results = self.config.get("web_search.max_results", 5)
+        self.registry.register(
+            WebSearchTool(provider=provider, max_results=max_results)
+        )
         self.registry.register(FetchWebpageTool())
 
     def _register_image_tools(self):
@@ -215,7 +344,7 @@ Respond with a brief numbered plan (3-5 steps). Be concise."""
         plan_messages.append({"role": "user", "content": planning_prompt})
 
         try:
-            response = self.client.chat.completions.create(
+            response = self._chat_completion_with_fallback(
                 model=self.config.resolve_model(self.model),
                 messages=plan_messages,
                 temperature=0.3,  # Lower temp for plans
@@ -234,7 +363,7 @@ Respond with a brief numbered plan (3-5 steps). Be concise."""
                 )
                 return plan
         except Exception as e:
-            print(f"Warning: Failed to create plan: {str(e)}", file=sys.stderr)
+            logger.warning("Failed to create plan: %s", str(e))
 
         return ""
 
@@ -270,7 +399,7 @@ Be concise and actionable."""
         reflection_messages.append({"role": "user", "content": reflection_prompt})
 
         try:
-            response = self.client.chat.completions.create(
+            response = self._chat_completion_with_fallback(
                 model=self.config.resolve_model(self.model),
                 messages=reflection_messages,
                 temperature=0.5,
@@ -289,7 +418,7 @@ Be concise and actionable."""
                 )
                 return reflection
         except Exception as e:
-            print(f"Warning: Reflection failed: {str(e)}", file=sys.stderr)
+            logger.warning("Reflection failed: %s", str(e))
 
         return ""
 
@@ -301,11 +430,12 @@ Be concise and actionable."""
             return self._execute_tool_with_permissions(tool_call)
 
         # Get retry config for this tool
-        retry_config = RETRY_CONFIG.get(
-            function_name, {"max_retries": 1, "backoff_factor": 1}
+        retry_config = cast(
+            Dict[str, float],
+            RETRY_CONFIG.get(function_name, {"max_retries": 1, "backoff_factor": 1}),
         )
-        max_retries = retry_config["max_retries"]
-        backoff_factor = retry_config["backoff_factor"]
+        max_retries = int(retry_config["max_retries"])
+        backoff_factor = float(retry_config["backoff_factor"])
 
         last_error = None
 
@@ -316,10 +446,34 @@ Be concise and actionable."""
                 # If successful, return
                 if not self._should_reflect_on_output(result):
                     self.last_tool_output = result
+                    if self.enable_adaptation:
+                        self.adaptive_strategy.record_tool_outcome(
+                            function_name,
+                            success=True,
+                        )
                     return result
 
                 # If error, reflect and potentially retry
                 last_error = result
+                if self.enable_adaptation:
+                    guidance = self.adaptive_strategy.record_tool_outcome(
+                        function_name,
+                        success=False,
+                        error_message=result,
+                    )
+                    if guidance:
+                        self.messages.append(
+                            {
+                                "role": "assistant",
+                                "content": f"[Adaptive Strategy]\n{guidance}",
+                            }
+                        )
+                        if self.enable_trace:
+                            self.trace_recorder.log(
+                                "adaptive_strategy_updated",
+                                tool=function_name,
+                                guidance_preview=guidance[:200],
+                            )
                 reflection = self._reflect_on_execution(
                     function_name,
                     result,
@@ -346,11 +500,17 @@ Be concise and actionable."""
                         f"(attempt {attempt + 2}/{max_retries}) "
                         f"after {wait_time:.1f}s..."
                     )
-                    print(msg, file=sys.stderr)
+                    logger.info(msg)
                     time.sleep(wait_time)
 
             except Exception as e:
                 last_error = str(e)
+                if self.enable_adaptation:
+                    self.adaptive_strategy.record_tool_outcome(
+                        function_name,
+                        success=False,
+                        error_message=last_error,
+                    )
                 if attempt < max_retries - 1:
                     wait_time = backoff_factor**attempt
                     time.sleep(wait_time)
@@ -361,17 +521,26 @@ Be concise and actionable."""
 
     def execute(self, prompt: str, use_streaming: bool = False) -> str:
         """Execute agent with a prompt."""
-        # Tier 2: Start evaluation tracking
+        # Advanced capability: Start evaluation tracking
         if self.enable_evaluation:
             self.current_task_id = self.evaluator.start_task(prompt, self.model)
+        if self.enable_trace:
+            self.trace_recorder.start(prompt=prompt, model=self.model)
+            self.trace_recorder.log("execution_started")
 
-        # Tier 2: Agent role selection
+        # Advanced capability: Agent role selection
         if self.enable_agent_selection:
             route = self.orchestrator.route_task(prompt)
             self.agent_role = route["role"]
-            print(f"🤖 {route['agent_name']}", file=sys.stderr)
+            logger.info("Selected agent route: %s", route["agent_name"])
+            if self.enable_trace:
+                self.trace_recorder.log(
+                    "agent_routed",
+                    agent_name=route["agent_name"],
+                    role=self.agent_role.value,
+                )
 
-        # Tier 2: Get semantic memory context
+        # Advanced capability: Get semantic memory context
         memory_context = ""
         if self.enable_memory:
             memory_context = self.semantic_memory.get_memory_context(prompt)
@@ -382,6 +551,8 @@ Be concise and actionable."""
         # Create plan if enabled
         plan = self._create_plan(prompt) if self.enable_planning else ""
         if plan:
+            if self.enable_trace:
+                self.trace_recorder.log("plan_created", plan_preview=plan[:200])
             # Add plan to messages for context
             self.messages.append(
                 {
@@ -408,17 +579,54 @@ Be concise and actionable."""
 
         # Agent loop
         for iteration in range(MAX_ITERATIONS):
+            # Check for interruption
+            if self.interrupted:
+                if self.enable_evaluation:
+                    self.evaluator.end_task(
+                        success=False, error_message="Interrupted by external signal"
+                    )
+                if self.enable_trace:
+                    self.trace_recorder.log(
+                        "execution_interrupted", iteration=iteration
+                    )
+                    self.last_trace = self.trace_recorder.finish(
+                        status="interrupted",
+                        error="Interrupted by external signal",
+                    )
+                return "\n⚠️ Task interrupted by user"
+
             try:
                 # Record iteration for evaluation
                 if self.enable_evaluation:
                     self.evaluator.record_iteration()
+                if self.enable_trace:
+                    self.trace_recorder.log("iteration_started", iteration=iteration)
+
+                # Inject bounded adaptive guidance when repeated failures are detected.
+                if self.enable_adaptation:
+                    adaptive_guidance = self.adaptive_strategy.get_active_guidance()
+                    if adaptive_guidance:
+                        self.messages.append(
+                            {
+                                "role": "assistant",
+                                "content": f"[Adaptive Guidance]\n{adaptive_guidance}",
+                            }
+                        )
+                        if self.enable_trace:
+                            self.trace_recorder.log(
+                                "adaptive_guidance_injected",
+                                guidance_preview=adaptive_guidance[:200],
+                            )
 
                 # Get model response
                 stream = use_streaming or self.enable_streaming
-                response = self.client.chat.completions.create(
+                model_settings = self.config.get_model_settings(self.model)
+                response = self._chat_completion_with_fallback(
                     model=self.config.resolve_model(self.model),
                     messages=self.messages,
                     tools=self.registry.get_definitions(),
+                    temperature=model_settings["temperature"],
+                    max_tokens=model_settings["max_tokens"],
                     stream=stream,
                 )
 
@@ -426,8 +634,20 @@ Be concise and actionable."""
                     message = self._handle_streaming_response(response)
                 else:
                     if not response.choices:
+                        if self.enable_trace:
+                            self.last_trace = self.trace_recorder.finish(
+                                status="failed",
+                                error="No response from model",
+                            )
                         return "Error: No response from model"
                     message = response.choices[0].message
+
+                if self.enable_trace:
+                    self.trace_recorder.log(
+                        "model_response_received",
+                        has_tool_calls=bool(message.tool_calls),
+                        content_preview=(message.content or "")[:200],
+                    )
 
                 # Add assistant message
                 assistant_msg = {
@@ -461,7 +681,7 @@ Be concise and actionable."""
                     # No tool calls - return final response
                     final_response = message.content or ""
 
-                    # Tier 2: Store successful solution in semantic memory
+                    # Advanced capability: Store successful solution in semantic memory
                     if self.enable_memory and self.current_execution_path:
                         self.semantic_memory.store_solution(
                             prompt,
@@ -469,9 +689,16 @@ Be concise and actionable."""
                             success=True,
                         )
 
-                    # Tier 2: End evaluation tracking (success)
+                    # Advanced capability: End evaluation tracking (success)
                     if self.enable_evaluation:
                         self.evaluator.end_task(success=True)
+
+                    if self.enable_trace:
+                        self.trace_recorder.log("execution_completed")
+                        self.last_trace = self.trace_recorder.finish(
+                            status="success",
+                            final_answer=final_response,
+                        )
 
                     return final_response
 
@@ -480,16 +707,40 @@ Be concise and actionable."""
                     self.evaluator.end_task(
                         success=False, error_message="Interrupted by user"
                     )
+                if self.enable_trace:
+                    self.trace_recorder.log(
+                        "execution_interrupted", reason="keyboard_interrupt"
+                    )
+                    self.last_trace = self.trace_recorder.finish(
+                        status="interrupted",
+                        error="Interrupted by user",
+                    )
                 return "\nInterrupted by user"
             except Exception as e:
                 if self.enable_evaluation:
                     self.evaluator.end_task(success=False, error_message=str(e))
+                if self.enable_trace:
+                    self.trace_recorder.log(
+                        "execution_failed",
+                        error=str(e),
+                        error_type=type(e).__name__,
+                    )
+                    self.last_trace = self.trace_recorder.finish(
+                        status="failed",
+                        error=str(e),
+                    )
                 return f"Error: {str(e)}"
 
         # Max iterations reached
         if self.enable_evaluation:
             self.evaluator.end_task(
                 success=False, error_message="Max iterations reached"
+            )
+        if self.enable_trace:
+            self.trace_recorder.log("execution_failed", error="Max iterations reached")
+            self.last_trace = self.trace_recorder.finish(
+                status="failed",
+                error="Max iterations reached",
             )
         return f"Warning: Reached max iterations ({MAX_ITERATIONS})"
 
@@ -507,14 +758,23 @@ Be concise and actionable."""
             # Stream text content
             if delta.content:
                 content += delta.content
-                print(delta.content, end="", flush=True)
+                # Avoid backend stdout writes when an external stream callback is active
+                # (e.g., API websocket forwarding).
+                if not self.stream_callback:
+                    print(delta.content, end="", flush=True)
+                if self.stream_callback:
+                    try:
+                        self.stream_callback(delta.content)
+                    except Exception:
+                        # Callback failures must not interrupt execution.
+                        pass
 
             # Handle tool calls in streaming
             if delta.tool_calls:
                 for tool_call in delta.tool_calls:
                     tool_calls.append(tool_call)
 
-        if content:
+        if content and not self.stream_callback:
             print()  # Newline after streaming
 
         # Create a message-like object
@@ -534,11 +794,9 @@ Be concise and actionable."""
         except json.JSONDecodeError as e:
             return f"Error: Invalid JSON arguments: {str(e)}"
 
-        print(
-            f"Executing tool: {function_name} with args: {arguments}", file=sys.stderr
-        )
+        logger.debug("Executing tool '%s' with args: %s", function_name, arguments)
 
-        # Tier 2: Check for critical operations requiring approval
+        # Advanced capability: Check for critical operations requiring approval
         if self.require_approval:
             if function_name == "Bash":
                 command = arguments.get("command", "")
@@ -546,7 +804,7 @@ Be concise and actionable."""
                 if is_critical:
                     approved = self.critical_checker.prompt_approval(
                         "Execute bash command",
-                        reason,
+                        reason or "Potentially destructive bash command",
                         command,
                     )
                     if not approved:
@@ -560,7 +818,7 @@ Be concise and actionable."""
                 if is_critical:
                     approved = self.critical_checker.prompt_approval(
                         "Write to critical file",
-                        reason,
+                        reason or "Write to sensitive file path",
                         file_path,
                     )
                     if not approved:
@@ -614,14 +872,22 @@ Be concise and actionable."""
         try:
             result = self.registry.execute(function_name, **arguments)
 
-            # Tier 2: Track tool success
+            if self.enable_trace:
+                self.trace_recorder.log(
+                    "tool_executed",
+                    tool=function_name,
+                    arguments=list(arguments.keys()),
+                    success=not result.startswith("Error:"),
+                )
+
+            # Advanced capability: Track tool success
             if self.enable_tool_tracking:
                 success = not result.startswith("Error:")
                 self.tool_tracker.record_execution(
                     function_name, success, result if not success else None
                 )
 
-            # Tier 2: Track tool usage in evaluator
+            # Advanced capability: Track tool usage in evaluator
             if self.enable_evaluation:
                 self.evaluator.record_tool_use(function_name)
 
@@ -636,7 +902,27 @@ Be concise and actionable."""
             if self.enable_tool_tracking:
                 self.tool_tracker.record_execution(function_name, False, str(e))
 
+            if self.enable_trace:
+                self.trace_recorder.log(
+                    "tool_failed",
+                    tool=function_name,
+                    error=str(e),
+                )
+
             return f"Error executing {function_name}: {str(e)}"
+
+    def get_last_trace(self) -> Dict[str, Any]:
+        """Get the most recent execution trace."""
+        return self.last_trace.copy() if self.last_trace else {}
+
+    def was_web_search_used(self) -> bool:
+        """Check if web search was used in this execution."""
+        if self.enable_tool_tracking:
+            session_stats = self.tool_tracker.session_stats
+            return (
+                "WebSearch" in session_stats and session_stats["WebSearch"]["calls"] > 0
+            )
+        return False
 
     def clear_history(self):
         """Clear conversation history."""
@@ -649,22 +935,22 @@ Be concise and actionable."""
         self.model = model
 
     def print_execution_summary(self) -> None:
-        """Print summary of execution including Tier 2 stats."""
-        print("\n" + "=" * 60)
-        print("EXECUTION SUMMARY")
-        print("=" * 60)
+        """Print summary of execution including advanced capability stats."""
+        logger.info("\n%s", "=" * 60)
+        logger.info("EXECUTION SUMMARY")
+        logger.info("%s", "=" * 60)
 
-        # Tier 2: Evaluation metrics
+        # Advanced capability: Evaluation metrics
         if self.enable_evaluation:
             self.evaluator.print_summary()
 
-        # Tier 2: Tool tracking stats
+        # Advanced capability: Tool tracking stats
         if self.enable_tool_tracking:
             self.tool_tracker.print_session_summary()
             self.tool_tracker.print_tool_rankings()
 
-        # Tier 2: Semantic memory stats
+        # Advanced capability: Semantic memory stats
         if self.enable_memory:
             self.semantic_memory.print_memory_stats()
 
-        print()
+        logger.info("")

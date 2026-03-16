@@ -20,6 +20,11 @@ dependencies = [
     "pillow>=10.0.0",
     "prompt-toolkit>=3.0.0",
     "rich>=13.0.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.30.0",
+    "python-multipart>=0.0.9",
+    "pyjwt>=2.9.0",
+    "bcrypt>=5.0.0",
 ]
 
 [project.urls]
@@ -29,6 +34,9 @@ Repository = "https://github.com/mann-127/BladeRunner"
 
 [project.scripts]
 bladerunner = "bladerunner.cli:main"
+bladerunner-api = "bladerunner.api_server:main"
+bladerunner-create-user = "bladerunner.create_user:main"
+bladerunner-eval = "bladerunner.capability_eval:main"
 
 [project.optional-dependencies]
 dev = [
@@ -37,6 +45,8 @@ dev = [
     "black>=23.0.0",
     "flake8>=6.0.0",
     "mypy>=1.0.0",
+    "types-requests>=2.32.0.20250306",
+    "types-PyYAML>=6.0.12.20250915",
 ]
 
 lsp = [
@@ -53,6 +63,10 @@ rag = [
     "sentence-transformers>=2.2.0",
 ]
 
+google = [
+    "google-adk>=0.1.0",
+]
+
 [tool.black]
 line-length = 88
 target-version = ['py313']
@@ -64,6 +78,9 @@ addopts = "-ra --strict-config --strict-markers"
 
 [tool.uv]
 package = true
+
+[tool.setuptools.package-data]
+bladerunner = ["py.typed"]
 
 [build-system]
 requires = ["setuptools>=61.0"]

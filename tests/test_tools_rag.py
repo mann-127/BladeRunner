@@ -21,8 +21,6 @@ def rag_store(tmp_path: Path):
 
 def test_add_and_search_documents(rag_store) -> None:
     """Test basic document ingestion and retrieval."""
-    from bladerunner.tools.rag import RAGStore
-
     documents = [
         "Python is a high-level programming language",
         "JavaScript is used for web development",
@@ -132,7 +130,10 @@ def test_persistence_across_sessions(tmp_path: Path) -> None:
 
     # First session: add documents
     store1 = RAGStore(persist_directory=persist_dir)
-    documents = ["Persistent storage is important", "Vector databases save embeddings"]
+    documents = [
+        "Persistent storage is important",
+        "Vector databases save embeddings",
+    ]
     store1.add_documents(documents)
 
     # Second session: load from disk and search
