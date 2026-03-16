@@ -517,7 +517,7 @@ BladeRunner supports multiple LLM backends with automatic switching.
 - API Key: `OPENROUTER_API_KEY`
 
 **Groq:**
-- Ultra-fast inference (14,400 requests/day free)
+- Ultra-fast inference (free tier available - see [console.groq.com](https://console.groq.com))
 - Llama 70B and Mixtral 8x7B
 - No vision support
 - API Key: `GROQ_API_KEY`
@@ -705,8 +705,13 @@ uv run bladerunner --profile agent-k -p "Quick prototype"
 | constant-k | standard | ✅ | ❌ | ✅ |
 | agent-k | permissive | ❌ | ❌ | ❌ |
 
-**Hidden flags** (same as profiles):
+**Hidden flags** (alternative syntax for profiles):
+Both syntaxes are equivalent:
 ```bash
+# Using --profile
+uv run bladerunner --profile officer-k -p "Your task"
+
+# Using hidden flags (shorthand)
 uv run bladerunner --officer-k -p "Your task"
 uv run bladerunner --constant-k -p "Your task"
 uv run bladerunner --agent-k -p "Your task"

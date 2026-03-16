@@ -80,7 +80,7 @@ models:
     max_tokens: 2048
   
   # === Groq Models (backend: groq) ===
-  # Free tier: 14,400 requests/day, blazing fast
+  # Free tier available, blazing fast inference - see console.groq.com for current limits
   
   groq-llama:
     full_name: llama-3.1-70b-versatile

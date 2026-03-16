@@ -285,7 +285,7 @@ cp .env.example .env
 
 **Getting API Keys:**
 - **OpenRouter**: Sign up at [openrouter.ai](https://openrouter.ai) for access to Claude, GPT, Llama, and more
-- **Groq** (recommended for free usage): Sign up at [console.groq.com](https://console.groq.com) - 14,400 free requests/day, extremely fast
+- **Groq** (recommended for free usage): Sign up at [console.groq.com](https://console.groq.com) for free access. Check their current free tier details, extremely fast
 - **Web Search** (built-in): Uses DuckDuckGo by default - no API key required!
   - Optional: Get Brave API key at [brave.com/search/api](https://brave.com/search/api) for higher quality results (2,000 queries/month free)
   - See [Web Search Providers](#web-search-providers) for configuration options
@@ -294,7 +294,7 @@ cp .env.example .env
 
 | Backend | Speed | Cost | Free Tier | Models | Vision |
 |---------|-------|------|-----------|--------|--------|
-| **Groq** | ⚡⚡⚡ Fastest | Free | 14.4K req/day | Llama, Mixtral | ❌ |
+| **Groq** | ⚡⚡⚡ Fastest | Free | See console.groq.com | Llama, Mixtral | ❌ |
 | **OpenRouter** | ⚡⚡ Standard | Pay-per-use | $0/mo | All (Claude, GPT, etc.) | ✅ |
 
 **Recommendation:**
@@ -373,6 +373,9 @@ uv run bladerunner-api
   "session_id": "session_abc",
   "model": "haiku",
   "engine": "bladerunner",
+  "image_paths": [],
+  "auto_match_skill": false,
+  "google_search_grounding": null,
   "enable_web_search": false,
   "enable_rag": false,
   "permission_profile": "standard",
@@ -562,8 +565,8 @@ uv run bladerunner-eval --suite all
 ### Test Suite Coverage
 
 Current suite status:
-- **208 collected tests**
-- **25 test modules** under `tests/`
+- **220 collected tests**
+- **27 test modules** under `tests/`
 - Coverage includes CLI, API server/websocket auth flows, agent orchestration, tools, sessions, permissions, memory, evaluation, and integration behavior
 
 To verify current status locally:
@@ -775,13 +778,7 @@ web_search:
 - Building portfolio/production projects
 - Want structured API responses
 
-**Other Providers (require custom integration):**
-- **Tavily AI**: Optimized for AI agents (~$0.002/search)
-- **Serper**: Budget-friendly (~$0.001/search)  
-- **Google Custom Search**: 100 free/day, complex setup
-- **SerpAPI**: $50+/month, rapid prototyping
-
-**To add custom providers:** Extend `_search_*` methods in `bladerunner/tools/web.py`.
+**To add custom providers:** Extend the `WebSearchTool` class in `bladerunner/tools/web.py` to support additional providers like Tavily, Serper, or Google Custom Search.
 
 ---
 

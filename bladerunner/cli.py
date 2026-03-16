@@ -150,8 +150,50 @@ def main():
         choices=["officer-k", "constant-k", "agent-k"],
         help="Use a preset profile for the agent.",
     )
+    # Hidden aliases for profiles (Officer K, Constant K, Agent K)
+    profile_group.add_argument(
+        "--officer-k", action="store_true", help=argparse.SUPPRESS
+    )
+    profile_group.add_argument(
+        "--constant-k", action="store_true", help=argparse.SUPPRESS
+    )
+    profile_group.add_argument(
+        "--agent-k", action="store_true", help=argparse.SUPPRESS
+    )
 
     args = parser.parse_args()
+
+    # Handle hidden profile aliases
+    if args.officer_k:
+        args.profile = "officer-k"
+    elif args.constant_k:
+        args.profile = "constant-k"
+    elif args.agent_k:
+        args.profile = "agent-k"
+
+    # Apply profile preset if specified
+    if args.profile:
+        profile_settings = {
+            "officer-k": {
+                "permissions": "strict",
+                "no_planning": False,
+                "no_reflection": False,
+            },
+            "constant-k": {
+                "permissions": "standard",
+                "no_planning": False,
+                "no_reflection": True,
+            },
+            "agent-k": {
+                "permissions": "permissive",
+                "no_planning": True,
+                "no_reflection": True,
+            },
+        }
+        preset = profile_settings[args.profile]
+        args.permissions = preset["permissions"]
+        args.no_planning = preset["no_planning"]
+        args.no_reflection = preset["no_reflection"]
 
     # Load configuration
     config_path = Path(args.config) if args.config else None
