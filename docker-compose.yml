@@ -1,0 +1,13 @@
+services:
+  bladerunner-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bladerunner-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/root/.bladerunner
+    restart: unless-stopped

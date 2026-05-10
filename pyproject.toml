@@ -1,0 +1,113 @@
+[project]
+name = "edgerunner"
+description = "Execute orders like a Replicant. Autonomous AI coding agent."
+version = "2.1.0"
+readme = "README.md"
+requires-python = ">=3.13"
+keywords = ["ai", "agent", "coding-assistant", "llm", "automation", "agentic-ai"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "openai>=2.15.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/mann-127/BladeRunner"
+Repository = "https://github.com/mann-127/BladeRunner"
+
+[project.scripts]
+bladerunner = "bladerunner.cli:main"
+bladerunner-api = "bladerunner.api:main"
+bladerunner-create-user = "bladerunner.create_user:main"
+
+[project.optional-dependencies]
+web = [
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+]
+
+image = [
+    "pillow>=10.0.0",
+]
+
+interactive = [
+    "prompt-toolkit>=3.0.0",
+    "rich>=13.0.0",
+]
+
+api = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.30.0",
+    "python-multipart>=0.0.9",
+    "pyjwt>=2.9.0",
+    "bcrypt>=5.0.0",
+]
+
+rag = [
+    "chromadb>=0.4.0",
+    "sentence-transformers>=2.2.0",
+]
+
+full = [
+    "edgerunner[web,image,interactive,api,rag]",
+]
+
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.8.0",
+    "edgerunner[web,image,interactive,api,rag]",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    "*.egg-info",
+    ".pytest_cache",
+    ".mypy_cache",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # Pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+]
+ignore = [
+    "E203",  # whitespace before ':'
+    "E501",  # line too long (handled by formatter)
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+skip-magic-trailing-comma = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra --strict-config --strict-markers"
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

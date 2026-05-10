@@ -1,0 +1,138 @@
+# BladeRunner Configuration File
+# Requires OPENROUTER_API_KEY environment variable (or GROQ_API_KEY if backend: groq)
+
+# Backend selection
+# openrouter — broad hosted model catalog, vision support (default)
+# groq       — ultra-fast free inference (Llama, Mixtral)
+backend: openrouter
+
+# Default model alias or full model name
+model: gemma
+
+# Debug mode (verbose logging)
+debug: false
+
+# === Agent settings ===
+agent:
+  max_iterations: 30             # Maximum tool-call iterations per task
+  max_history_messages: 20       # Trim oldest non-system messages after this count
+  stream: false                  # Stream response tokens (set true to enable in CLI mode)
+  require_approval: true         # Prompt user before critical bash/file operations
+  permissions_profile: standard  # strict | standard | permissive
+  memory_enabled: true           # Store successful runs for future recall
+  memory_use_embeddings: false   # Use sentence-transformers for memory similarity
+  memory_embedding_model: all-MiniLM-L6-v2
+
+# Model aliases — use the alias with --model or set model: above
+models:
+  # === OpenRouter models (default backend) ===
+  gemma:
+    full_name: google/gemma-3-27b-it:free
+    temperature: 0.7
+    max_tokens: 2048
+
+  llama-70b:
+    full_name: meta-llama/llama-3.3-70b-instruct:free
+    temperature: 0.7
+    max_tokens: 2048
+
+  qwen3-coder:
+    full_name: qwen/qwen3-coder:free
+    temperature: 0.7
+    max_tokens: 2048
+
+  gpt-oss-20b:
+    full_name: openai/gpt-oss-20b:free
+    temperature: 0.7
+    max_tokens: 2048
+
+  # === Groq models (backend: groq) ===
+  # Free tier available — see console.groq.com for current limits
+  groq-llama:
+    full_name: llama-3.1-70b-versatile
+    temperature: 0.7
+    max_tokens: 2048
+
+  groq-mixtral:
+    full_name: mixtral-8x7b-32768
+    temperature: 0.7
+    max_tokens: 2048
+
+# Backend connection settings (auto-managed)
+backends:
+  openrouter:
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+
+  groq:
+    base_url: https://api.groq.com/openai/v1
+    api_key_env: GROQ_API_KEY
+
+# Session management
+sessions:
+  enabled: true
+  directory: ~/.bladerunner/sessions
+
+# Web search — DuckDuckGo by default, no API key required
+web_search:
+  enabled: false
+  provider: duckduckgo  # or "brave" (requires BRAVE_API_KEY)
+  max_results: 5
+  timeout: 10
+
+# RAG (Retrieval-Augmented Generation)
+# Requires: uv sync --extra rag
+rag:
+  enabled: false
+  persist_directory: ~/.bladerunner/rag
+  embedding_model: all-MiniLM-L6-v2
+
+# FastAPI service settings
+api:
+  host: 127.0.0.1
+  port: 8000
+  database: ~/.bladerunner/api.db
+  uploads_dir: ~/.bladerunner/uploads
+  cors_origins:
+    - "*"
+  chat_timeout_seconds: 300
+
+  # Authentication
+  auth:
+    enabled: false
+    keys: []  # Static API keys; or set BLADERUNNER_API_KEYS=key1,key2 env var
+
+    # JWT authentication (recommended for production)
+    jwt:
+      enabled: false
+      secret_key: ""  # REQUIRED: set via BLADERUNNER_JWT_SECRET env var (32+ chars)
+      algorithm: HS256
+      access_token_expire_minutes: 60
+      refresh_token_expire_days: 7
+
+    # User credentials for JWT login
+    # Generate password hashes with: uv run bladerunner-create-user
+    users: []
+      # Example:
+      # - username: admin
+      #   password_hash: $2b$12$...
+      #   user_id: admin-001
+      #   permissions: ["read", "write", "admin"]
+
+  # Upload restrictions
+  uploads:
+    max_size_mb: 10
+    allowed_types:
+      - image/jpeg
+      - image/png
+      - image/gif
+      - image/webp
+    retention_days: 30
+    per_user_quota_mb: 100
+
+# Logging (applies to API server and uvicorn)
+logging:
+  level: INFO
+  format: "%(asctime)s %(levelname)s [%(name)s] %(message)s"
+  date_format: "%Y-%m-%dT%H:%M:%S%z"
+  uvicorn_access_log: true
